@@ -8,11 +8,14 @@
 
 #include <cmath>
 #include <random>
+
 #include <gtest/gtest.h>
-#include <mathematics/func_table.h>
+
 #include <mathematics/aabb.h>
-#include <mathematics/quaternion.h>
+#include <mathematics/circle.h>
+#include <mathematics/func_table.h>
 #include <mathematics/matrix.h>
+#include <mathematics/quaternion.h>
 #include <mathematics/vector.h>
 
 const float maxNmb = 100.0f;
@@ -737,4 +740,16 @@ TEST(Engine, TestMatrix4)
 	
 	EXPECT_LT(neko::Mat4f::MatrixDifference(mInvCalculus, mInv), 0.01f);
 	EXPECT_GT(neko::Mat4f::MatrixDifference(mInvCalculus, neko::Mat4f::Identity), 0.01f);
+}
+
+TEST(Engine, TestCircleContact)
+{
+    neko::Circle2D circleA(neko::Vec2f(2,2), 2);
+    neko::Circle2D circleB(neko::Vec2f(3, 3), 3);
+
+    neko::Sphere3D sphere1(neko::Vec3f(2, 2, 2), 2);
+    neko::Sphere3D sphere2(neko::Vec3f(5, 5, 5), 2);
+
+    std::cout << circleA.Intersect(circleB) << "\n";
+    std::cout << sphere1.Intersect(sphere2) << "\n";
 }
