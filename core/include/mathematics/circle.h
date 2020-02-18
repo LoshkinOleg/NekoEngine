@@ -75,6 +75,35 @@ struct Circle
 	T center;
     const float radius = 0;
 };
+=======
+			if (Distance(distanceVector.GetMagnitude()) <= rect.halfSize.x + radius)
+			{
+                return true;
+			}
+
+			if (Distance(distanceVector.GetMagnitude()) <= rect.halfSize.y + radius)
+			{
+                return true;
+			}
+            return false;
+        }
+
+    	static bool IsPlanCircleContact(Circle<Vec3f> sphere, Vec3f normal, Vec3f pos)
+        {
+            const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.GetMagnitude();
+        	
+            return p < sphere.radius && p > -sphere.radius;
+        }
+    	
+        static float Distance(const float magnitude)
+        {
+            return magnitude;
+        }
+    	
+    	T center;
+        const float radius = 0;
+    };
+>>>>>>> Circle plan contact working
 
 using Circle2D = Circle<Vec2f>;
 using Sphere3D = Circle<Vec3f>;
