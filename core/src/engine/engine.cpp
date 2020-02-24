@@ -36,6 +36,7 @@
 #include "graphics/graphics.h"
 #include <engine/window.h>
 #include "imgui.h"
+
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
@@ -118,7 +119,6 @@ void BasicEngine::Update(seconds dt)
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
 #endif
-
     renderer_->ResetJobs();
     window_->ResetJobs();
 	

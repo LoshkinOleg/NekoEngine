@@ -52,6 +52,7 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     {
         std::ostringstream oss;
         oss << "[Error] Texture: cannot load " << filename << "\n";
+		
         LogDebug(oss.str());
         return INVALID_TEXTURE_ID;
     }
