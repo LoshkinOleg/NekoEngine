@@ -38,7 +38,6 @@
 namespace neko
 {
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD
 // LogType
 //-----------------------------------------------------------------------------
 /// \brief To differentiate log messages
@@ -63,16 +62,6 @@ enum class LogCategory : std::uint8_t
 	IO,
 	SOUND,
 	LENGTH
-=======
-// LogTypes
-//-----------------------------------------------------------------------------
-/// \brief To differentiate log messages
-enum class LogTypes : char
-{
-    DEBUG, //For regular debug messages
-    WARNING, //For non-critical errors
-    ERROR //For critical errors
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 };
 
 //-----------------------------------------------------------------------------
@@ -81,7 +70,6 @@ enum class LogTypes : char
 /// \brief Struct representing a log message with its type
 struct LogMessage
 {
-<<<<<<< HEAD
 	LogType type = LogType::DEBUG;
 	LogCategory category = LogCategory::NONE;
 	std::string log;
@@ -110,18 +98,6 @@ struct LogMessage
 	{
 		(type != LogType::CRITICAL ? std::cout : std::cerr) << log;
 	}
-=======
-    LogTypes type = LogTypes::DEBUG;
-    std::string msg;
-
-    explicit LogMessage(const std::string& log)
-            : msg(log)
-    {}
-
-    explicit LogMessage(const LogTypes& logType, const std::string& log)
-            : type(logType), msg(log)
-    {}
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 };
 
 //-----------------------------------------------------------------------------
@@ -130,7 +106,6 @@ struct LogMessage
 /// \brief Used for the service locator
 class LogManagerInterface
 {
-<<<<<<< HEAD
 protected:
 	~LogManagerInterface() = default;
 public:
@@ -154,20 +129,6 @@ public:
 	 * \brief Retrieves the log history
 	 */
 	virtual const std::vector<LogMessage>& GetLogs() = 0;
-=======
-public:
-    /**
-     * \brief Generate a log message.
-     * @param logType the type of the log message
-     * @param log the log message
-     */
-    virtual void Log(LogTypes logType, const std::string& log) = 0;
-
-    /**
-     * \brief Retrieves the log history
-     */
-    virtual const std::vector<std::string>& GetLogs() = 0;
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 };
 
 //-----------------------------------------------------------------------------
@@ -176,7 +137,6 @@ public:
 /// \brief Used for the service locator
 class NullLogManager final : public LogManagerInterface
 {
-<<<<<<< HEAD
 	void Log([[maybe_unused]] LogType logType,
 	         [[maybe_unused]] const std::string& log) override
 	{
@@ -200,24 +160,12 @@ class NullLogManager final : public LogManagerInterface
 		return {};
 #endif
 	}
-=======
-public:
-    void Log([[maybe_unused]]LogTypes logType, [[maybe_unused]]const std::string& log) override
-    {};
-
-    const std::vector<std::string>& GetLogs() override
-    {
-        std::cerr << "Impossible to get log history from a null LogManager\n";
-        assert(false);
-    };
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 };
 
 //-----------------------------------------------------------------------------
 // LogManager
 //-----------------------------------------------------------------------------
 /// \brief Creates and stores log messages
-<<<<<<< HEAD
 class LogManager final : public LogManagerInterface
 {
 protected:
@@ -260,29 +208,6 @@ private:
 	std::mutex logMutex_;
 	std::vector<std::function<void()>> tasks_;
 	std::condition_variable conditionVariable_;
-=======
-class LogManager : public LogManagerInterface
-{
-public:
-    ~LogManager() = default;
-
-    void Log(LogTypes logType, const std::string& log) override;
-
-    const std::vector<std::string>& GetLogs() override
-    { return logHistory_; }
-
-    void WriteToFile();
-
-    void Close();
-
-private:
-    std::vector<std::string> logHistory_;
-
-    std::mutex logMutex_;
-    std::queue<std::function<void()>> tasks_;
-    std::unique_ptr<std::thread> logThread_;
-    std::condition_variable itemInQueue_;
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 };
 
 //-----------------------------------------------------------------------------
@@ -299,20 +224,16 @@ using Log = Locator<LogManagerInterface, NullLogManager>;
 void LogDebug(const std::string& msg);
 
 /**
-<<<<<<< HEAD
  * \brief Generate a debug type log message
  */
 void LogDebug(LogCategory category, const std::string& msg);
 
 /**
-=======
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
  * \brief Generate a warning type log message
  */
 void LogWarning(const std::string& msg);
 
 /**
-<<<<<<< HEAD
  * \brief Generate a warning type log message
  */
 void LogWarning(LogCategory category, const std::string& msg);
@@ -326,19 +247,9 @@ void LogError(const std::string& msg);
  * \brief Generate an error type log message
  */
 void LogError(LogCategory category, const std::string& msg);
-=======
- * \brief Generate an error type log message
- */
-void LogError(const std::string& msg);
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.
 
 /**
  * \brief Retrieves the log history
  */
-<<<<<<< HEAD
 const std::vector<LogMessage>& GetLogs();
 }
-=======
-const std::vector<std::string>& GetLogs();
-}
->>>>>>> Created a simple LogManager able to handle multiple type of messages and write the log results into a file.

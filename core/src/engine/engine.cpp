@@ -28,14 +28,15 @@
 #include <chrono>
 #include <sstream>
 
+#include <imgui.h>
+
 #include <engine/engine.h>
 #include <engine/log.h>
 #include <utilities/file_utility.h>
 
-#include "../../../externals/imgui-1.74/imgui.h"
-#include "graphics/graphics.h"
 #include <engine/window.h>
-#include "imgui.h"
+#include <graphics/graphics.h>
+#include <utilities/file_utility.h>
 
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
