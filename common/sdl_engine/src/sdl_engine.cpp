@@ -55,7 +55,7 @@ void SdlEngine::Init()
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
     window_->Init();
     initAction_.Execute();
-    inputManager_.Init(); 
+    inputManager_.Init();
 }
 
 void SdlEngine::Destroy()
@@ -70,11 +70,13 @@ void SdlEngine::Destroy()
 
 void SdlEngine::ManageEvent()
 {
-
     inputManager_.OnPreUserInput();
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Manage Event");
 #endif
+    window_->MakeCurrentContext();
+    inputManager.OnPreUserInputs();
+	
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {

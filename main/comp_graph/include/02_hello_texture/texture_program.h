@@ -26,7 +26,8 @@ public:
 private:
     gl::RenderQuad quad_{Vec3f::zero, Vec2f::one};
     gl::Shader shader_;
-
     gl::Texture texture_;
+    InputManager inputManager_;
+    TextureId textureId_ = 0u;
 };
 }

@@ -28,7 +28,6 @@ void TextureProgram::Init()
 
 void TextureProgram::Update(seconds dt)
 {
-    
 }
 
 void TextureProgram::Destroy()
