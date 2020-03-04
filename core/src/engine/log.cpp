@@ -94,7 +94,7 @@ void LogMessage::Generate()
 LogManager::LogManager()
 	: status_(0)
 {
-	//Log::provide(this);
+	Log::provide(this);
 	status_ |= IS_RUNNING | IS_EMPTY;
 	logThread_ = std::make_unique<std::thread>([this]
 	{
@@ -173,7 +173,6 @@ void LogManager::Log(LogType logType, const std::string& log)
 {
 	Log(LogCategory::NONE, logType, log);
 }
-
 
 void LogManager::Log(LogCategory category, LogType logType,
 	const std::string& log)
