@@ -195,7 +195,6 @@ void BasicEngine::EngineLoop()
 		const auto dt = std::chrono::duration_cast<seconds>(start - clock);
 		clock = start;
 		Update(dt);
-
 	}
 #endif
     Destroy();

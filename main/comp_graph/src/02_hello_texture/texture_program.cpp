@@ -8,7 +8,6 @@
 
 namespace neko
 {
-
 void TextureProgram::Init()
 {
     const auto& config = BasicEngine::GetInstance()->config;
@@ -56,11 +55,9 @@ void TextureProgram::Render()
 
 void TextureProgram::DrawImGui()
 {
-	
 }
 
 void TextureProgram::OnEvent(const SDL_Event& event)
 {
-
 }
 }

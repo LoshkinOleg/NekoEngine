@@ -5,7 +5,6 @@
 #include <imgui.h>
 #include "input/sample_browser.h"
 
-
 #include "input/input_program.h"
 
 
@@ -16,6 +15,7 @@ namespace neko
 void SampleBrowser::Init()
 {
     RegisterRenderProgram("01 input", std::make_unique<InputProgram>());
+	
     programs_[currentProgramIndex_]->Init();
 }
 
