@@ -4,6 +4,33 @@
 #include <engine/log.h>
 namespace neko
 {
+<<<<<<< HEAD
+=======
+void LoggerProgram::Init()
+{
+    selectedType = 0;
+    selectedLogCount = 0;
+    selectedCat = 0;
+    maxLogToShow = 50;
+    const auto& config = BasicEngine::GetInstance()->config; 
+}
+
+void LoggerProgram::Update(seconds dt)
+{
+
+}
+
+void LoggerProgram::Render()
+{
+
+}
+
+void LoggerProgram::Destroy()
+{
+
+}
+
+>>>>>>> Added a refresh button
 void LoggerProgram::DrawUi()
 {
     if (ImGui::Begin("Logs", &isActive_, ImGuiWindowFlags_MenuBar))
@@ -111,6 +138,10 @@ void LoggerProgram::SetMaxLogsToShow()
     maxLogToShow = maxLogCountSteps[selectedLogCount] * 0.5f;
 }
 
+void LoggerProgram::RefreshLogs() {
+    currentSessionLogs = Log::get().GetLogs();
+    InsertCurrentLog();
+}
 
 
 
