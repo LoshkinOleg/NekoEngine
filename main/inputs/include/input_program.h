@@ -1,6 +1,6 @@
 #pragma once
 
-#include <input/sample_program.h>
+#include <sample_program.h>
 #include <sdl_engine/sdl_input.h>
 #include "gl/shape.h"
 #include "gl/shader.h"
