@@ -13,7 +13,6 @@ void InputProgram::Init()
 {
     const auto& config = BasicEngine::GetInstance()->config;
     SDL_StartTextInput();
-
 }
 
 void InputProgram::Update(seconds dt)
@@ -45,7 +44,7 @@ void InputProgram::DrawImGui()
         std::cout << "Touche W appuyé" << '\n';
     }
 }
-
+	
 void InputProgram::OnEvent(const SDL_Event& event)
 {
 }

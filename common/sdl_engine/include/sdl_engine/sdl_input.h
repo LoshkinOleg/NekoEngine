@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <SDL.h>
+#include <sdl_engine/sdl_engine.h>
 
 #include <mathematics/vector.h>
 #include <utilities/service_locator.h>
