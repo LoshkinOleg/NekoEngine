@@ -8,7 +8,6 @@
 
 namespace neko
 {
-
 void InputProgram::Init()
 {
     const auto& config = BasicEngine::GetInstance()->config;
@@ -24,8 +23,6 @@ void InputProgram::Update(seconds dt)
     }
 }
 
-	
-
 void InputProgram::Destroy()
 {
     SDL_StopTextInput();
@@ -38,11 +35,6 @@ void InputProgram::Render()
 
 void InputProgram::DrawImGui()
 {
-	inputManager.OnPreUserInputs();
-    if (inputManager.IsKeyDown(neko::KeyCode::W))
-    {
-        std::cout << "Touche W appuyé" << '\n';
-    }
 }
 	
 void InputProgram::OnEvent(const SDL_Event& event)
