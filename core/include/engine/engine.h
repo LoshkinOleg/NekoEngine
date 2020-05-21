@@ -31,11 +31,13 @@
 #include <utilities/time_utility.h>
 #include <mathematics/vector.h>
 #include <atomic>
+#include <engine/log.h>
 
 
 namespace neko
 {
 class Renderer;
+
 class Window;
 
 /**
@@ -66,14 +68,20 @@ class BasicEngine : public SystemInterface
 {
 public:
     explicit BasicEngine(Configuration* config = nullptr);
-	BasicEngine() = delete;
+
+    BasicEngine() = delete;
+
     ~BasicEngine();
+
     void Init() override;
+
     void Update(seconds dt) final;
+
     void Destroy() override;
 
     //Update functions
     virtual void ManageEvent() = 0;
+
     virtual void GenerateUiFrame();
 
     void EngineLoop();
@@ -85,17 +93,20 @@ public:
     void RegisterSystem(SystemInterface& system);
     void RegisterOnDrawUi(DrawImGuiInterface& drawUi);
 
-    float GetDeltaTime() const { return dt_; };
-	
-    static BasicEngine* GetInstance(){return instance_;}
+    float GetDeltaTime() const
+    { return dt_; };
+
+    static BasicEngine* GetInstance()
+    { return instance_; }
 
     //template <typename T = BasicEngine>
     //static T* GetInstance(){ return dynamic_cast<T*>(instance_);};
 protected:
     static BasicEngine* instance_;
     Renderer* renderer_ = nullptr;
+    LogManager* logManager_ = nullptr;
     Window* window_ = nullptr;
-	bool isRunning_;
+    bool isRunning_;
     std::atomic<float> dt_;
     Action<> initAction_;
     Action<seconds> updateAction_;

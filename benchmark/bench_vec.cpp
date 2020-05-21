@@ -35,8 +35,8 @@ static void BM_Vec3Magnitude(benchmark::State& state)
 
     std::vector<neko::Vec3f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
     for (auto _ : state)
     {
         for (auto v : local_numbers)
@@ -53,8 +53,8 @@ static void BM_Vec4Magnitude(benchmark::State& state)
 {
     std::vector<neko::Vec4f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
     for (auto _ : state)
     {
         for (auto v : local_numbers)
@@ -72,8 +72,8 @@ static void BM_Vec3MagnitudeAoSoA4(benchmark::State& state)
 {
     std::vector<neko::Vec3f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
 
     for (auto _ : state)
     {
@@ -104,8 +104,8 @@ static void BM_Vec4MagnitudeAoSoA4(benchmark::State& state)
 {
     std::vector<neko::Vec4f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
 
     for (auto _ : state)
     {
@@ -136,8 +136,8 @@ static void BM_Vec4MagnitudeAoSoA4Intrinsincs(benchmark::State& state)
 {
     std::vector<neko::Vec4f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
     for (auto _ : state)
     {
         for (size_t i = 0; i < local_numbers.size(); i += 4)
@@ -167,8 +167,8 @@ static void BM_Vec3MagnitudeAoSoA8(benchmark::State& state)
 {
     std::vector<neko::Vec3f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
 
     for (auto _ : state)
     {
@@ -199,8 +199,8 @@ static void BM_Vec4MagnitudeAoSoA8(benchmark::State& state)
 {
     std::vector<neko::Vec4f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
 
     for (auto _ : state)
     {
@@ -231,8 +231,8 @@ static void BM_Vec4MagnitudeAoSoA8Intrinsincs(benchmark::State& state)
 {
     std::vector<neko::Vec4f> local_numbers(state.range(0));
     RandomFill(local_numbers, 0.0f, maxNmb);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
-    assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[0]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
+    //assert(reinterpret_cast<uintptr_t>(&local_numbers[1]) % alignof(__STDCPP_DEFAULT_NEW_ALIGNMENT__) == 0);
 
     for (auto _ : state)
     {

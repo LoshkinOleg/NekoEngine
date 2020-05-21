@@ -137,7 +137,7 @@ void BufferFile::Load(std::string_view path)
 	{
 		std::ostringstream oss;
 		oss << "[Error] Could not open file: " << path << " for BufferFile";
-		logDebug(oss.str());
+		LogDebug(oss.str());
 		return;
 	}
 	if(is)
@@ -310,7 +310,7 @@ std::string MakeGeneric(const std::string_view path)
 std::string GetRelativePath(const std::string_view path, const std::string_view relative)
 {
 	fs::path p = fs::path(path);
-	//logDebug(std::string("Relative path from: ") + path.data() + " to: " + relative.data());
+	//LogDebug(std::string("Relative path from: ") + path.data() + " to: " + relative.data());
 	return MakeGeneric(fs::relative(p, relative).string());
 }
 
