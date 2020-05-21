@@ -5,13 +5,17 @@ file(GLOB_RECURSE Neko_UTILITY_SRC src/utilities/*.cpp include/utilities/*.h)
 file(GLOB_RECURSE Neko_PHYSICS_SRC src/physics/*.cpp include/physics/*.h)
 file(GLOB_RECURSE Neko_SOUND_SRC src/sound/*.cpp include/sound/*.h)
 file(GLOB_RECURSE Neko_MATH_SRC src/mathematics/*.cpp include/mathematics/*.h)
+file(GLOB_RECURSE Neko_GAME_SRC
+    src/game/*.cpp include/game/*.h
+    src/game/chunks/*.cpp include/game/chunks/*.h)
 
 source_group("Graphics"				FILES ${Neko_GRAPHICS_SRC})
 source_group("Engine"				FILES ${Neko_ENGINE_SRC})
 source_group("Utility"				FILES ${Neko_UTILITY_SRC})
 source_group("Physics"				FILES ${Neko_PHYSICS_SRC})
 source_group("Sound"				FILES ${Neko_SOUND_SRC})
-source_group("Maths"			FILES ${Neko_MATH_SRC})
+source_group("Maths"	    		FILES ${Neko_MATH_SRC})
+source_group("Game"	        		FILES ${Neko_GAME_SRC})
 
 List(APPEND Neko_SRC
         ${Neko_ENGINE_SRC}
@@ -19,7 +23,8 @@ List(APPEND Neko_SRC
         ${Neko_UTILITY_SRC}
         ${Neko_PHYSICS_SRC}
         ${Neko_SOUND_SRC}
-        ${Neko_MATH_SRC})
+        ${Neko_MATH_SRC}
+        ${Neko_GAME_SRC})
 
 
 #Utility
