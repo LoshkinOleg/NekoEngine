@@ -3,14 +3,10 @@
 //
 
 #include <imgui.h>
-#include "comp_graph/sample_browser.h"
+#include "input/sample_browser.h"
 
 
-#include "01_hello_triangle/triangle_program.h"
-#include "02_hello_texture/texture_program.h"
-#include "03_hello_transform/transform_program.h"
-#include "04_hello_coords/coords_program.h"
-#include "05_hello_logger/logger_program.h"
+#include "input/input_program.h"
 
 
 namespace neko
@@ -19,12 +15,7 @@ namespace neko
 
 void SampleBrowser::Init()
 {
-    RegisterRenderProgram("01 Hello Triangle", std::make_unique<HelloTriangleProgram>());
-    RegisterRenderProgram("02 Hello Texture", std::make_unique<TextureProgram>());
-    RegisterRenderProgram("03 Hello Transform", std::make_unique<HelloTransformProgram>());
-    RegisterRenderProgram("04 Hello Coords", std::make_unique<HelloCoordsProgram>());
-    RegisterRenderProgram("05 Hello Logger", std::make_unique<HelloLoggerProgram>());
-
+    RegisterRenderProgram("01 input", std::make_unique<InputProgram>());
     programs_[currentProgramIndex_]->Init();
 }
 
@@ -57,8 +48,6 @@ void SampleBrowser::OnEvent(const SDL_Event& event)
 
 void SampleBrowser::DrawImGui()
 {
-
-    ImGui::SetNextWindowPos(ImVec2(0, 200), ImGuiCond_FirstUseEver);
     ImGui::Begin("Sample Browser");
     if (ImGui::BeginCombo("Current Sample",
                           programsNames_[currentProgramIndex_].c_str())) // The second parameter is the label previewed before opening the combo.
