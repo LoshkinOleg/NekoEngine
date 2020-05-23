@@ -12,8 +12,8 @@ namespace neko
     {
         const auto& config = BasicEngine::GetInstance()->config;
 
-        shader_.LoadFromFile(config.dataRootPath + "data/shaders/01_hello_triangle/hello_triangle.vert",
-            config.dataRootPath + "data/shaders/01_hello_triangle/hello_triangle.frag");
+        shader_.LoadFromFile(config.dataRootPath + "shaders/01_hello_triangle/hello_triangle.vert",
+            config.dataRootPath + "shaders/01_hello_triangle/hello_triangle.frag");
 
         //Initialize the VAO program
         glGenBuffers(2, &vaoProgam_.VBO[0]);
