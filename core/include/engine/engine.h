@@ -33,6 +33,8 @@
 #include <atomic>
 #include <engine/log.h>
 
+#include "jobsystem.h"
+
 
 namespace neko
 {
@@ -49,14 +51,14 @@ struct Configuration
     Vec2u windowSize = Vec2u(1024, 1024);
     Vec2u gameWindowSize{1280, 720};
     bool fullscreen = false;
-    bool vSync = false;
+    bool vSync = true;
     unsigned int framerateLimit = 0u;
 #if defined(EMSCRIPTEN)
     std::string dataRootPath = "./";
 #elif defined(__ANDROID__)
-    std::string dataRootPath = "";
+    std::string dataRootPath = "data/";
 #else
-    std::string dataRootPath = "../../";
+    std::string dataRootPath = "../../data/";
 #endif
 };
 
@@ -99,6 +101,7 @@ public:
     static BasicEngine* GetInstance()
     { return instance_; }
 
+    void ScheduleJob(Job* job, JobThreadType threadType);
     //template <typename T = BasicEngine>
     //static T* GetInstance(){ return dynamic_cast<T*>(instance_);};
 protected:
@@ -106,7 +109,8 @@ protected:
     Renderer* renderer_ = nullptr;
     LogManager* logManager_ = nullptr;
     Window* window_ = nullptr;
-    bool isRunning_;
+    JobSystem jobSystem_;
+	bool isRunning_;
     std::atomic<float> dt_;
     Action<> initAction_;
     Action<seconds> updateAction_;

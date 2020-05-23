@@ -241,7 +241,7 @@ void LogManager::WriteToFile()
 			fileContent += line.log;
 		}
 
-		CreateDirectory(filePath);
+		//CreateDirectory(filePath); TODO(Luca@Simon) Check Circular reference
 		WriteStringToFile(filePath + dateTime.str() + ".log", fileContent);
 
 		status_ &= ~IS_WRITING;
