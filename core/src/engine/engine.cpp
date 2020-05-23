@@ -31,7 +31,10 @@
 #include <engine/engine.h>
 #include <engine/log.h>
 #include <utilities/file_utility.h>
+
+#include "../../../externals/imgui-1.74/imgui.h"
 #include "graphics/graphics.h"
+#include <engine/window.h>
 #include "imgui.h"
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
@@ -43,58 +46,123 @@ BasicEngine* BasicEngine::instance_ = nullptr;
 
 BasicEngine::BasicEngine(Configuration* config)
 {
-	if (config != nullptr)
-	{
-		this->config = *config;
-	}
+    if (config != nullptr)
+    {
+        this->config = *config;
+    }
 
 #ifdef EASY_PROFILE_USE
-	EASY_PROFILER_ENABLE;
+    EASY_PROFILER_ENABLE;
 #endif
 }
 
 BasicEngine::~BasicEngine()
 {
-	logDebug("Destroy Basic Engine");
+    logManager_->WriteToFile();
+    LogDebug("Destroy Basic Engine");
+    logManager_->Wait();
+    logManager_->Destroy();
 
 #ifdef EASY_PROFILE_USE
-	profiler::dumpBlocksToFile("Neko_Profile.prof");
+    profiler::dumpBlocksToFile("Neko_Profile.prof");
 #endif
 }
+#ifdef __ANDROID__
 
-void BasicEngine::Init()
+#include <sys/stat.h>
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_swiss_sae_gpr5300_MainActivity_destroy([[maybe_unused]]JNIEnv *env, [[maybe_unused]]jclass clazz, [[maybe_unused]]jstring directory)
 {
 
 #ifdef EASY_PROFILE_USE
-	EASY_FUNCTION(profiler::colors::Magenta);
+    std::string path = env->GetStringUTFChars(directory, nullptr);
+
+    struct stat sb;
+    int32_t res = stat(path.c_str(), &sb);
+    if (0 == res && sb.st_mode && S_IFDIR){
+        logDebug(path+" dir already in app's internal data storage.");
+    }
+    else if (ENOENT == errno){
+        res = mkdir(path.c_str(), 0770);
+    }
+	path += "/Neko_Profile.prof";
+	logDebug("Android data profile data path: "+path);
+    auto blockNumber = profiler::dumpBlocksToFile(path.c_str());
+    if(blockNumber == 0)
+    {
+        logDebug("[Error] Could not save profile data");
+    }
+    else
+    {
+        logDebug("Easy Profile with several blocks.");
+    }
+#endif
+}
+#endif
+
+void BasicEngine::Init()
+{
+    logManager_ = new LogManager;
+	
+#ifdef EASY_PROFILE_USE
+    EASY_FUNCTION(profiler::colors::Magenta);
 #endif
 	instance_ = this;
-	logDebug("Current path: " + GetCurrentPath());
+	LogDebug("Current path: " + GetCurrentPath());
+	jobSystem_.Init();
 }
 
 void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("Basic Engine Update");
-#endif
-	{
-#ifdef EASY_PROFILE_USE
-		EASY_BLOCK("Application Update");
+    EASY_BLOCK("Basic Engine Update");
 #endif
 
-		updateAction_.Execute(dt);
-	}
-#if defined(NEKO_SAMETHREAD)
-	renderer_->Update();
+    renderer_->ResetJobs();
+    window_->ResetJobs();
+	
+    Job eventJob([this]
+    {
+#if defined(__ANDROID__)
+        window_->MakeCurrentContext();
 #endif
+	    ManageEvent();
+#if defined(__ANDROID__)
+        window_->LeaveCurrentContext();
+#endif
+    });
+    Job updateJob([this, &dt]{updateAction_.Execute(dt);});
+    updateJob.AddDependency(&eventJob);
 
-	renderer_->Sync();
+    Job* rendererSyncJob = renderer_->GetSyncJob();
+    updateJob.AddDependency(rendererSyncJob);
+
+    Job* renderJob = renderer_->GetRenderAllJob();
+    renderJob->AddDependency(&eventJob);
+
+    Job* swapBufferJob = window_->GetSwapBufferJob();
+    swapBufferJob->AddDependency(renderJob);
+    swapBufferJob->AddDependency(&updateJob);
+
+    renderer_->ScheduleJobs();
+    jobSystem_.ScheduleJob(swapBufferJob, JobThreadType::RENDER_THREAD);
+    jobSystem_.ScheduleJob(&eventJob, JobThreadType::MAIN_THREAD);
+    jobSystem_.ScheduleJob(&updateJob, JobThreadType::MAIN_THREAD);
+
+    swapBufferJob->Join();
 }
 
 void BasicEngine::Destroy()
 {
+    Job leaveContext([this] {window_->LeaveCurrentContext(); });
+    jobSystem_.ScheduleJob(&leaveContext, JobThreadType::RENDER_THREAD);
+    leaveContext.Join();
+    window_->MakeCurrentContext();
     renderer_->Destroy();
+	jobSystem_.Destroy();
 	instance_ = nullptr;
 }
 
@@ -102,24 +170,25 @@ static std::chrono::time_point<std::chrono::system_clock> clock;
 #ifdef EMSCRIPTEN
 void EmLoop(void* arg)
 {
-	BasicEngine* engine = static_cast<BasicEngine*>(arg);
-	const auto start = std::chrono::system_clock::now();
-	const auto dt = std::chrono::duration_cast<seconds>(start - clock);
-	clock = start;
-	(engine)->Update(dt);
+    BasicEngine* engine = static_cast<BasicEngine*>(arg);
+    const auto start = std::chrono::system_clock::now();
+    const auto dt = std::chrono::duration_cast<seconds>(start - clock);
+    clock = start;
+    (engine)->Update(dt);
 }
 #endif
 
 void BasicEngine::EngineLoop()
 {
 	isRunning_ = true;
-
-	renderer_->RenderLoop();
+    window_->LeaveCurrentContext();
+	Job initRenderJob([this]{window_->MakeCurrentContext();});
+	jobSystem_.ScheduleJob(&initRenderJob, JobThreadType::RENDER_THREAD);
 	clock = std::chrono::system_clock::now();
 #ifdef EMSCRIPTEN
-	// void emscripten_set_main_loop(em_callback_func func, int fps, int simulate_infinite_loop);
+    // void emscripten_set_main_loop(em_callback_func func, int fps, int simulate_infinite_loop);
 
-	emscripten_set_main_loop_arg(&EmLoop, this, 0, 1);
+    emscripten_set_main_loop_arg(&EmLoop, this, 0, 1);
 #else
 	while (isRunning_)
 	{
@@ -130,27 +199,27 @@ void BasicEngine::EngineLoop()
 
 	}
 #endif
-	Destroy();
+    Destroy();
 }
 
 void BasicEngine::SetWindowAndRenderer(Window* window, Renderer* renderer)
 {
-	window_ = window;
-	renderer_ = renderer;
-	renderer_->SetWindow(window);
-	RendererLocator::provide(renderer);
+    window_ = window;
+    renderer_ = renderer;
+    renderer_->SetWindow(window);
+    RendererLocator::provide(renderer);
 }
 
 void BasicEngine::GenerateUiFrame()
 {
+#ifdef EASY_PROFILE_USE
+    EASY_BLOCK("Generate ImGui Frame");
+#endif
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Neko Window");
 
 	std::ostringstream oss;
 	oss << "App FPS: " << 1.0f / GetDeltaTime() << '\n'
-#if !defined(NEKO_SAME_THREAD)
-		<< "Render FPS: " << 1.0f / renderer_->GetDeltaTime()
-#endif
 		<< '\n';
 	ImGui::Text("%s", oss.str().c_str());
 	ImGui::End();
@@ -167,6 +236,11 @@ void BasicEngine::RegisterSystem(SystemInterface& system)
 void BasicEngine::RegisterOnDrawUi(DrawImGuiInterface& drawUi)
 {
     drawImGuiAction_.RegisterCallback([&drawUi]{ drawUi.DrawImGui();});
+}
+
+void BasicEngine::ScheduleJob(Job* job, JobThreadType threadType)
+{
+    jobSystem_.ScheduleJob(job, threadType);
 }
 
 

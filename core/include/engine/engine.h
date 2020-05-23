@@ -31,11 +31,15 @@
 #include <utilities/time_utility.h>
 #include <mathematics/vector.h>
 #include <atomic>
+#include <engine/log.h>
+
+#include "jobsystem.h"
 
 
 namespace neko
 {
 class Renderer;
+
 class Window;
 
 /**
@@ -47,14 +51,14 @@ struct Configuration
     Vec2u windowSize = Vec2u(1024, 1024);
     Vec2u gameWindowSize{1280, 720};
     bool fullscreen = false;
-    bool vSync = false;
+    bool vSync = true;
     unsigned int framerateLimit = 0u;
 #if defined(EMSCRIPTEN)
     std::string dataRootPath = "./";
 #elif defined(__ANDROID__)
-    std::string dataRootPath = "";
+    std::string dataRootPath = "data/";
 #else
-    std::string dataRootPath = "../../";
+    std::string dataRootPath = "../../data/";
 #endif
 };
 
@@ -66,14 +70,20 @@ class BasicEngine : public SystemInterface
 {
 public:
     explicit BasicEngine(Configuration* config = nullptr);
-	BasicEngine() = delete;
+
+    BasicEngine() = delete;
+
     ~BasicEngine();
+
     void Init() override;
+
     void Update(seconds dt) final;
+
     void Destroy() override;
 
     //Update functions
     virtual void ManageEvent() = 0;
+
     virtual void GenerateUiFrame();
 
     void EngineLoop();
@@ -85,16 +95,21 @@ public:
     void RegisterSystem(SystemInterface& system);
     void RegisterOnDrawUi(DrawImGuiInterface& drawUi);
 
-    float GetDeltaTime() const { return dt_; };
-	
-    static BasicEngine* GetInstance(){return instance_;}
+    float GetDeltaTime() const
+    { return dt_; };
 
+    static BasicEngine* GetInstance()
+    { return instance_; }
+
+    void ScheduleJob(Job* job, JobThreadType threadType);
     //template <typename T = BasicEngine>
     //static T* GetInstance(){ return dynamic_cast<T*>(instance_);};
 protected:
     static BasicEngine* instance_;
     Renderer* renderer_ = nullptr;
+    LogManager* logManager_ = nullptr;
     Window* window_ = nullptr;
+    JobSystem jobSystem_;
 	bool isRunning_;
     std::atomic<float> dt_;
     Action<> initAction_;
