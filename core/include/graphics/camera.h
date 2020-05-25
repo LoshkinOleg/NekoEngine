@@ -318,5 +318,7 @@ struct FpsCamera final : MoveableCamera3D
 	void Destroy() override
 	{
 	}
+
+	
 };
 }

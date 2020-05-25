@@ -15,6 +15,7 @@
 #include <07_hello_light/light_program.h>
 #include <08_hello_lightmaps/lightmaps_program.h>
 #include <09_hello_lightcasters/lightcasters_program.h>
+#include <10_hello_instancing/instancing_program.h>
 
 #include <99_hello_scene/scene_program.h>
 
@@ -33,6 +34,8 @@ void SampleBrowser::Init()
     RegisterRenderProgram("07 Hello Light", std::make_unique<HelloLightProgram>());
     RegisterRenderProgram("08 Hello Lightmaps", std::make_unique<HelloLightMapsProgram>());
     RegisterRenderProgram("09 Hello Light Casters", std::make_unique<HelloLightCastersProgram>());
+    RegisterRenderProgram("10 Hello Instancing", std::make_unique<HelloInstancingProgram>());
+	
     RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
     RegisterRenderProgram("100 Block Placement", std::make_unique<BlockProgram>());
 	
