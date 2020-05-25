@@ -11,11 +11,16 @@
 #include "03_hello_transform/transform_program.h"
 #include "04_hello_coords/coords_program.h"
 #include "05_hello_logger/logger_program.h"
+#include "05_hello_camera/camera_program.h"
+#include "06_hello_model/model_program.h"
+#include "07_hello_light/light_program.h"
+#include "08_hello_lightmaps/lightmaps_program.h"
+#include "09_hello_lightcasters/lightcasters_program.h"
 
+#include "99_hello_scene/scene_program.h"
 
 namespace neko
 {
-
 
 void SampleBrowser::Init()
 {
@@ -24,8 +29,14 @@ void SampleBrowser::Init()
     RegisterRenderProgram("03 Hello Transform", std::make_unique<HelloTransformProgram>());
     RegisterRenderProgram("04 Hello Coords", std::make_unique<HelloCoordsProgram>());
     RegisterRenderProgram("05 Hello Logger", std::make_unique<HelloLoggerProgram>());
-
-    programs_[currentProgramIndex_]->Init();
+    RegisterRenderProgram("05 Hello Camera", std::make_unique<HelloCameraProgram>());
+    RegisterRenderProgram("06 Hello Model", std::make_unique<HelloModelProgram>());
+    RegisterRenderProgram("07 Hello Light", std::make_unique<HelloLightProgram>());
+    RegisterRenderProgram("08 Hello Lightmaps", std::make_unique<HelloLightMapsProgram>());
+    RegisterRenderProgram("09 Hello Light Casters", std::make_unique<HelloLightCastersProgram>());
+	
+    RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+	programs_[currentProgramIndex_]->Init();
 }
 
 void SampleBrowser::Update(seconds dt)

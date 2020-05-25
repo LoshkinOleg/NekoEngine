@@ -28,7 +28,7 @@
 #include "mathematics/const.h"
 #include <mathematics/intrinsincs.h>
 #include "mathematics/angle.h"
-#include "trigo.h"
+#include "mathematics/trigo.h"
 
 namespace neko
 {
@@ -347,6 +347,10 @@ public:
             : x(X), y(Y), z(Z)
     {
 
+    }
+	explicit Vec3(const T* ptr) : x(ptr[0]), y(ptr[1]), z(ptr[2])
+    {
+	    
     }
 
     template<typename U>

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(Neko)
 
 set (CMAKE_CXX_STANDARD 17)
@@ -18,6 +18,7 @@ set(Neko_Test ON CACHE BOOL "Activate Test")
 set(Neko_Assert ON CACHE BOOL "Activate Neko Assertion")
 set(Neko_Benchmark ON CACHE BOOL "Activate Benchmark")
 set(Neko_Lua ON CACHE BOOL "Activate Lua Wrapper")
+set(Neko_Assimp ON CACHE BOOL "Activate Assimp Wrapper")
 
 MESSAGE("CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 
@@ -62,12 +63,15 @@ endif()
 include("cmake/data.cmake")
 set(NEKO_CORE_DIR "${CMAKE_SOURCE_DIR}/core/" CACHE INTERNAL "")
 add_subdirectory(${NEKO_CORE_DIR})
-
+if(NOT Emscripten)
+target_precompile_headers(Neko_Core PRIVATE "${NEKO_CORE_DIR}/include/core_pch.h")
+endif()
 #imgui
 set(IMGUI_VERSION "1.74" CACHE INTERNAL "")
 set(IMGUI_ROOT "${EXTERNAL_DIR}/imgui-${IMGUI_VERSION}" CACHE STRING "")
 include_directories("${IMGUI_ROOT}")
 add_subdirectory("${IMGUI_ROOT}")
+set_target_properties(imgui PROPERTIES UNITY_BUILD ON)
 
 if(Neko_Lua)
     set(LUA_VERSION "5.3.5")
@@ -75,6 +79,8 @@ if(Neko_Lua)
     add_subdirectory(${LUA_DIR})
     set(LUA_WRAPPER_DIR "${CMAKE_SOURCE_DIR}/common/lua_wrapper" CACHE INTERNAL "")
     add_subdirectory(${LUA_WRAPPER_DIR})
+    set_target_properties (lua PROPERTIES
+            FOLDER Externals)
 endif()
 
 if(Neko_GLES3)
@@ -99,7 +105,31 @@ if(Neko_SDL2)
     include_directories(${SDL_DIR}/include ${SDL_DIR}/src)
 
     add_subdirectory("common/sdl_engine")
+    if(NOT Emscripten)
+    target_precompile_headers(sdl_engine PRIVATE "common/sdl_engine/include/sdl_wrapper_pch.h")
+        endif()
+endif()
 
+if(Neko_Assimp)
+    set(ASSIMP_VERSION 5.0.1)
+    set(ASSIMP_DIR "${EXTERNAL_DIR}/assimp-${ASSIMP_VERSION}")
+    set(ASSIMP_NO_EXPORT ON CACHE INTERNAL "")
+    set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE INTERNAL "")
+    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE INTERNAL "")
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "")
+    set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "")
+    set(ASSIMP_INSTALL OFF CACHE INTERNAL "")
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
+
+    SET (ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+    SET (ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+    SET (ASSIMP_BUILD_BLEND_IMPORTER ON CACHE BOOL "" FORCE)
+    SET (ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+
+    add_subdirectory("${ASSIMP_DIR}")
+    set_target_properties (assimp IrrXML PROPERTIES
+            FOLDER Externals)
+    add_subdirectory("common/assimp_wrapper")
 endif()
 
 if(Neko_Test)
