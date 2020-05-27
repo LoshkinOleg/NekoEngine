@@ -1,6 +1,6 @@
-#include "../../../include/game/chunks/chunk.h"
+#include "../../include/chunks/chunk.h"
 
-namespace neko::game
+namespace neko
 {
 void Chunk::SetBlock(const uint8_t blockId, const Vec3i& pos)
 {

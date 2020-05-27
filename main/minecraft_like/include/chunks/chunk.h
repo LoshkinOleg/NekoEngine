@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
-#include "../../mathematics/vector.h"
+#include "../../../../core/include/mathematics/vector.h"
 
-namespace neko::game
+namespace neko
 {
 const static int chunkSize = 16;
 
