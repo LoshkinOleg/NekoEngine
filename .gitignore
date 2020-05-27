@@ -44,3 +44,6 @@ out/*
 build/*
 Build/*
 web_build/*
+
+#validator cache
+__pycache__/*

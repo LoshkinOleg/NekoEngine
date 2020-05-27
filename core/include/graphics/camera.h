@@ -6,7 +6,6 @@
 
 namespace neko
 {
-
 struct Camera
 {
     Vec3f position;
@@ -22,6 +21,7 @@ struct Camera
 		const Vec3f right = GetRight();
 		return Vec3f::Cross(reverseDirection, right);
 	}
+	
 	Mat4f GenerateViewMatrix() const
 	{
 		const Vec3f right = GetRight();
@@ -46,6 +46,7 @@ struct Camera
 		const Quaternion q = Quaternion::FromEuler(angles);
 		reverseDirection = Vec3f(Transform3d::RotationMatrixFrom(q)*Vec4f(0,0,1,0));
 	}
+	
 	void Rotate(const EulerAngles& angles)
 	{
 		const auto pitch = Quaternion::AngleAxis(angles.x, GetRight());
@@ -60,21 +61,88 @@ struct Camera
 struct Camera3D : Camera
 {
 	float aspect = 1.0f;
-	degree_t fovy = degree_t(45.0f);
+	degree_t fovY = degree_t(45.0f);
 	float nearPlane = 0.1f;
 	float farPlane = 100.0f;
-	Mat4f GenerateProjectionMatrix()
+	Mat4f GenerateProjectionMatrix() const
 	{
 		return Transform3d::Perspective(
-			fovy,
+			fovY,
 			aspect,
 			nearPlane,
 			farPlane);
 	};
 
-	void SetAspect(int width, int height)
+	void SetAspect(const int width, const int height)
 	{
 		aspect = static_cast<float>(width) / static_cast<float>(height);
 	}
+};
+
+struct MoveableCamera3D final : Camera3D, sdl::SdlEventSystemInterface, SystemInterface
+{
+	float moveSpeed = 3.0f;
+	float mouseSpeed = 0.1f;
+	
+	void Init() override
+	{
+		position = Vec3f::zero;
+		reverseDirection = Vec3f::forward;
+	}
+	
+	void Update(seconds dt) override
+	{
+		//Retrieve the input manager
+		const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
+
+		//Check if left click is pressed
+		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
+		}
+		
+		//Movement keys tests
+		Vec3f cameraMove = Vec3f();
+		if (inputManager.IsActionHeld(sdl::InputAction::RIGHT))
+			cameraMove.x += dt.count();
+		if (inputManager.IsActionHeld(sdl::InputAction::LEFT))
+			cameraMove.x -= dt.count();
+		if (inputManager.IsActionHeld(sdl::InputAction::JUMP))
+			cameraMove.y += dt.count();
+		if (inputManager.IsActionHeld(sdl::InputAction::CROUCH))
+			cameraMove.y -= dt.count();
+		if (inputManager.IsActionHeld(sdl::InputAction::UP))
+			cameraMove.z += dt.count();
+		if (inputManager.IsActionHeld(sdl::InputAction::DOWN))
+			cameraMove.z -= dt.count();
+		
+		//Boost key test
+		if (inputManager.IsActionHeld(sdl::InputAction::ZOOM))
+			cameraMove *= 3.0f;
+		
+		//Apply camera movement
+		position += (GetRight() * cameraMove.x + 
+			Vec3f::up * cameraMove.y - 
+			reverseDirection * cameraMove.z) * moveSpeed;
+	}
+
+	void OnEvent(const SDL_Event& event) override
+	{
+		//Retrieves the amount of mouse movement between each frame
+		if (event.type == SDL_MOUSEMOTION)
+			mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+	}
+
+	void Destroy() override
+	{
+		
+	}
+private:
+	Vec2f mouseMotion_;
 };
 }
