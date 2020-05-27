@@ -91,7 +91,6 @@ struct MoveableCamera3D final : Camera3D, sdl::SdlEventSystemInterface, SystemIn
 	{
 		//Retrieve the input manager
 		const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
-		std::cout << reverseDirection << std::endl;
 
 		//Check if left click is pressed
 		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))

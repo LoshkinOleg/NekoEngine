@@ -36,7 +36,6 @@ void DrawSystem::Update(seconds dt)
 {
 	chunkRenderer_.Update(dt);
 	RendererLocator::get().Render(&chunkRenderer_);
-	std::lock_guard<std::mutex> lock(updateMutex_);
 }
 
 void DrawSystem::Destroy()

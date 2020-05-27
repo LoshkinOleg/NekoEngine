@@ -4,14 +4,14 @@ namespace neko
 {
 CompGraphEngine::CompGraphEngine(Configuration* config) : SdlEngine(config)
 {
-    RegisterSystem(sampleBrowser_);
-    RegisterOnDrawUi(sampleBrowser_);
-    RegisterOnEvent(sampleBrowser_);
+	RegisterSystem(sampleBrowser_);
+	RegisterOnDrawUi(sampleBrowser_);
+	RegisterOnEvent(sampleBrowser_);
 }
 
 void CompGraphEngine::Destroy()
 {
-    sampleBrowser_.Destroy();
-    SdlEngine::Destroy();
+	sampleBrowser_.Destroy();
+	SdlEngine::Destroy();
 }
 }
