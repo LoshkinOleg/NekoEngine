@@ -1,5 +1,10 @@
 #include <sdl_engine/sdl_input.h>
 
+#include <imgui.h>
+
+#include "utilities/json_utility.h"
+#include "sdl_engine/sdl_engine.h"
+
 namespace neko::sdl
 {
 InputManager::InputManager(SdlEngine& engine)
@@ -72,8 +77,7 @@ void InputManager::Init()
 		}
 	}
 	controllerAxis_[static_cast<unsigned>(ControllerAxis::LEFT_BUMPER)] = -1.0f;
-	controllerAxis_[static_cast<unsigned>(ControllerAxis::RIGHT_BUMPER)] = -
-		1.0f;
+	controllerAxis_[static_cast<unsigned>(ControllerAxis::RIGHT_BUMPER)] = -1.0f;
 	BindFromJson();
 }
 
@@ -97,14 +101,9 @@ void InputManager::OnPreUserInput()
 	for (size_t i = 0; i < static_cast<int>(MouseButtonCode::LENGTH); i++)
 	{
 		if (buttonState_[i] == ButtonState::UP)
-		{
 			buttonState_[i] = ButtonState::NONE;
-		}
-		else if (
-			buttonState_[i] == ButtonState::DOWN)
-		{
+		else if (buttonState_[i] == ButtonState::DOWN)
 			buttonState_[i] = ButtonState::HELD;
-		}
 	}
 
 	for (size_t i = 0; i < static_cast<int>(ControllerInputs::LENGTH); i++)
@@ -441,20 +440,17 @@ bool InputManager::IsSwitchButtonHeld(SwitchInputs key) const
 
 bool InputManager::IsControllerDown(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		DOWN;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::DOWN;
 }
 
 bool InputManager::IsControllerUp(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		UP;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::UP;
 }
 
 bool InputManager::IsControllerHeld(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		HELD;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::HELD;
 }
 
 Vec2f InputManager::GetMousePosition() const
@@ -530,13 +526,16 @@ bool InputManager::IsActionDown(InputAction button) const
 	}
 	return IsMouseButtonDown(
 			static_cast<MouseButtonCode>(
-				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::
-					KEYBOARD_SIZE))) ||
+				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerDown(
 			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
 			);
 #else
+<<<<<<< HEAD
 		return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
+=======
+    return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
+>>>>>>> Set up MinecraftLikeEngine with entity
 #endif
 }
 
@@ -548,17 +547,15 @@ bool InputManager::IsActionUp(InputAction button) const
 	{
 		return IsKeyUp(static_cast<KeyCode>(bindingPcInput_[actionIndex])) |
 			IsControllerUp(
-				static_cast<ControllerInputs>(bindingControllerInput_[
-					actionIndex]));
+				static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]));
 	}
 
 	return IsMouseButtonUp(
 			static_cast<MouseButtonCode>(
-				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::
-					KEYBOARD_SIZE))) |
-		IsControllerUp(
-			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]
-			));
+				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) |
+		IsControllerUp(static_cast<ControllerInputs>(
+				bindingControllerInput_[actionIndex]
+		));
 #else
 		return IsSwitchButtonUp(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif
@@ -572,8 +569,8 @@ bool InputManager::IsActionHeld(InputAction button) const
 	{
 		return IsKeyHeld(static_cast<KeyCode>(bindingPcInput_[actionIndex])) ||
 			IsControllerHeld(
-				static_cast<ControllerInputs>(bindingControllerInput_[
-					actionIndex]));
+				static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
+			);
 	}
 
 	return IsMouseButtonHeld(
@@ -581,8 +578,12 @@ bool InputManager::IsActionHeld(InputAction button) const
 				static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerHeld(
 			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
+<<<<<<< HEAD
 			);
 
+=======
+		);
+>>>>>>> Set up MinecraftLikeEngine with entity
 #else
 		return IsSwitchButtonHeld(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif

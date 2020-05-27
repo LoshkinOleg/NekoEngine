@@ -396,7 +396,7 @@ public:
 	virtual Vec2f GetMouseScroll() const = 0;
 
 	virtual float GetJoystickAxis(ControllerAxis axis) const = 0;
-
+	
 	/**
 	 * \brief Check if a key input is pressed down
 	 */
