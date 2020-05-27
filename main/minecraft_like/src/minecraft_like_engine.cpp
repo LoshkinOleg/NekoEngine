@@ -39,6 +39,8 @@ void MinecraftLikeEngine::Init()
 			                        degree_t(RandomRange(0.0f, 90.0f)),
 			                        degree_t(RandomRange(0.0f, 90.0f))));
 	}
+	entityManager_.AddComponentType(0, EntityMask(ComponentType::CHUNK));
+	componentsManagerSystem_.chunkManager_.AddComponent(0);
 }
 
 void MinecraftLikeEngine::Destroy()

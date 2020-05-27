@@ -10,6 +10,7 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	: chunkRenderer_(engine, camera_, entityViewer_),
 	  entityViewer_(engine.entityManager_, engine.entityHierarchy_),
 	  transformViewer_(engine.entityManager_, engine.componentsManagerSystem_.transform3dManager_),
+	  chunksViewer_(engine.entityManager_, engine.componentsManagerSystem_.chunkManager_),
 	  engine_(engine)
 {
 	engine.RegisterSystem(camera_);
@@ -29,6 +30,7 @@ void DrawSystem::DrawImGui()
 	transformViewer_.SetSelectedEntity(entityViewer_.GetSelectedEntity());
 	ImGui::Begin("Inspector");
 	transformViewer_.DrawImGui();
+	chunksViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
 	ImGui::End();
 }
 

@@ -22,5 +22,30 @@ void ChunksManager::DestroyComponent(Entity entity)
 
 void ChunksManager::SetComponent(Entity entity, const Chunk& component)
 {
+	components_[entity] = component;
 }
+
+ChunksViewer::ChunksViewer(EntityManager& entityManager, ChunksManager& chunksManager) :
+	entityManager_(entityManager),
+	chunksManager_(chunksManager)
+{
+}
+
+void ChunksViewer::DrawImGui(Entity selectedEntity)
+{
+	if (selectedEntity == INVALID_ENTITY)
+		return;
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK)))
+	{
+		if (ImGui::CollapsingHeader("Chunk"))
+		{
+			Chunk chunk = chunksManager_.GetComponent(selectedEntity);
+			if (ImGui::Checkbox("Init", &chunk.init))
+			{
+				chunksManager_.SetComponent(selectedEntity, chunk);
+			}
+		}
+	}
+}
+
 }

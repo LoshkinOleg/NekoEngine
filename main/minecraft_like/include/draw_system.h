@@ -3,6 +3,7 @@
 #include <sdl_engine/sdl_camera.h>
 
 #include "chunk_renderer.h"
+#include "chunks_manager.h"
 
 namespace neko
 {
@@ -23,6 +24,7 @@ namespace neko
         //ImGui Viewer
         EntityViewer entityViewer_;
         Transform3dViewer transformViewer_;
+        ChunksViewer chunksViewer_;
         MinecraftLikeEngine& engine_;
         MoveableCamera3D camera_;
     };
