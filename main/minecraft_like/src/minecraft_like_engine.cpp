@@ -2,30 +2,32 @@
 
 namespace neko
 {
-	MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config) : SdlEngine(config), chunkManager(entityManager), chunksSystem_(*this){
+MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config) :
+	SdlEngine(config), chunkManager(entityManager), chunksSystem_(*this)
+{
+	RegisterSystem(drawSystem_);
+	RegisterSystem(chunksSystem_);
+	RegisterOnEvent(drawSystem_);
+}
 
-		RegisterSystem(drawSystem_);
-		RegisterSystem(chunksSystem_);
-		
-	}
+void MinecraftLikeEngine::Init()
+{
+	SdlEngine::Init();
+}
 
-    void MinecraftLikeEngine::Init() {
-		SdlEngine::Init();
-	}
+void MinecraftLikeEngine::Destroy()
+{
+	drawSystem_.Destroy();
+	SdlEngine::Destroy();
+}
 
-    void MinecraftLikeEngine::Destroy() {
-		drawSystem_.Destroy();
-		SdlEngine::Destroy();
-	    
-	}
+void MinecraftLikeEngine::ManageEvent()
+{
+	SdlEngine::ManageEvent();
+}
 
-    void MinecraftLikeEngine::ManageEvent() {
-		SdlEngine::ManageEvent();
-	    
-	}
-
-    void MinecraftLikeEngine::GenerateUiFrame() {
-		SdlEngine::GenerateUiFrame();
-	    
-	}
+void MinecraftLikeEngine::GenerateUiFrame()
+{
+	SdlEngine::GenerateUiFrame();
+}
 }

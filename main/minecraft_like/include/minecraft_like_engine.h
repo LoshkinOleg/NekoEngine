@@ -8,20 +8,20 @@
 
 namespace neko
 {
-	class MinecraftLikeEngine : public sdl::SdlEngine
-	{
-	public:
-		MinecraftLikeEngine(Configuration* config = nullptr);
+class MinecraftLikeEngine : public sdl::SdlEngine
+{
+public:
+	MinecraftLikeEngine(Configuration* config = nullptr);
 
-        void Init() override;
-        void Destroy() override;
-        void ManageEvent() override;
-        void GenerateUiFrame() override;
-		EntityManager entityManager;
-		ChunksManager chunkManager;
+	void Init() override;
+	void Destroy() override;
+	void ManageEvent() override;
+	void GenerateUiFrame() override;
+	EntityManager entityManager;
+	ChunksManager chunkManager;
 
-	private :
-		DrawSystem drawSystem_;
-		ChunksSystem chunksSystem_;
-	};
+private :
+	DrawSystem drawSystem_;
+	ChunksSystem chunksSystem_;
+};
 }

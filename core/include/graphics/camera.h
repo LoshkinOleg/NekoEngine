@@ -3,6 +3,7 @@
 #include <mathematics/vector.h>
 #include <mathematics/matrix.h>
 #include "mathematics/transform.h"
+#include "sdl_engine/sdl_engine.h"
 
 namespace neko
 {
