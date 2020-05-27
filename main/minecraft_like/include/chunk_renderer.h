@@ -3,17 +3,18 @@
 #include <gl/shape.h>
 
 #include <graphics/graphics.h>
-#include <sdl_engine/sdl_camera.h>
 #include <sdl_engine/sdl_engine.h>
+
 
 namespace neko
 {
+struct MoveableCamera3D;
 class MinecraftLikeEngine;
 
 class ChunkRenderer final : public RenderCommandInterface
 {
 public:
-	ChunkRenderer(MinecraftLikeEngine& engine, sdl::Camera3D& camera, EntityViewer& entityViewer);
+	ChunkRenderer(MinecraftLikeEngine& engine, MoveableCamera3D& camera, EntityViewer& entityViewer);
 
 	void Render() override;
 
@@ -25,11 +26,11 @@ public:
 
 private:
 	std::mutex updateMutex_;
-	sdl::Camera3D& camera_;
+	MoveableCamera3D& camera_;
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
 
-	seconds timeSinceInit_;
+	seconds timeSinceInit_ = seconds(0.0f);
 	
 	//Initialization data for test
 	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one / 2.0f};

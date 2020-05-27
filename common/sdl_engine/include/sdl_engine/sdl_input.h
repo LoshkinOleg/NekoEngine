@@ -1,13 +1,12 @@
 #pragma once
 
 #include <vector>
-#include <mathematics/vector.h>
-#include <SDL.h>
-#include <json.hpp>
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "utilities/service_locator.h"
+#include <imgui.h>
+#include <SDL.h>
+
+#include <mathematics/vector.h>
+#include <utilities/service_locator.h>
 
 #define PC_INPUT
 #define SWITCH_INPUT
@@ -17,9 +16,8 @@ namespace neko::sdl
 class SdlEngine;
 
 /**
-	 * \brief enum all the key on an US keyboard
-	 */
-
+* \brief enum all the key on an US keyboard
+*/
 enum class KeyCode : uint16_t
 {
 	UNKNOWN = SDL_SCANCODE_UNKNOWN,
@@ -363,14 +361,18 @@ enum class InputAction
 	SECONDARY_SHOOT = 7,
 	SECONDARY_CANCEL = 8,
 	ABILITIES = 9,
-	LENGTH = 10
+	JUMP = 10,
+	CROUCH = 11,
+	ZOOM = 12,
+	LENGTH = 13
 };
 
 class IInputManager
 {
 public:
-
 	IInputManager() = default;
+
+	virtual ~IInputManager() = default;
 
 	virtual void Init() = 0;
 
@@ -378,7 +380,7 @@ public:
 
 	virtual void OnPreUserInput() = 0;
 
-	virtual void ProccesInputs(SDL_Event event) = 0;
+	virtual void ProcessInputs(SDL_Event event) = 0;
 
 	/**
 	 * \brief Get position between 0 and width/height
@@ -491,9 +493,11 @@ public:
 	/**
 	* \brief translate ControllerInputs enum to string
 	*/
-	virtual std::string ControllerInputsEnumToString(ControllerInputs controller) = 0;
+	virtual std::string ControllerInputsEnumToString(
+		ControllerInputs controller) = 0;
 
-	virtual std::string ControllerAxisEnumToString(const ControllerAxis controller) = 0;
+	virtual std::string ControllerAxisEnumToString(
+		const ControllerAxis controller) = 0;
 };
 
 /**
@@ -512,7 +516,7 @@ public:
 
 	void OnPreUserInput() override;
 
-	void ProccesInputs(SDL_Event event) override;
+	void ProcessInputs(SDL_Event event) override;
 
 	Vec2f GetMousePosition() const override;
 
@@ -562,9 +566,11 @@ public:
 
 	std::string SwitchInputsEnumToString(SwitchInputs switchInputs) override;
 
-	std::string ControllerInputsEnumToString(ControllerInputs controller) override;
+	std::string ControllerInputsEnumToString(ControllerInputs controller)
+	override;
 
-	std::string ControllerAxisEnumToString(const ControllerAxis controller) override;
+	std::string ControllerAxisEnumToString(const ControllerAxis controller)
+	override;
 
 protected:
 	std::vector<int> bindingPcInput_ =
@@ -603,9 +609,9 @@ protected:
 class NullInputManager final : public IInputManager
 {
 public:
-	NullInputManager() = default;
-
-	~NullInputManager() = default;
+	~NullInputManager() override
+	{
+	}
 
 	void Init() override
 	{
@@ -615,115 +621,66 @@ public:
 	{
 	}
 
-	void OnPreUserInput()
+	void OnPreUserInput() override
 	{
-	};
+	}
 
-	void ProccesInputs(SDL_Event event) override
+	void ProcessInputs(SDL_Event event) override
 	{
 	}
 
 	Vec2f GetMousePosition() const override { return Vec2f(0.0f, 0.0f); }
 
-	Vec2f GetRelativeMousePosition() const override { return Vec2f(0.0f, 0.0f); }
+	Vec2f GetRelativeMousePosition() const override
+	{
+		return Vec2f(0.0f, 0.0f);
+	}
 
 	Vec2f GetMouseScroll() const override { return Vec2f(0.0f, 0.0f); }
 
 	float GetJoystickAxis(ControllerAxis axis) const override { return 0.0f; }
 
-	bool IsKeyDown(KeyCode key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsKeyDown(KeyCode key) const override { return false; }
 
-	bool IsKeyUp(KeyCode key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsKeyUp(KeyCode key) const override { return false; }
 
-	bool IsKeyHeld(KeyCode key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsKeyHeld(KeyCode key) const override { return false; }
 
 	bool IsMouseButtonDown(MouseButtonCode button) const override
 	{
-		button;
 		return false;
 	}
 
 	bool IsMouseButtonUp(MouseButtonCode button) const override
 	{
-		button;
 		return false;
 	}
 
 	bool IsMouseButtonHeld(MouseButtonCode button) const override
 	{
-		button;
 		return false;
 	}
 
-	bool IsSwitchButtonDown(SwitchInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsSwitchButtonDown(SwitchInputs key) const override { return false; }
 
-	bool IsSwitchButtonUp(SwitchInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsSwitchButtonUp(SwitchInputs key) const override { return false; }
 
-	bool IsSwitchButtonHeld(SwitchInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsSwitchButtonHeld(SwitchInputs key) const override { return false; }
 
-	bool IsControllerDown(ControllerInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsControllerDown(ControllerInputs key) const override { return false; }
 
-	bool IsControllerUp(ControllerInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsControllerUp(ControllerInputs key) const override { return false; }
 
-	bool IsControllerHeld(ControllerInputs key) const override
-	{
-		key;
-		return false;
-	}
+	bool IsControllerHeld(ControllerInputs key) const override { return false; }
 
-	bool IsActionDown(InputAction button) const override
-	{
-		button;
-		return false;
-	}
+	bool IsActionDown(InputAction button) const override { return false; }
 
-	bool IsActionUp(InputAction button) const override
-	{
-		button;
-		return false;
-	}
+	bool IsActionUp(InputAction button) const override { return false; }
 
-	bool IsActionHeld(InputAction button) const override
-	{
-		button;
-		return false;
-	}
+	bool IsActionHeld(InputAction button) const override { return false; }
 
 	void PrintJoystick(const int device) const override
 	{
-		device;
 	}
 
 	/**
@@ -731,22 +688,16 @@ public:
 	*/
 	std::string ActionEnumToString(InputAction action) override
 	{
-		action;
 		return "";
 	}
 
 	/**
 	* \brief translate KeyCode enum to string
 	*/
-	std::string PcInputsEnumToString(KeyCode keyCode) override
-	{
-		keyCode;
-		return "";
-	}
+	std::string PcInputsEnumToString(KeyCode keyCode) override { return ""; }
 
 	std::string PcInputsEnumToString(MouseButtonCode mouseButton) override
 	{
-		mouseButton;
 		return "";
 	}
 
@@ -755,25 +706,24 @@ public:
 	*/
 	std::string SwitchInputsEnumToString(SwitchInputs switchInputs) override
 	{
-		switchInputs;
 		return "";
 	}
 
 	/**
 	* \brief translate ControllerInputs enum to string
 	*/
-	std::string ControllerInputsEnumToString(ControllerInputs controller) override
+	std::string ControllerInputsEnumToString(ControllerInputs controller)
+	override
 	{
-		controller;
 		return "";
 	}
 
 	/**
 	* \brief translate ControllerInputs enum to string
 	*/
-	std::string ControllerAxisEnumToString(const ControllerAxis controller) override
+	std::string ControllerAxisEnumToString(const ControllerAxis controller)
+	override
 	{
-		controller;
 		return "";
 	}
 };

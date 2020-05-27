@@ -1,12 +1,14 @@
 #include "chunk_renderer.h"
 
+#include <graphics/camera.h>
+
 #include "minecraft_like_engine.h"
 
 namespace neko
 {
 ChunkRenderer::ChunkRenderer(
 	MinecraftLikeEngine& engine,
-	sdl::Camera3D& camera,
+	MoveableCamera3D& camera,
 	EntityViewer& entityViewer)
 	: camera_(camera),
 	  engine_(engine),

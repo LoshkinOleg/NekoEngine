@@ -24,6 +24,6 @@ namespace neko
         EntityViewer entityViewer_;
         Transform3dViewer transformViewer_;
         MinecraftLikeEngine& engine_;
-        sdl::Camera3D camera_;
+        MoveableCamera3D camera_;
     };
 }

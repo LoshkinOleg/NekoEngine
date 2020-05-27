@@ -34,6 +34,7 @@ void SampleBrowser::Init()
     RegisterRenderProgram("07 Hello Light", std::make_unique<HelloLightProgram>());
     RegisterRenderProgram("08 Hello Lightmaps", std::make_unique<HelloLightMapsProgram>());
     RegisterRenderProgram("09 Hello Light Casters", std::make_unique<HelloLightCastersProgram>());
+    RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
 	
     RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
 	programs_[currentProgramIndex_]->Init();

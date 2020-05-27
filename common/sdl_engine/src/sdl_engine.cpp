@@ -93,7 +93,7 @@ void SdlEngine::ManageEvent()
                 window_->OnResize(config.windowSize);
             }
         }
-        inputManager_.ProccesInputs(event);
+        inputManager_.ProcessInputs(event);
     }
     onEventAction_.Execute(event);
 }

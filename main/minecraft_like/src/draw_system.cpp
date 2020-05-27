@@ -12,6 +12,8 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	  transformViewer_(engine.entityManager_, engine.componentsManagerSystem_.transform3dManager_),
 	  engine_(engine)
 {
+	engine.RegisterSystem(camera_);
+	engine.RegisterOnEvent(camera_);
 }
 
 void DrawSystem::Init()
@@ -35,9 +37,6 @@ void DrawSystem::Update(seconds dt)
 	chunkRenderer_.Update(dt);
 	RendererLocator::get().Render(&chunkRenderer_);
 	std::lock_guard<std::mutex> lock(updateMutex_);
-	const auto& config = BasicEngine::GetInstance()->config;
-	camera_.SetAspect(config.windowSize.x, config.windowSize.y);
-	camera_.Update(dt);
 }
 
 void DrawSystem::Destroy()
@@ -47,6 +46,5 @@ void DrawSystem::Destroy()
 
 void DrawSystem::OnEvent(const SDL_Event& event)
 {
-	camera_.OnEvent(event);
 }
 }
