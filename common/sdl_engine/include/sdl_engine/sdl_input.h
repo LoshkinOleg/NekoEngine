@@ -4,14 +4,9 @@
 
 #include <imgui.h>
 #include <SDL.h>
-#include <sdl_engine/sdl_engine.h>
 
 #include <mathematics/vector.h>
 #include <utilities/service_locator.h>
-
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "utilities/service_locator.h"
 
 #define PC_INPUT
 #define SWITCH_INPUT

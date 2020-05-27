@@ -63,9 +63,9 @@ void SampleBrowser::Init()
 	
     RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
     RegisterRenderProgram("100 Block Placement", std::make_unique<BlockProgram>());
-
+	
     RegisterRenderProgram("98 Hello Line", std::make_unique<HelloLineProgram>());
-    RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+	RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
 	
 	programs_[currentProgramIndex_]->Init();
 }

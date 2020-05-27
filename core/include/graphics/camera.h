@@ -339,13 +339,6 @@ struct FpsCamera final : MoveableCamera3D
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}
 	}
-=======
-			fovY,
-			aspect,
-			nearPlane,
-			farPlane);
-	};
->>>>>>> Implement frustum culling sample
 
 	void Destroy() override
 	{

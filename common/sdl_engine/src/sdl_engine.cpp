@@ -55,7 +55,6 @@ void SdlEngine::Init()
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
     window_->Init();
     initAction_.Execute();
-    InputLocator::provide(&inputManager_);
     inputManager_.Init(); 
 }
 
@@ -75,9 +74,6 @@ void SdlEngine::ManageEvent()
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Manage Event");
 #endif
-    window_->MakeCurrentContext();
-    inputManager.OnPreUserInputs();
-	
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -95,9 +91,9 @@ void SdlEngine::ManageEvent()
                 window_->OnResize(config.windowSize);
             }
         }
-        onEventAction_.Execute(event);
         inputManager_.ProcessInputs(event);
     }
+    onEventAction_.Execute(event);
 }
 
 void SdlEngine::GenerateUiFrame()
