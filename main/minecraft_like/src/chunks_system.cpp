@@ -1,30 +1,34 @@
-
 #include "chunks_system.h"
-#include "minecraft_like_engine.h"
 
 #include <iostream>
 
-namespace neko {
-	ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
-        : chunksManager_(engine.chunkManager) {
-		Chunk chunk;
-		chunk.init = true;
-		chunksManager_.SetComponent(0, chunk);
-	}
+#include "minecraft_like_engine.h"
+#include "chunks_manager.h"
 
-    void ChunksSystem::Init() {
-	    
-	}
+namespace neko
+{
+ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
+	: chunksManager_(engine.componentsManagerSystem_.chunkManager_)
+{
+	Chunk chunk;
+	chunk.init = true;
+	chunksManager_.SetComponent(0, chunk);
+}
 
-    void ChunksSystem::Update(seconds dt) {
-       for (Index i = 0; i < 100; i++) {
-			std::cout << chunksManager_.GetComponent(i).init; 
-        }
-	   std::cout << std::endl; 
-	}
+void ChunksSystem::Init()
+{
+}
 
-    void ChunksSystem::Destroy() {
-	    
+void ChunksSystem::Update(seconds dt)
+{
+	for (Index i = 0; i < 100; i++)
+	{
+		std::cout << chunksManager_.GetComponent(i).init;
 	}
+	std::cout << std::endl;
+}
 
+void ChunksSystem::Destroy()
+{
+}
 }

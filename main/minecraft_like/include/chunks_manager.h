@@ -1,23 +1,23 @@
+#pragma once
+#include <engine/component.h>
 
-#include "engine/component.h"
-
-namespace neko {
-
-struct Chunk {
-    bool init = false; 
+namespace neko
+{
+struct Chunk
+{
+	bool init = false;
 };
 
-
-class ChunksManager : public neko::ComponentManager<Chunk, ComponentType::OTHER_TYPE>
+class ChunksManager final : public neko::ComponentManager<Chunk, ComponentType::CHUNK>
 {
 public:
-    ChunksManager(EntityManager& entityManager);
+	explicit ChunksManager(EntityManager& entityManager);
 
-    Index AddComponent(Entity entity) override;
+	Index AddComponent(Entity entity) override;
 
-    void DestroyComponent(Entity entity) override;
+	void DestroyComponent(Entity entity) override;
 
-    void SetComponent(Entity entity, const Chunk& component) override;
+	void SetComponent(Entity entity, const Chunk& component) override;
 
 private:
 };

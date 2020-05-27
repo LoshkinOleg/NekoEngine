@@ -5,25 +5,21 @@
 
 namespace neko
 {
-
 class InputProgram : public SampleProgram
 {
 public:
-    void Init() override;
+	void Init() override;
 
-    void Update(seconds dt) override;
+	void Update(seconds dt) override;
 
-    void Destroy() override;
+	void Destroy() override;
 
-    void Render() override;
+	void Render() override;
 
-    void DrawImGui() override;
+	void DrawImGui() override;
 
-    void OnEvent(const SDL_Event& event) override;
+	void OnEvent(const SDL_Event& event) override;
 
 private:
-
-
-    
 };
 };

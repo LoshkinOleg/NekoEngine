@@ -10,7 +10,7 @@ class InputEngine : public sdl::SdlEngine
 public:
 	explicit InputEngine(Configuration* config = nullptr);
 
-    void Destroy() override;
+	void Destroy() override;
 
 private:
 	SampleBrowser sampleBrowser_;

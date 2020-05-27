@@ -1,20 +1,23 @@
 #pragma once
-#include "chunks_manager.h"
-#include "engine/system.h"
+#include <engine/system.h>
 
 namespace neko
 {
+class ChunksManager;
 class MinecraftLikeEngine;
 
-class ChunksSystem : public SystemInterface
-    {
-    public:
-        explicit ChunksSystem(MinecraftLikeEngine& engine);
-        void Init() override;
+class ChunksSystem final : public SystemInterface
+{
+public:
+	explicit ChunksSystem(MinecraftLikeEngine& engine);
 
-        void Update(seconds dt) override;
-        void Destroy() override;
-    private:
-        ChunksManager& chunksManager_;
-    };
+	void Init() override;
+
+	void Update(seconds dt) override;
+
+	void Destroy() override;
+
+private:
+	ChunksManager& chunksManager_;
+};
 }
