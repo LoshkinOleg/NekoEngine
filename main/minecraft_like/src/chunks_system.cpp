@@ -21,11 +21,11 @@ void ChunksSystem::Init()
 
 void ChunksSystem::Update(seconds dt)
 {
-	for (Index i = 0; i < 100; i++)
-	{
-		std::cout << chunksManager_.GetComponent(i).init;
-	}
-	std::cout << std::endl;
+	//for (Index i = 0; i < 100; i++)
+	//{
+	//	std::cout << chunksManager_.GetComponent(i).init;
+	//}
+	//std::cout << std::endl;
 }
 
 void ChunksSystem::Destroy()
