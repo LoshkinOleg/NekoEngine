@@ -5,6 +5,7 @@
 #include <comp_graph/sample_browser.h>
 #include <imgui.h>
 
+<<<<<<< HEAD
 #include <01_hello_triangle/triangle_program.h>
 #include <02_hello_texture/texture_program.h>
 #include <03_hello_transform/transform_program.h>
@@ -16,6 +17,20 @@
 #include <08_hello_lightmaps/lightmaps_program.h>
 #include <09_hello_lightcasters/lightcasters_program.h>
 #include <10_hello_instancing/instancing_program.h>
+=======
+#include "01_hello_triangle/triangle_program.h"
+#include "02_hello_texture/texture_program.h"
+#include "03_hello_transform/transform_program.h"
+#include "04_hello_coords/coords_program.h"
+#include "05_hello_camera/camera_program.h"
+#include "06_hello_model/model_program.h"
+#include "07_hello_light/light_program.h"
+#include "08_hello_lightmaps/lightmaps_program.h"
+#include "09_hello_lightcasters/lightcasters_program.h"
+#include "10_hello_instancing/instancing_program.h"
+#include "11_hello_framebuffer/framebuffer_program.h"
+#include "12_hello_stencil/stencil_program.h"
+>>>>>>> Adding the stencil buffer example
 
 #include <99_hello_scene/scene_program.h>
 
@@ -36,6 +51,7 @@ void SampleBrowser::Init()
     RegisterRenderProgram("09 Hello Light Casters", std::make_unique<HelloLightCastersProgram>());
     RegisterRenderProgram("10 Hello Instancing", std::make_unique<HelloInstancingProgram>());
 	RegisterRenderProgram("11 Hello Framebuffer", std::make_unique<HelloFramebufferProgram>());
+    RegisterRenderProgram("12 Hello Stencil", std::make_unique<HelloStencilProgam>());
 	
     RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
     RegisterRenderProgram("100 Block Placement", std::make_unique<BlockProgram>());
