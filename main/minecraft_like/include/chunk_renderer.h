@@ -5,36 +5,39 @@
 #include <graphics/graphics.h>
 #include <sdl_engine/sdl_engine.h>
 
+#include "../../inputs/include/input/sample_program.h"
+#include "graphics/camera.h"
+#include "graphics/texture.h"
+
 
 namespace neko
 {
 struct MoveableCamera3D;
 class MinecraftLikeEngine;
 
-class ChunkRenderer final : public RenderCommandInterface
+class ChunkRenderer final : public RenderCommandInterface, public SampleProgram
 {
 public:
 	ChunkRenderer(MinecraftLikeEngine& engine, MoveableCamera3D& camera, EntityViewer& entityViewer);
 
+	void Init() override;
+
+	void Update(seconds dt) override;
+
+	void Destroy() override;
+
 	void Render() override;
 
-	void Init();
+	void DrawImGui() override;
 
-	void Update(seconds dt);
-
-	void Destroy();
+	void OnEvent(const SDL_Event& event) override;
 
 private:
-	std::mutex updateMutex_;
-	MoveableCamera3D& camera_;
-	MinecraftLikeEngine& engine_;
-	EntityViewer& entityViewer_;
+	MoveableCamera3D camera_;
 
-	seconds timeSinceInit_ = seconds(0.0f);
-	
-	//Initialization data for test
-	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one / 2.0f};
+	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
 	gl::Shader shader_;
-	const EntityMask kCubeComponentType_ = EntityMask(ComponentType::OTHER_TYPE);
+
+	TextureId texture_;
 };
 }

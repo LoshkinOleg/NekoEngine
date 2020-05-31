@@ -2,6 +2,8 @@
 
 #include <graphics/camera.h>
 
+
+#include "gl/texture.h"
 #include "minecraft_like_engine.h"
 
 namespace neko
@@ -10,49 +12,61 @@ ChunkRenderer::ChunkRenderer(
 	MinecraftLikeEngine& engine,
 	MoveableCamera3D& camera,
 	EntityViewer& entityViewer)
-	: camera_(camera),
-	  engine_(engine),
-	  entityViewer_(entityViewer)
+	: camera_(camera)
 {
 }
 
 void ChunkRenderer::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
-	shader_.LoadFromFile(config.dataRootPath + "shaders/99_hello_scene/cube.vert",
-	                     config.dataRootPath + "shaders/99_hello_scene/cube.frag");
+	shader_.LoadFromFile(
+		config.dataRootPath + "shaders/base.vert",
+		config.dataRootPath + "shaders/base.frag");
+	texture_ = gl::stbCreateTexture(config.dataRootPath + "sprites/wall.jpg");
 	cube_.Init();
+
+	camera_.Init();
+	camera_.position = Vec3f::forward * 3;
+
+	glEnable(GL_DEPTH_TEST);
 }
 
 void ChunkRenderer::Update(seconds dt)
 {
-	timeSinceInit_ += dt;
+	std::lock_guard<std::mutex> lock(updateMutex_);
+
+	camera_.Update(dt);
 }
 
 void ChunkRenderer::Render()
 {
+	if (shader_.GetProgram() == 0) return;
+	if (texture_ == INVALID_TEXTURE_ID) return;
+
 	std::lock_guard<std::mutex> lock(updateMutex_);
+
 	shader_.Bind();
+	glBindTexture(GL_TEXTURE_2D, texture_); //bind texture id to texture slot
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	const auto selectedEntity = entityViewer_.GetSelectedEntity();
-	for (Entity entity = 0; entity < engine_.entityManager_.GetEntitiesSize(); entity++)
-	{
-		shader_.SetVec3("color",
-		                selectedEntity == entity ? Color3(0, 1, 0) : Color3(1, 0.3f, 0.2f));
-		if (engine_.entityManager_.EntityExists(entity))
-		{
-			const Mat4f model = engine_.componentsManagerSystem_.transform3dManager_.
-			                            GetComponent(entity);
-			shader_.SetMat4("model", model);
-			cube_.Draw();
-		}
-	}
+	shader_.SetMat4("model", Mat4f::Identity);
+
+	cube_.Draw();
 }
 
 void ChunkRenderer::Destroy()
 {
 	cube_.Destroy();
 	shader_.Destroy();
+	gl::DestroyTexture(texture_);
+}
+
+void ChunkRenderer::DrawImGui()
+{
+}
+
+void ChunkRenderer::OnEvent(const SDL_Event& event)
+{
+	camera_.OnEvent(event);
 }
 }
