@@ -32,8 +32,6 @@ public:
 
 	void OnEvent(const SDL_Event& event) override;
 
-	void AddCubes();
-
 private:
 
 	MoveableCamera3D& camera_;
