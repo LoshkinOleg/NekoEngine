@@ -84,7 +84,7 @@ struct MoveableCamera3D final : Camera3D, sdl::SdlEventSystemInterface, SystemIn
 	void Init() override
 	{
 		position = kCameraOriginPos_;
-		SetDirectionFromEuler(kCameraOriginAngles_);
+		reverseDirection = Vec3f::forward;
 	}
 	
 	void Update(seconds dt) override
