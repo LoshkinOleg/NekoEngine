@@ -12,7 +12,9 @@ ChunkRenderer::ChunkRenderer(
 	MinecraftLikeEngine& engine,
 	MoveableCamera3D& camera,
 	EntityViewer& entityViewer)
-	: camera_(camera)
+	: camera_(camera),
+	engine_(engine),
+	entityViewer_(entityViewer)
 {
 }
 
@@ -20,12 +22,12 @@ void ChunkRenderer::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
 	shader_.LoadFromFile(
-		config.dataRootPath + "shaders/base.vert",
-		config.dataRootPath + "shaders/base.frag");
+		config.dataRootPath + "shaders/04_hello_coords/coords.vert",
+		config.dataRootPath + "shaders/04_hello_coords/coords.frag");
 	texture_ = gl::stbCreateTexture(config.dataRootPath + "sprites/wall.jpg");
 	cube_.Init();
+	
 
-	camera_.Init();
 	camera_.position = Vec3f::forward * 3;
 
 	glEnable(GL_DEPTH_TEST);
@@ -34,8 +36,6 @@ void ChunkRenderer::Init()
 void ChunkRenderer::Update(seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
-
-	camera_.Update(dt);
 }
 
 void ChunkRenderer::Render()
@@ -49,14 +49,22 @@ void ChunkRenderer::Render()
 	glBindTexture(GL_TEXTURE_2D, texture_); //bind texture id to texture slot
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	shader_.SetMat4("model", Mat4f::Identity);
 
-	cube_.Draw();
+	for (const auto cubePosition : cubePositions)
+	{
+		Mat4f model = Mat4f::Identity; //model transform matrix
+		model = Transform3d::Translate(model, cubePosition);
+
+		shader_.SetMat4("model", model);
+		cube_.Draw();
+	}
+
 }
 
 void ChunkRenderer::Destroy()
 {
 	cube_.Destroy();
+
 	shader_.Destroy();
 	gl::DestroyTexture(texture_);
 }
@@ -67,6 +75,6 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::OnEvent(const SDL_Event& event)
 {
-	camera_.OnEvent(event);
 }
+
 }

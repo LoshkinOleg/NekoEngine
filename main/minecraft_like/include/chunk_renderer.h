@@ -32,12 +32,33 @@ public:
 
 	void OnEvent(const SDL_Event& event) override;
 
+	void AddCubes();
+
 private:
-	MoveableCamera3D camera_;
+
+	MoveableCamera3D& camera_;
 
 	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
 	gl::Shader shader_;
 
 	TextureId texture_;
+
+	std::mutex updateMutex_;
+	MinecraftLikeEngine& engine_;
+	EntityViewer& entityViewer_;
+	
+
+	Vec3f cubePositions[9] =
+	{
+		Vec3f(0.0f, 0.0f, 0.0f),
+		Vec3f(1.0f, 1.0f, 0.0f),
+		Vec3f(2.0f, 2.0f, 0.0f),
+		Vec3f(3.0f, 3.0f, 0.0f),
+		Vec3f(4.0f, 4.0f, 0.0f),
+		Vec3f(0.0f, -1.0f, 1.0f),
+		Vec3f(0.0f, -2.0f, 2.0f),
+		Vec3f(0.0f, -3.0f, 3.0f),
+		Vec3f(0.0f, -4.0f, 4.0f),
+	};
 };
 }
