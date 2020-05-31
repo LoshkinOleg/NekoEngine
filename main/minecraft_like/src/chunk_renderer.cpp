@@ -29,7 +29,6 @@ void ChunkRenderer::Init()
 	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
 	cube_.Init();
 	
-
 	camera_.position = Vec3f::forward * 3;
 
 	glEnable(GL_DEPTH_TEST);
@@ -47,6 +46,7 @@ void ChunkRenderer::Render()
 	std::lock_guard<std::mutex> lock(updateMutex_);
 
 	shader_.Bind();
+	glBindTexture(GL_TEXTURE_2D, texture_); //bind texture id to texture slot
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
 
@@ -70,7 +70,6 @@ void ChunkRenderer::Render()
 			cube_.Draw();
 		}
 	}
-
 }
 
 void ChunkRenderer::Destroy()
