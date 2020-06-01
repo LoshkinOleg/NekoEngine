@@ -92,9 +92,10 @@ void SdlEngine::ManageEvent()
                 window_->OnResize(config.windowSize);
             }
         }
+		
         inputManager_.ProcessInputs(event);
+        onEventAction_.Execute(event);
     }
-    onEventAction_.Execute(event);
 }
 
 void SdlEngine::GenerateUiFrame()
