@@ -20,17 +20,17 @@ struct Camera
 		reverseDirection = direction.Normalized();
 	}
 	
-	Vec3f GetRight() const
+	[[nodiscard]] Vec3f GetRight() const
 	{
 		if (reverseDirection.x == 0.0f && reverseDirection.z == 0.0f)
 			return Vec3f::Cross(Vec3f::forward, reverseDirection).Normalized();
 		return Vec3f::Cross(Vec3f::up, reverseDirection).Normalized();
 	}
 
-	Vec3f GetUp() const
+	[[nodiscard]] Vec3f GetUp() const
 	{
 		const Vec3f right = GetRight();
-		return Vec3f::Cross(reverseDirection, right);
+		return Vec3f::Cross(reverseDirection, right).Normalized();
 	}
 
 	Mat4f GetRotationMat() const
@@ -96,8 +96,16 @@ struct Camera2D : Camera
 
 struct Camera3D : Camera
 {
+<<<<<<< HEAD
 	degree_t fovY = degree_t(45.0f);
 	Mat4f GenerateProjectionMatrix() const override
+=======
+	float aspect = 1.0f;
+	degree_t fovy = degree_t(45.0f);
+	float nearPlane = 0.1f;
+	float farPlane = 100.0f;
+	[[nodiscard]] Mat4f GenerateProjectionMatrix() const
+>>>>>>> Adding hello outline program
 	{
 		return Transform3d::Perspective(
 				fovY,
