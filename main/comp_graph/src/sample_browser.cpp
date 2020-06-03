@@ -20,6 +20,7 @@
 #include <12_hello_stencil/stencil_program.h>
 #include <13_hello_depth/depth_program.h>
 #include "14_hello_outline/outline_program.h"
+#include "15_hello_cubemaps/cubemaps_program.h"
 
 #include <99_hello_scene/scene_program.h>
 
@@ -43,6 +44,7 @@ void SampleBrowser::Init()
     RegisterRenderProgram("12 Hello Stencil", std::make_unique<HelloStencilProgam>());
     RegisterRenderProgram("13 Hello Depth", std::make_unique<HelloDepthProgram>());
     RegisterRenderProgram("14 Hello Outline", std::make_unique<HelloOutlineProgram>());
+    RegisterRenderProgram("15 Hello Cubemaps", std::make_unique<HelloCubemapsProgram>());
 	
     RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
     RegisterRenderProgram("100 Block Placement", std::make_unique<BlockProgram>());
