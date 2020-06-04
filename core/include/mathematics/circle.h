@@ -28,54 +28,54 @@
 
 namespace neko
 {
-    template<class T = Vec2f>
-    struct Circle
+template<class T = Vec2f>
+struct Circle
+{
+    explicit Circle(T Center, float Radius) : center(Center), radius(Radius)
     {
-        explicit Circle(T Center, float Radius) : center(Center), radius(Radius)
-        {
 
-        }
+    }
 
-    	float GetRadius() const
-        {
-            return radius;
-        }
+	float GetRadius() const
+    {
+        return radius;
+    }
 
-    	bool CirclesIntersect(Circle<T> circle) const
-        {
-            const T distanceVector = circle.center - center;
-        	
-            return distanceVector.GetMagnitude() <= circle.radius + radius;
-        }
-
-        bool SquareCircleIntersect(neko::Rect2f rect) const
-        {
-			const T distanceVector = rect.center - center;
-
-			if (distanceVector.GetMagnitude() <= rect.halfSize.x + radius)
-			{
-                return true;
-			}
-
-			if (distanceVector.GetMagnitude() <= rect.halfSize.y + radius)
-			{
-                return true;
-			}
-        	
-            return false;
-        }
-
-    	static bool IsPlanCircleContact(const Circle<Vec3f> sphere, const Vec3f normal, const Vec3f pos)
-        {
-            const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.GetMagnitude();
-        	
-            return p < sphere.radius && p > -sphere.radius;
-        }
+	bool CirclesIntersect(Circle<T> circle) const
+    {
+        const T distanceVector = circle.center - center;
     	
-    	T center;
-        const float radius = 0;
-    };
+        return distanceVector.GetMagnitude() <= circle.radius + radius;
+    }
 
-    using Circle2D = Circle<Vec2f>;
-    using Sphere3D = Circle<Vec3f>;
+    bool SquareCircleIntersect(neko::Rect2f rect) const
+    {
+		const T distanceVector = rect.center - center;
+
+		if (distanceVector.GetMagnitude() <= rect.halfSize.x + radius)
+		{
+            return true;
+		}
+
+		if (distanceVector.GetMagnitude() <= rect.halfSize.y + radius)
+		{
+            return true;
+		}
+    	
+        return false;
+    }
+
+	static bool IsPlanCircleContact(const Circle<Vec3f> sphere, const Vec3f normal, const Vec3f pos)
+    {
+        const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.GetMagnitude();
+    	
+        return p < sphere.radius && p > -sphere.radius;
+    }
+	
+	T center;
+    const float radius = 0;
+};
+
+using Circle2D = Circle<Vec2f>;
+using Sphere3D = Circle<Vec3f>;
 }

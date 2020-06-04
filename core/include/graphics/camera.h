@@ -96,16 +96,8 @@ struct Camera2D : Camera
 
 struct Camera3D : Camera
 {
-<<<<<<< HEAD
 	degree_t fovY = degree_t(45.0f);
 	Mat4f GenerateProjectionMatrix() const override
-=======
-	float aspect = 1.0f;
-	degree_t fovy = degree_t(45.0f);
-	float nearPlane = 0.1f;
-	float farPlane = 100.0f;
-	[[nodiscard]] Mat4f GenerateProjectionMatrix() const
->>>>>>> Adding hello outline program
 	{
 		return Transform3d::Perspective(
 				fovY,
@@ -322,9 +314,21 @@ struct FpsCamera final : MoveableCamera3D
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}
 	}
+=======
+			fovY,
+			aspect,
+			nearPlane,
+			farPlane);
+	};
+>>>>>>> Implement frustum culling sample
 
 	void Destroy() override
 	{
+	}
+
+	radian_t GetFovX() const
+	{
+		return 2.0f*Atan(Tan(fovY*0.5f) * aspect);
 	}
 
 	

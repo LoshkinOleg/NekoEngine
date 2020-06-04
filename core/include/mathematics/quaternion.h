@@ -80,11 +80,11 @@ struct Quaternion
 
 		Quaternion result;
 		axis = axis.Normalized();
-		axis *= Sin(rad);
+		axis *= Sin(rad/2.0f);
 		result.x = axis.x;
 		result.y = axis.y;
 		result.z = axis.z;
-		result.w = Cos(rad);
+		result.w = Cos(rad/2.0f);
 
 		return Normalized(result);
 	}
