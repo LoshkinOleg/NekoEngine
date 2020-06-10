@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include "../../../../core/include/mathematics/vector.h"
+
+#include "mathematics/vector.h"
 
 namespace neko
 {
@@ -20,6 +21,8 @@ public:
 	
 	void SetBlock(const uint8_t blockId, const Vec3i& pos);
 	uint8_t GetBlockId(const Vec3i& pos);
+
+	Vec3f GetChunkPos() const;
 private:
 	Vec3f chunkPos;
 

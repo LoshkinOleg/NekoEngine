@@ -39,24 +39,13 @@ private:
 	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
 	gl::Shader shader_;
 
-	TextureId texture_;
+	TextureId texture_[3];
 
 	std::mutex updateMutex_;
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
 	
 
-	Vec3f cubePositions[9] =
-	{
-		Vec3f(0.0f, 0.0f, 0.0f),
-		Vec3f(1.0f, 1.0f, 0.0f),
-		Vec3f(2.0f, 2.0f, 0.0f),
-		Vec3f(3.0f, 3.0f, 0.0f),
-		Vec3f(4.0f, 4.0f, 0.0f),
-		Vec3f(0.0f, -1.0f, 1.0f),
-		Vec3f(0.0f, -2.0f, 2.0f),
-		Vec3f(0.0f, -3.0f, 3.0f),
-		Vec3f(0.0f, -4.0f, 4.0f),
-	};
+	std::vector<Vec3f> cubePositions;
 };
 }

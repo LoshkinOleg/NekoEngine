@@ -11,7 +11,6 @@ ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
 	: chunksManager_(engine.componentsManagerSystem_.chunkManager_)
 {
 	Chunk chunk;
-	chunk.init = true;
 	chunksManager_.SetComponent(0, chunk);
 }
 

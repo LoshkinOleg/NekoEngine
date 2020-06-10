@@ -21,7 +21,7 @@ public:
 
 	Transform3dManager transform3dManager_;
 	ChunksManager chunkManager_;
-	ChunksSystem chunksSystem_;
 protected:
+	ChunksSystem chunksSystem_;
 };
 }
