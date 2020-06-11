@@ -104,7 +104,7 @@ struct Camera2D : Camera
 		return Mat4f(std::array<Vec4f, 4>{
 			Vec4f(2.0f / (right - left), 0, 0, 0),
 			Vec4f(0, 2.0f / (top - bottom), 0, 0),
-			Vec4f(0, 0, 2.0f / (farPlane - nearPlane), 0),
+			Vec4f(0, 0, -2.0f / (farPlane - nearPlane), 0),
 			Vec4f(-(right + left) / (right - left), 
 					-(top + bottom) / (top - bottom), 
 					-(farPlane + nearPlane) / (farPlane - nearPlane), 1.0f)
@@ -115,7 +115,7 @@ struct Camera2D : Camera
 		left = -size.x;
 		right = size.x;
 		top = size.y;
-		bottom = size.y;
+		bottom = -size.y;
 	}
 };
 
