@@ -47,5 +47,6 @@ private:
 	
 
 	std::vector<Vec3f> cubePositions;
+	const size_t kInitEntityNmb_ = 10;
 };
 }

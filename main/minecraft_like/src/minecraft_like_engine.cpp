@@ -23,7 +23,7 @@ void MinecraftLikeEngine::Init()
 	{
 		const auto entity = entityManager_.CreateEntity();
 		componentsManagerSystem_.transform3dManager_.AddComponent(entity);
-		componentsManagerSystem_.
+		/*componentsManagerSystem_.
 			transform3dManager_.
 			SetPosition(entity,
 			            Vec3f(RandomRange(-10.0f, 10.0f),
@@ -37,7 +37,7 @@ void MinecraftLikeEngine::Init()
 			SetRotation(entity,
 			            EulerAngles(degree_t(RandomRange(0.0f, 90.0f)),
 			                        degree_t(RandomRange(0.0f, 90.0f)),
-			                        degree_t(RandomRange(0.0f, 90.0f))));
+			                        degree_t(RandomRange(0.0f, 90.0f))));*/
 	}
 	entityManager_.AddComponentType(0, EntityMask(ComponentType::CHUNK));
 	componentsManagerSystem_.chunkManager_.AddComponent(0);

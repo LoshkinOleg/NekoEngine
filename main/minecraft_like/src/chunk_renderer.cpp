@@ -49,25 +49,28 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-
-	Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(0); //TODO(@Luca) Do for all entity
-	
-	for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
+	for (size_t i = 0; i < kInitEntityNmb_; i++)
 	{
-		int z = std::floor(i / (chunkSize * chunkSize));
-		int y = std::floor((i - z * chunkSize * chunkSize) / chunkSize);
-		int x = i % chunkSize;
-		Mat4f model = Mat4f::Identity; //model transform matrix
-		model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
-		shader_.SetMat4("model", model);
-		int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-		if (texture_[blockID-1] == INVALID_TEXTURE_ID) return;
-		glBindTexture(GL_TEXTURE_2D, texture_[blockID-1]); //bind texture id to texture slot
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		if (blockID != 0)
+		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
+		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
+
+		for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
 		{
-			cube_.Draw();
+			int z = std::floor(i / (chunkSize * chunkSize));
+			int y = std::floor((i - z * chunkSize * chunkSize) / chunkSize);
+			int x = i % chunkSize;
+			Mat4f model = Mat4f::Identity; //model transform matrix
+			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
+			shader_.SetMat4("model", model);
+			int blockID = chunk.GetBlockId(Vec3i(x, y, z));
+			if (texture_[blockID - 1] == INVALID_TEXTURE_ID) return;
+			glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			if (blockID != 0)
+			{
+				cube_.Draw();
+			}
 		}
 	}
 
