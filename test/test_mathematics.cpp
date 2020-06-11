@@ -69,7 +69,7 @@ TEST(Engine, Quaternion_Magnitude)
 
 TEST(Engine, Quaternion_AngleAxis)
 {
-    neko::Quaternion q = neko::Quaternion::Identity();
+    neko::Quaternion q = neko::Quaternion::Identity;
     neko::radian_t rad(30);
     neko::Vec3f axis(1, 1, 1);
     neko::Quaternion expectedAngleAxisQuaternion = neko::Quaternion(0, 0, 0, 1);    //TODO: Calculate the expected value
@@ -79,8 +79,8 @@ TEST(Engine, Quaternion_AngleAxis)
 
 TEST(Engine, Quaternion_Angle)
 {
-    neko::Quaternion q1 = neko::Quaternion::Identity();
-    neko::Quaternion q2 = neko::Quaternion::Identity();
+    neko::Quaternion q1 = neko::Quaternion::Identity;
+    neko::Quaternion q2 = neko::Quaternion::Identity;
     neko::degree_t expectedAngle(0);
     neko::degree_t angle(neko::Quaternion::Angle(q1, q2));
     EXPECT_EQ(expectedAngle, angle);

@@ -15,7 +15,7 @@ void MoveableCameraProgram::Init()
 	cube_.Init();
 
 	camera_.Init();
-	camera_.position = Vec3f::forward * 3;
+	camera_.position = Vec3f::back * 3;
 
 	glEnable(GL_DEPTH_TEST);
 }

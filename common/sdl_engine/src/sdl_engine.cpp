@@ -55,7 +55,6 @@ void SdlEngine::Init()
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
     window_->Init();
     initAction_.Execute();
-    InputLocator::provide(&inputManager_);
     inputManager_.Init(); 
 }
 

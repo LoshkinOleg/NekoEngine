@@ -151,38 +151,31 @@ struct Vec2
         return *this;
     }
 
-    Vec2<T> operator/(T rhs) const
+    Vec2<T> operator/(const T& rhs) const
     {
         return (*this) * (1.0f / rhs);
     }
 
-    Vec2<T>& operator/=(T rhs)
+    Vec2<T>& operator/=(const T& rhs)
     {
         this->x /= rhs;
         this->y /= rhs;
         return *this;
     }
 
-    bool operator==(const Vec2<T>& right)
+    bool operator==(const Vec2<T>& right) const
     {
         return x == right.x && y == right.y;
     }
 
-    bool operator!=(const Vec2<T>& right)
+    bool operator!=(const Vec2<T>& right) const
     {
         return !(*this == right);
     }
 
-    const T& operator[](size_t p_axis) const
+    const T& operator[](const size_t& pAxis) const
     {
-
-        return coord[p_axis];
-    }
-
-    T& operator[](size_t p_axis)
-    {
-
-        return coord[p_axis];
+        return coord[pAxis];
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& dt)
@@ -461,7 +454,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Vec3<T>& dt)
     {
-        os << "Vec3(" << dt.x << "," << dt.y << "," << dt.z << ")";
+        os << "Vec3(" << dt.x << ", " << dt.y << ", " << dt.z << ")";
         return os;
     }
 

@@ -364,7 +364,8 @@ enum class InputAction
 	JUMP = 10,
 	CROUCH = 11,
 	ZOOM = 12,
-	LENGTH = 13
+	MENU = 13,
+	LENGTH = 14
 };
 
 class IInputManager

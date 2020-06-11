@@ -20,6 +20,7 @@ struct Quaternion
 		};
 		float coord[4];
 	};
+	const static Quaternion Identity;
 
 	Quaternion()
 	{
@@ -75,9 +76,9 @@ struct Quaternion
 	static Quaternion AngleAxis(radian_t rad, neko::Vec3f axis)
 	{
 		if (axis.SquareMagnitude() == 0.0f)
-			return Quaternion::Identity();
+			return Identity;
 
-		Quaternion result = Quaternion::Identity();
+		Quaternion result;
 		axis = axis.Normalized();
 		axis *= Sin(rad);
 		result.x = axis.x;
@@ -132,9 +133,46 @@ struct Quaternion
 		);
 	}
 
-	static Quaternion Identity()
+	EulerAngles ToEuler() const
 	{
-		return Quaternion(0, 0, 0, 1);
+		/*
+		reference
+		http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+		http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
+		*/
+	
+		EulerAngles eulerAngles;
+	
+		// Threshold for the singularities found at the north/south poles.
+		const float SINGULARITY_THRESHOLD = 0.4999995f;
+	
+		const auto sqw = w * w;
+		const auto sqx = x * x;
+		const auto sqy = y * y;
+		const auto sqz = z * z;
+		const auto unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+		const auto singularityTest = x * z + w * y;
+	
+		if (singularityTest > SINGULARITY_THRESHOLD * unit)
+		{
+			eulerAngles.z = 2.0f * Atan2(x, w);
+			eulerAngles.y = radian_t(PI / 2.0f);
+			eulerAngles.x = degree_t(0);
+		}
+		else if (singularityTest < -SINGULARITY_THRESHOLD * unit)
+		{
+			eulerAngles.z = -2.0f * Atan2(x, w);
+			eulerAngles.y = radian_t(-PI / 2.0f);
+			eulerAngles.x = degree_t(0);
+		}
+		else
+		{
+			eulerAngles.z = Atan2(2 * (w * z - x * y), sqw + sqx - sqy - sqz);
+			eulerAngles.y = Asin(2 * singularityTest / unit);
+			eulerAngles.x = Atan2(2 * (w * x - y * z), sqw - sqx - sqy + sqz);
+		}
+	
+		return eulerAngles;
 	}
 	
 	//Operators
@@ -238,4 +276,6 @@ struct Quaternion
         return os;
     }
 };
+
+const inline Quaternion Quaternion::Identity = Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 }

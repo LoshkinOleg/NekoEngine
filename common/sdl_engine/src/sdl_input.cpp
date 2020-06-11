@@ -7,6 +7,7 @@ InputManager::InputManager(SdlEngine& engine)
 	  mouse_(0),
 	  engine_(engine)
 {
+	InputLocator::provide(this);
 }
 
 void InputManager::BindFromJson()
@@ -37,6 +38,8 @@ void InputManager::BindFromJson()
 		static_cast<unsigned>(KeyCode::KEY_LEFT_SHIFT);
 	bindingPcInput_[static_cast<unsigned>(InputAction::ZOOM)] =
 		static_cast<unsigned>(KeyCode::KEY_LEFT_CTRL);
+	bindingPcInput_[static_cast<unsigned>(InputAction::MENU)] =
+		static_cast<unsigned>(KeyCode::ESCAPE);
 	/*json tmpJson = PokFileSystem::ReadJsonFile("input_json", FileType::BINDING, FolderType::ROM);
 	for (int i = 0; i < static_cast<int>(InputAction::LENGTH); i++) {
 		if (tmpJson[i] != nullptr) {
@@ -674,6 +677,7 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 		case InputAction::JUMP: return "Jump";
 		case InputAction::CROUCH: return "Crouch";
 		case InputAction::ZOOM: return "Zoom";
+		case InputAction::MENU: return "Menu";
 		default: return "";
 	}
 }
