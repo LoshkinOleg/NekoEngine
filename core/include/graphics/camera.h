@@ -45,7 +45,11 @@ struct Camera
 		});
 	}
 	
+<<<<<<< HEAD
 	Mat4f GenerateViewMatrix() const
+=======
+	[[nodiscard]] Mat4f GenerateViewMatrix() const
+>>>>>>> Block placement (in a vacuum)
 	{
 		const Mat4f rotation = GetRotationMat();
 		const Mat4f translation =
@@ -122,13 +126,21 @@ struct Camera2D : Camera
 struct Camera3D : Camera
 {
 	degree_t fovY = degree_t(45.0f);
+<<<<<<< HEAD
 	Mat4f GenerateProjectionMatrix() const override
+=======
+	
+	float nearPlane = 0.1f;
+	float farPlane = 100.0f;
+	[[nodiscard]] Mat4f GenerateProjectionMatrix() const override
+>>>>>>> Block placement (in a vacuum)
 	{
 		return Transform3d::Perspective(
 				fovY,
 				aspect_,
 				nearPlane,
 				farPlane);
+<<<<<<< HEAD
 	}
 };
 
@@ -152,10 +164,103 @@ protected:
 struct MoveableCamera2D final : Camera2D, MovableCamera
 {
 	void Init() override
+=======
+	}
+	
+	radian_t GetFovX() const
+>>>>>>> Block placement (in a vacuum)
+	{
+	}
+<<<<<<< HEAD
+	
+	void Update(const seconds dt) override
+	{
+		//Check if left click is pressed
+		if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
+		}
+		
+		//Movement keys tests
+		Vec3f cameraMove = Vec3f();
+		if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
+			cameraMove.x += dt.count();
+		if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
+			cameraMove.x -= dt.count();
+		if (inputManager_.IsActionHeld(sdl::InputAction::JUMP))
+			cameraMove.y += dt.count();
+		if (inputManager_.IsActionHeld(sdl::InputAction::CROUCH))
+			cameraMove.y -= dt.count();
+		if (inputManager_.IsActionHeld(sdl::InputAction::UP))
+			cameraMove.z += dt.count();
+		if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
+			cameraMove.z -= dt.count();
+		
+		//Boost key test
+		if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+			cameraMove *= 3.0f;
+		
+		//Apply camera movement
+		position += (GetRight() * cameraMove.x + 
+			Vec3f::up * cameraMove.y - 
+			reverseDirection * cameraMove.z) * moveSpeed;
+	}
+
+	void OnEvent(const SDL_Event& event) override
+	{
+		if (event.type == SDL_WINDOWEVENT_RESIZED)
+		{
+			const auto& config = BasicEngine::GetInstance()->config;
+			SetAspect(config.windowSize.x, config.windowSize.y);
+		}
+		
+		//Retrieves the amount of mouse movement between each frame
+		if (event.type == SDL_MOUSEMOTION)
+			mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+	}
+
+	void Destroy() override
+	{
+	}
+};
+
+struct MoveableCamera3D : Camera3D, MovableCamera
+=======
+};
+
+struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
+{
+	float moveSpeed = 2.5f;
+	float mouseSpeed = 0.1f;
+
+	MovableCamera() :
+		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
+	{
+	}
+	
+	void Update(seconds dt) override = 0;
+	void OnEvent(const SDL_Event& event) override = 0;
+protected:
+	Vec2f mouseMotion_;
+	sdl::InputManager& inputManager_;
+};
+
+struct MoveableCamera2D final : Camera2D, MovableCamera
+>>>>>>> Block placement (in a vacuum)
+{
+	void Init() override
 	{
 	}
 	
 	void Update(const seconds dt) override
+<<<<<<< HEAD
+	{
+=======
 	{
 		//Check if left click is pressed
 		if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
@@ -219,6 +324,7 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 	
 	void Update(const seconds dt) override
 	{
+>>>>>>> Block placement (in a vacuum)
 		//Check if left click is pressed
 		if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
 		{
@@ -277,6 +383,7 @@ struct FpsCamera final : MoveableCamera3D
 	bool freezeCam = false;
 
 	void Init() override
+<<<<<<< HEAD
 	{
 		SDL_SetRelativeMouseMode(SDL_TRUE);
 	}
@@ -320,17 +427,71 @@ struct FpsCamera final : MoveableCamera3D
 
 	void OnEvent(const SDL_Event& event) override
 	{
+=======
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
+
+	void Update(const seconds dt) override
+	{
+		if (!freezeCam)
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
+			
+			//Checking if keys are down
+			Vec3f cameraMove = Vec3f();
+			if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
+				cameraMove.x += dt.count();
+			if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
+				cameraMove.x -= dt.count();
+			if (inputManager_.IsActionHeld(sdl::InputAction::JUMP))
+				cameraMove.y += dt.count();
+			if (inputManager_.IsActionHeld(sdl::InputAction::CROUCH))
+				cameraMove.y -= dt.count();
+			if (inputManager_.IsActionHeld(sdl::InputAction::UP))
+				cameraMove.z += dt.count();
+			if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
+				cameraMove.z -= dt.count();
+
+			//Boost key test
+			if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+				cameraMove *= 3.0f;
+			
+			//Apply camera movement
+			position += (GetRight() * cameraMove.x + 
+				Vec3f::up * cameraMove.y - 
+				Vec3f::Cross(GetRight(), Vec3f::up) * cameraMove.z) * moveSpeed;
+		}
+	}
+
+	void OnEvent(const SDL_Event& event) override
+	{
+>>>>>>> Block placement (in a vacuum)
 		if (inputManager_.IsActionDown(sdl::InputAction::MENU))
 		{
 			freezeCam = !freezeCam;
 			SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
 		}
+<<<<<<< HEAD
 		
 		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			SetAspect(event.window.data1, event.window.data2);
 		}
 		
+=======
+		
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+		{
+			SetAspect(event.window.data1, event.window.data2);
+		}
+		
+>>>>>>> Block placement (in a vacuum)
 		if (!freezeCam)
 		{
 			if (event.type == SDL_MOUSEMOTION)
@@ -338,6 +499,7 @@ struct FpsCamera final : MoveableCamera3D
 			
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}
+<<<<<<< HEAD
 	}
 
 	void Destroy() override
@@ -350,5 +512,12 @@ struct FpsCamera final : MoveableCamera3D
 	}
 
 	
+=======
+	}
+
+	void Destroy() override
+	{
+	}
+>>>>>>> Block placement (in a vacuum)
 };
 }

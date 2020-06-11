@@ -522,21 +522,16 @@ bool InputManager::IsActionDown(InputAction button) const
 		return IsKeyDown(static_cast<KeyCode>(bindingPcInput_[actionIndex])) ||
 			IsControllerDown(static_cast<ControllerInputs>(
 					bindingControllerInput_[actionIndex])
-				);
+			);
 	}
 	return IsMouseButtonDown(
 			static_cast<MouseButtonCode>(
 				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerDown(
 			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
-			);
+		);
 #else
-<<<<<<< HEAD
-		return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
-=======
-    return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
->>>>>>> Set up MinecraftLikeEngine with entity
-#endif
+	return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 }
 
 bool InputManager::IsActionUp(InputAction button) const
@@ -665,6 +660,7 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 {
 	switch (action)
 	{
+<<<<<<< HEAD
 		case InputAction::UP: return "Up";
 		case InputAction::DOWN: return "Down";
 		case InputAction::LEFT: return "Left";
@@ -680,6 +676,23 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 		case InputAction::ZOOM: return "Zoom";
 		case InputAction::MENU: return "Menu";
 		default: return "";
+=======
+	case InputAction::UP: return "Up";
+	case InputAction::DOWN: return "Down";
+	case InputAction::LEFT: return "Left";
+	case InputAction::RIGHT: return "Right";
+	case InputAction::DASH: return "Dash";
+	case InputAction::MAIN_SHOOT: return "Main_Shoot";
+	case InputAction::SECONDARY_TARGET: return "Secondary_Target";
+	case InputAction::SECONDARY_SHOOT: return "Secondary_Shoot";
+	case InputAction::SECONDARY_CANCEL: return "Secondary_cancel";
+	case InputAction::ABILITIES: return "Abilities";
+	case InputAction::JUMP: return "Jump";
+	case InputAction::CROUCH: return "Crouch";
+	case InputAction::ZOOM: return "Zoom";
+	case InputAction::MENU: return "Menu";
+	default: return "";
+>>>>>>> Block placement (in a vacuum)
 	}
 }
 

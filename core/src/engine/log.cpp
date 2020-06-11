@@ -94,7 +94,7 @@ void LogMessage::Generate()
 LogManager::LogManager()
 	: status_(0)
 {
-	Log::provide(this);
+	//Log::provide(this);
 	status_ |= IS_RUNNING | IS_EMPTY;
 	logThread_ = std::make_unique<std::thread>([this]
 	{
@@ -241,7 +241,7 @@ void LogManager::WriteToFile()
 			fileContent += line.log;
 		}
 
-		//CreateDirectory(filePath); //TODO(Luca@Simon) Check Circular reference
+		//CreateDirectory(filePath); //TODO Fix this
 		WriteStringToFile(filePath + dateTime.str() + ".log", fileContent);
 
 		status_ &= ~IS_WRITING;
