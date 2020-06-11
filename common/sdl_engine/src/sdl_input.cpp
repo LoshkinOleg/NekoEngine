@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 
-#include "utilities/json_utility.h"
 #include "sdl_engine/sdl_engine.h"
 
 namespace neko::sdl
@@ -528,10 +527,10 @@ bool InputManager::IsActionDown(InputAction button) const
 			static_cast<MouseButtonCode>(
 				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerDown(
-			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
-		);
+			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]));
 #else
 	return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
+#endif
 }
 
 bool InputManager::IsActionUp(InputAction button) const
@@ -573,12 +572,7 @@ bool InputManager::IsActionHeld(InputAction button) const
 				static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerHeld(
 			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
-<<<<<<< HEAD
-			);
-
-=======
 		);
->>>>>>> Set up MinecraftLikeEngine with entity
 #else
 		return IsSwitchButtonHeld(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif
@@ -660,23 +654,6 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 {
 	switch (action)
 	{
-<<<<<<< HEAD
-		case InputAction::UP: return "Up";
-		case InputAction::DOWN: return "Down";
-		case InputAction::LEFT: return "Left";
-		case InputAction::RIGHT: return "Right";
-		case InputAction::DASH: return "Dash";
-		case InputAction::MAIN_SHOOT: return "Main_Shoot";
-		case InputAction::SECONDARY_TARGET: return "Secondary_Target";
-		case InputAction::SECONDARY_SHOOT: return "Secondary_Shoot";
-		case InputAction::SECONDARY_CANCEL: return "Secondary_cancel";
-		case InputAction::ABILITIES: return "Abilities";
-		case InputAction::JUMP: return "Jump";
-		case InputAction::CROUCH: return "Crouch";
-		case InputAction::ZOOM: return "Zoom";
-		case InputAction::MENU: return "Menu";
-		default: return "";
-=======
 	case InputAction::UP: return "Up";
 	case InputAction::DOWN: return "Down";
 	case InputAction::LEFT: return "Left";
@@ -692,7 +669,6 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 	case InputAction::ZOOM: return "Zoom";
 	case InputAction::MENU: return "Menu";
 	default: return "";
->>>>>>> Block placement (in a vacuum)
 	}
 }
 

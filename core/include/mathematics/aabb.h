@@ -23,9 +23,11 @@
  SOFTWARE.
  */
 
+#include <array>
+
 #include <engine/assert.h>
 #include <mathematics/const.h>
-#include <mathematics/matrix.h>
+#include <mathematics/quaternion.h>
 #include <mathematics/vector.h>
 
 namespace neko {
@@ -53,7 +55,7 @@ struct Obb2d
     void SetFromCenter(
         const Vec2f& newCenter, 
         const Vec2f& localExtends, 
-        const degree_t& rot)
+        const degree_t& rot = degree_t(0.0f))
 	{
         center = newCenter;
         localLowerLeftBound = localExtends * -1.0f;
@@ -221,7 +223,11 @@ struct Obb3d
     }
 
     /// Set the center, the extends and the rotation of the OBB.
-    void FromCenterExtendsRotation(Vec3f newCenter, Vec3f localExtends, RadianAngles rot) {
+    void SetFromCenter(
+        const Vec3f& newCenter, 
+        const Vec3f& localExtends, 
+        const RadianAngles& rot = RadianAngles::zero)
+	{
         center = newCenter;
         localLowerLeftBound = localExtends * -1.0f;
         localUpperRightBound = localExtends;
@@ -317,7 +323,7 @@ struct Obb3d
         else
         {
             centerToProjectionOnDir =
-                GetUp() * (centerToBound).Magnitude() *
+                GetUp() * centerToBound.Magnitude() *
                 Cos(Vec3f::AngleBetween(centerToBound, GetUp())) * -1;
             boundToOppositeBound =
                 GetCenter() + centerToProjectionOnDir - bound;
@@ -328,34 +334,37 @@ struct Obb3d
         return oppositeBound;
     }
 
-    Vec2f ProjectOnAxis(const Vec3f& axis)
+    Vec2f ProjectOnAxis(const Vec3f& axis) const
     {
         float min = std::numeric_limits<float>::infinity();
         float max = -std::numeric_limits<float>::infinity();
-        std::array<Vec3f, 8> corners;
-        corners[0] = RotateAxis(Vec3f(localLowerLeftBound.x, localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter();
-        corners[1] = RotateAxis(Vec3f(-localLowerLeftBound.x, localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter();
-        corners[2] = RotateAxis(Vec3f(localLowerLeftBound.x, localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter();
-        corners[3] = RotateAxis(Vec3f(-localLowerLeftBound.x, localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter();
-        corners[4] = RotateAxis(Vec3f(localLowerLeftBound.x, -localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter();
-        corners[5] = RotateAxis(Vec3f(-localLowerLeftBound.x, -localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter();
-        corners[6] = RotateAxis(Vec3f(localLowerLeftBound.x, -localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter();
-        corners[7] = RotateAxis(Vec3f(-localLowerLeftBound.x, -localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter();
+        std::array<Vec3f, 8> corners
+        {
+        	RotateAxis(Vec3f(localLowerLeftBound.x, localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(-localLowerLeftBound.x, localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(localLowerLeftBound.x, localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(-localLowerLeftBound.x, localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(localLowerLeftBound.x, -localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(-localLowerLeftBound.x, -localLowerLeftBound.y, localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(localLowerLeftBound.x, -localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter(),
+            RotateAxis(Vec3f(-localLowerLeftBound.x, -localLowerLeftBound.y, -localLowerLeftBound.z), rotation) + GetCenter(),
+        };
         for (auto& corner : corners) {
-            float projection = Vec3f::Dot(corner, axis);
+	        const float projection = Vec3f::Dot(corner, axis);
             if (projection < min) { min = projection; }
             if (projection > max) { max = projection; }
         }
         return Vec2f(min, max);
     }
 
-    bool IntersectObb(Obb3d& obb1)
+    bool IntersectObb(const Obb3d& obb1) const
     {
         std::array<Vec3f, 6> perpendicularAxis = { GetUp(), GetRight(), GetForward(), obb1.GetUp(), obb1.GetRight(), obb1.GetForward()};
         // we need to find the minimal overlap and axis on which it happens
-        for (auto& axis : perpendicularAxis) {
-            Vec2f proj1 = ProjectOnAxis(axis);
-            Vec2f proj2 = obb1.ProjectOnAxis(axis);
+        for (auto& axis : perpendicularAxis) 
+        {
+	        const Vec2f proj1 = ProjectOnAxis(axis);
+	        const Vec2f proj2 = obb1.ProjectOnAxis(axis);
 
             if (!(proj1.x <= proj2.y && proj1.y >= proj2.x) || !(proj2.x <= proj1.y && proj2.y >= proj1.x))
             {
@@ -365,11 +374,11 @@ struct Obb3d
 
         return true;
     }
-
-    static Vec3f RotateAxis(Vec3f axis, RadianAngles rotation)	///< return the normal of the upper side
+    ///\brief return the normal of the upper side
+    static Vec3f RotateAxis(const Vec3f& axis, const RadianAngles& rotation)
     {
-        EulerAngles euler(rotation.x, rotation.y, rotation.z);
-        Quaternion q = Quaternion::FromEuler(euler);
+	    const EulerAngles euler(rotation.x, rotation.y, rotation.z);
+	    const Quaternion q = Quaternion::FromEuler(euler);
         Vec3f newAxis;
         newAxis.x = axis.x * (q.x * q.x + q.w * q.w - q.y * q.y - q.z * q.z) + axis.y * (2 * q.x * q.y - 2 * q.w * q.z) + axis.z * (2 * q.x * q.z + 2 * q.w * q.y);
         newAxis.y = axis.x * (2 * q.w * q.z + 2 * q.x * q.y) + axis.y * (q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z) + axis.z * (-2 * q.w * q.x + 2 * q.y * q.z);
@@ -585,6 +594,12 @@ struct Aabb3d
         const bool z = abs(aabb.CalculateCenter().z - CalculateCenter().z) <= (aabb.CalculateExtends().z + CalculateExtends().z);
 
         return x && y && z;
+    }
+	
+    bool IntersectRay(const Vec3f& dirRay, const Vec3f& origin) const
+    {
+    	float voidF = 0.0f;
+	    return IntersectRay(dirRay, origin, voidF);
     }
 
     bool IntersectRay(const Vec3f& dirRay, const Vec3f& origin, float& minDist) const

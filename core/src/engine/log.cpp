@@ -94,7 +94,7 @@ void LogMessage::Generate()
 LogManager::LogManager()
 	: status_(0)
 {
-	//Log::provide(this);
+	Log::provide(this);
 	status_ |= IS_RUNNING | IS_EMPTY;
 	logThread_ = std::make_unique<std::thread>([this]
 	{
@@ -228,7 +228,7 @@ void LogManager::WriteToFile()
 		fileContent +=
 			"\\--------------------------------------------------------------------------------/\n\n";
 
-		fileContent += "Program start (=^ ◡ ^=)\n";
+		fileContent += "Program start (=^ O ^=)\n";
 		fileContent +=
 			"--------------------------------------------------------------------------------\n";
 

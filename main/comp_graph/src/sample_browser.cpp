@@ -28,8 +28,9 @@
 #include <21_hello_shadow/shadow_program.h>
 #include <22_hello_blinn/blinn_program.h>
 
-#include <10_hello_moveable_camera/moveable_camera_program.h>
-#include <100_block_placement/block_program.h>
+#include <xx_hello_logger/logger_program.h>
+#include <xx_hello_moveable_camera/moveable_camera_program.h>
+#include <xx_block_placement/block_program.h>
 
 #include <98_hello_line/line_program.h>
 #include <99_hello_scene/scene_program.h>
@@ -43,7 +44,6 @@ void SampleBrowser::Init()
     RegisterRenderProgram("02 Hello Texture", std::make_unique<TextureProgram>());
     RegisterRenderProgram("03 Hello Transform", std::make_unique<HelloTransformProgram>());
     RegisterRenderProgram("04 Hello Coords", std::make_unique<HelloCoordsProgram>());
-    RegisterRenderProgram("05 Hello Logger", std::make_unique<HelloLoggerProgram>());
     RegisterRenderProgram("05 Hello Camera", std::make_unique<HelloCameraProgram>());
     RegisterRenderProgram("06 Hello Model", std::make_unique<HelloModelProgram>());
     RegisterRenderProgram("07 Hello Light", std::make_unique<HelloLightProgram>());
@@ -62,12 +62,13 @@ void SampleBrowser::Init()
     RegisterRenderProgram("20 Hello Bloom", std::make_unique<HelloBloomProgram>());
     RegisterRenderProgram("21 Hello Shadow", std::make_unique<HelloShadowProgram>());
     RegisterRenderProgram("22 Hello Blinn", std::make_unique<HelloBlinnProgram>());
-	
-    RegisterRenderProgram("10 Moveable Camera", std::make_unique<MoveableCameraProgram>());
-    RegisterRenderProgram("100 Block Placement", std::make_unique<BlockProgram>());
 
     RegisterRenderProgram("98 Hello Line", std::make_unique<HelloLineProgram>());
 	RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+	
+    RegisterRenderProgram("XX Hello Logger", std::make_unique<HelloLoggerProgram>());
+    RegisterRenderProgram("XX Moveable Camera", std::make_unique<MoveableCameraProgram>());
+    RegisterRenderProgram("XX Block Placement", std::make_unique<BlockProgram>());
 	
 	programs_[currentProgramIndex_]->Init();
 }

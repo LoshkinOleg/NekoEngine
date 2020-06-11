@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <array>
 
-#include "mathematics/vector.h"
+#include <mathematics/vector.h>
 
 namespace neko
 {
@@ -24,9 +25,9 @@ public:
 
 	Vec3f GetChunkPos() const;
 private:
-	Vec3f chunkPos;
+	Vec3f chunkPos_;
 
-	uint8_t chunkFlags = 0;
+	uint8_t chunkFlags_ = 0;
 	std::array<uint8_t, chunkSize * chunkSize * chunkSize> blocksIds = { 0 };
 };
 }

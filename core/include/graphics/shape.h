@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <mathematics/vector.h>
 #include <mathematics/circle.h>
 

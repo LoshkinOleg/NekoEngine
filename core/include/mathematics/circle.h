@@ -52,19 +52,19 @@ struct Circle
     {
         const T distanceVector = circle.center - center;
     	
-        return distanceVector.GetMagnitude() <= circle.radius + radius;
+        return distanceVector.Magnitude() <= circle.radius + radius;
     }
 
     bool SquareCircleIntersect(Rect2f rect) const
     {
 		const T distanceVector = rect.center - center;
 
-		if (distanceVector.GetMagnitude() <= rect.halfSize.x + radius)
+		if (distanceVector.Magnitude() <= rect.halfSize.x + radius)
 		{
             return true;
 		}
 
-		if (distanceVector.GetMagnitude() <= rect.halfSize.y + radius)
+		if (distanceVector.Magnitude() <= rect.halfSize.y + radius)
 		{
             return true;
 		}
