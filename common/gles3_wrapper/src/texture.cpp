@@ -122,7 +122,7 @@ TextureId LoadCubemap(std::vector<std::string> facesFilename)
         }
         else
         {
-            logDebug("[Error] Cubemap tex failed to load at path: "+ facesFilename[i]);
+            LogDebug("[Error] Cubemap tex failed to load at path: "+ facesFilename[i]);
         }
         image.Destroy();
     }

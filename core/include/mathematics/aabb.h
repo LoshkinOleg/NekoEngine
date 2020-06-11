@@ -388,13 +388,13 @@ struct Aabb2d
     ///\brief Get the center of the AABB.
     Vec2f CalculateCenter() const
     {
-	    return 0.5f * (lowerLeftBound + upperRightBound);
+	    return (lowerLeftBound + upperRightBound) * 0.5f;
     }
 
     ///\brief Get the extends of the AABB (half-widths).
     Vec2f CalculateExtends() const
     {
-	    return 0.5f * (upperRightBound - lowerLeftBound);
+	    return (upperRightBound - lowerLeftBound) * 0.5f;
     }
 
     ///\brief Set the AABB from the center, extends.

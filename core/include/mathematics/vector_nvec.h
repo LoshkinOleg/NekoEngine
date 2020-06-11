@@ -23,8 +23,10 @@
  SOFTWARE.
  */
 
+#include <array>
+
 #include <mathematics/vector.h>
-#include "mathematics/intrinsincs.h"
+
 namespace neko
 {
 //-----------------------------------------------------------------------------

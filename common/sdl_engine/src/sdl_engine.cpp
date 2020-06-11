@@ -71,9 +71,11 @@ void SdlEngine::Destroy()
 void SdlEngine::ManageEvent()
 {
     inputManager_.OnPreUserInput();
+	
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Manage Event");
 #endif
+
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {

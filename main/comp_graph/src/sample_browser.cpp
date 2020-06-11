@@ -9,7 +9,6 @@
 #include <02_hello_texture/texture_program.h>
 #include <03_hello_transform/transform_program.h>
 #include <04_hello_coords/coords_program.h>
-#include <05_hello_logger/logger_program.h>
 #include <05_hello_camera/camera_program.h>
 #include <06_hello_model/model_program.h>
 #include <07_hello_light/light_program.h>
@@ -21,13 +20,16 @@
 #include <13_hello_depth/depth_program.h>
 #include <14_hello_outline/outline_program.h>
 #include <15_hello_cubemaps/cubemaps_program.h>
-#include <16_hello_culling\culling_program.h>
+#include <16_hello_culling/culling_program.h>
 #include <17_hello_frustum/frustum_program.h>
 #include <18_hello_normal/normal_program.h>
 #include <19_hello_hdr/hdr_program.h>
 #include <20_hello_bloom/bloom_program.h>
 #include <21_hello_shadow/shadow_program.h>
 #include <22_hello_blinn/blinn_program.h>
+
+#include <10_hello_moveable_camera/moveable_camera_program.h>
+#include <100_block_placement/block_program.h>
 
 #include <98_hello_line/line_program.h>
 #include <99_hello_scene/scene_program.h>

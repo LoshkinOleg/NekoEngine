@@ -49,11 +49,11 @@ public:
     RenderCuboid()=delete;
     explicit RenderCuboid(Vec3f offset, Vec3f size) : RenderShape(offset), size_(size){}
 
-    [[nodiscard]] Sphere GenerateBoundingSphere() const
+    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
     {
-        Sphere s;
-        s.center_ = offset_;
-        s.radius_ = std::max(std::max(size_.x, size_.y), size_.z);
+        Sphere3D s;
+        s.center = offset_;
+        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
         return s;
     }
 

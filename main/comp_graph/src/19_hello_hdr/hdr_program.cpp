@@ -33,7 +33,7 @@ void HelloHdrProgram::Init()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, hdrRbo_);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        logDebug("[Error] Framebuffer not complete!");
+        LogDebug("[Error] Framebuffer not complete!");
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     hdrPlane_.Init();

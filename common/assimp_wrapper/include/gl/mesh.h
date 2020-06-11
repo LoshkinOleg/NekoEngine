@@ -50,7 +50,7 @@ namespace neko::assimp
 		[[nodiscard]] unsigned int GetVao() const {return VAO;}
 		[[nodiscard]] size_t GetElementsCount() const {return indices_.size();}
 
-		[[nodiscard]] Sphere GenerateBoundingSphere() const;
+		[[nodiscard]] Sphere3D GenerateBoundingSphere() const;
 	protected:
 
 		void LoadMaterialTextures(aiMaterial* material, aiTextureType aiTexture, Texture::TextureType texture,

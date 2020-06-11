@@ -63,7 +63,7 @@ void HelloBloomProgram::Init()
     // finally check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        logDebug("[Error] HDR Framebuffer not complete!");
+        LogDebug("[Error] HDR Framebuffer not complete!");
     }
 
     // ping-pong-framebuffer for blurring
@@ -83,7 +83,7 @@ void HelloBloomProgram::Init()
         // also check if framebuffers are complete (no need for depth buffer)
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            logDebug("[Error] Ping Pong Framebuffer not complete!");
+            LogDebug("[Error] Ping Pong Framebuffer not complete!");
         }
     }
 

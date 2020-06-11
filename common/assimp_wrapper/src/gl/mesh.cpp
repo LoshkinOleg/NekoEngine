@@ -194,11 +194,11 @@ void Mesh::SetupMesh()
     glBindVertexArray(0);
 }
 
-Sphere Mesh::GenerateBoundingSphere() const
+Sphere3D Mesh::GenerateBoundingSphere() const
 {
-    Sphere s;
-    s.radius_ = std::max(std::max(max_.x - min_.x, max_.y - min_.y), max_.z - min_.z);
-    s.center_ = min_ + (max_ - min_) / 2.0f;
+    Sphere3D s;
+    s.radius = std::max(std::max(max_.x - min_.x, max_.y - min_.y), max_.z - min_.z);
+    s.center = min_ + (max_ - min_) / 2.0f;
     return s;
 }
 

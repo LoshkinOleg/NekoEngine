@@ -74,7 +74,7 @@ void HelloFrustumProgram::Init()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo_);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        logDebug("[Error] Framebuffer is not complete!");
+        LogDebug("[Error] Framebuffer is not complete!");
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -218,8 +218,8 @@ void HelloFrustumProgram::Render()
     glDisable(GL_DEPTH_TEST);
     screenShader_.Bind();
     const float miniMapSize = 0.2f;
-    screenShader_.SetVec2("offset", Vec2f((1.0f - miniMapSize/camera_.aspect) , 1.0f - miniMapSize));
-    screenShader_.SetVec2("scale", Vec2f( miniMapSize/camera_.aspect, miniMapSize));
+    screenShader_.SetVec2("offset", Vec2f((1.0f - miniMapSize/camera_.GetAspect()) , 1.0f - miniMapSize));
+    screenShader_.SetVec2("scale", Vec2f( miniMapSize/camera_.GetAspect(), miniMapSize));
 
     screenShader_.SetInt("screenTexture", 0);
     glActiveTexture(GL_TEXTURE0);
@@ -280,7 +280,7 @@ void HelloFrustumProgram::Culling(size_t begin, size_t end)
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Culling");
 #endif
-	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius_;
+	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius;
     const auto cameraDir = -camera_.reverseDirection;
     const auto cameraRight = camera_.GetRight();
     const auto cameraUp = camera_.GetUp();

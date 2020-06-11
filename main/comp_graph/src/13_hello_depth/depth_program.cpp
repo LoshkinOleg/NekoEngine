@@ -36,16 +36,16 @@ void HelloDepthProgram::Init()
 		switch (status)
 		{
 		case GL_FRAMEBUFFER_UNDEFINED:
-			logDebug("[Error] Framebuffer is undefined!");
+			LogDebug("[Error] Framebuffer is undefined!");
 			break;
 		case GL_FRAMEBUFFER_UNSUPPORTED:
-			logDebug("[Error] Framebuffer is unsupported!");
+			LogDebug("[Error] Framebuffer is unsupported!");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-			logDebug("[Error] Framebuffer has incomplete attachment!");
+			LogDebug("[Error] Framebuffer has incomplete attachment!");
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-			logDebug("[Error] Framebuffer has incomplete missing attachment!");
+			LogDebug("[Error] Framebuffer has incomplete missing attachment!");
 			break;
 		}
 	}

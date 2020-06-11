@@ -31,7 +31,14 @@ namespace neko
 template<class T = Vec2f>
 struct Circle
 {
-    explicit Circle(T Center, float Radius) : center(Center), radius(Radius)
+    explicit Circle()
+		: center()
+    {
+
+    }
+	
+    explicit Circle(const T& center, const float radius)
+		: center(center), radius(radius)
     {
 
     }
@@ -48,7 +55,7 @@ struct Circle
         return distanceVector.GetMagnitude() <= circle.radius + radius;
     }
 
-    bool SquareCircleIntersect(neko::Rect2f rect) const
+    bool SquareCircleIntersect(Rect2f rect) const
     {
 		const T distanceVector = rect.center - center;
 
@@ -67,43 +74,14 @@ struct Circle
 
 	static bool IsPlanCircleContact(const Circle<Vec3f> sphere, const Vec3f normal, const Vec3f pos)
     {
-        const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.GetMagnitude();
+        const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.Magnitude();
     	
         return p < sphere.radius && p > -sphere.radius;
     }
 	
 	T center;
-    const float radius = 0;
+    float radius = 0.0f;
 };
-=======
-			if (Distance(distanceVector.GetMagnitude()) <= rect.halfSize.x + radius)
-			{
-                return true;
-			}
-
-			if (Distance(distanceVector.GetMagnitude()) <= rect.halfSize.y + radius)
-			{
-                return true;
-			}
-            return false;
-        }
-
-    	static bool IsPlanCircleContact(Circle<Vec3f> sphere, Vec3f normal, Vec3f pos)
-        {
-            const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.GetMagnitude();
-        	
-            return p < sphere.radius && p > -sphere.radius;
-        }
-    	
-        static float Distance(const float magnitude)
-        {
-            return magnitude;
-        }
-    	
-    	T center;
-        const float radius = 0;
-    };
->>>>>>> Circle plan contact working
 
 using Circle2D = Circle<Vec2f>;
 using Sphere3D = Circle<Vec3f>;

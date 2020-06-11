@@ -31,7 +31,7 @@ void HelloShadowProgram::Init()
 	glReadBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
-		logDebug("[Error] Shadow depth map framebuffer is incomplete");
+		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	depthCamera_.SetSize(Vec2f::one * 4.0f);

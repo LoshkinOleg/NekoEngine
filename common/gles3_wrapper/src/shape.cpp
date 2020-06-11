@@ -105,90 +105,91 @@ void RenderCuboid::Init()
 	Vec3f position[36] =
 	{
 		//Right face 
-		 Vec3f(0.5f,   0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f,   0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f,   0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  -0.5f ,  0.5f) * size_ + offset_,
-		 //Left face                 *size_+offset_
-		 Vec3f(-0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f,  0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 //Top face                  *size_+offset_
-		 Vec3f(-0.5f,  0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f,  0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(-0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 //Bottom fa                 *size_+offset_
-		 Vec3f(-0.5f, -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f, -0.5f , -0.5f) * size_ + offset_,
-		 Vec3f(0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f , -0.5f) * size_ + offset_,
-		 //Front fac                 *size_+offset_
-		 Vec3f(-0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f,  0.5f ,  0.5f) * size_ + offset_,
-		 Vec3f(-0.5f, -0.5f ,  0.5f) * size_ + offset_,
-		 //Back face
-		Vec3f(-0.5f , -0.5f , -0.5f )*size_+offset_,
-		Vec3f( 0.5f ,  0.5f , -0.5f )*size_+offset_,
-		Vec3f( 0.5f , -0.5f , -0.5f )*size_+offset_,
-		Vec3f( 0.5f ,  0.5f , -0.5f )*size_+offset_,
-		Vec3f(-0.5f , -0.5f , -0.5f )*size_+offset_,
-		Vec3f(-0.5f ,  0.5f , -0.5f )*size_+offset_,
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		//Left face                 
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		//Top face                  
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		//Bottom face               
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		//Front face                
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Left
+		//Back face
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Right
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
 	};
 	Vec2f texCoords[36] = {
-		Vec2f(1.0f, 0.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(0.0f, 0.0f),
-		
-		Vec2f(1.0f, 0.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(0.0f, 0.0f),
-		Vec2f(1.0f, 0.0f),
-		
-		Vec2f(0.0f, 1.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(0.0f, 0.0f),
-		
-		Vec2f(0.0f, 1.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(0.0f, 0.0f),
-		Vec2f(0.0f, 1.0f),
-		
-		Vec2f(0.0f, 0.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(0.0f, 1.0f),
-		Vec2f(0.0f, 0.0f),
-		
-		Vec2f(0.0f, 0.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(1.0f, 0.0f),
-		Vec2f(1.0f, 1.0f),
-		Vec2f(0.0f, 0.0f),
-		Vec2f(0.0f, 1.0f),
+		//Right Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		Vec2f(0.0f, 1.0f),	//Top Left
+		//Left Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		//Top Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		Vec2f(0.0f, 1.0f),	//Top Left
+		//Bottom Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		//Front Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		//Back Face
+		Vec2f(1.0f, 1.0f),	//Top Right
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec2f(1.0f, 0.0f),	//Bottom Right
+		Vec2f(0.0f, 0.0f),	//Bottom Left
+		Vec2f(0.0f, 1.0f),	//Top Left
 	};
 
 	Vec3f normals[36] =
