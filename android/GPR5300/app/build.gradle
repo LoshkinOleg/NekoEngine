@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         release {
-            storeFile file('/home/efarhan/Android/comp_graph_key.jks')
+            storeFile file('comp_graph.jks')
             storePassword '12345678'
             keyAlias = 'comp_graph_key'
             keyPassword '12345678'
@@ -44,6 +44,7 @@ android {
             version "3.10.2"
         }
     }
+    ndkVersion '21.0.6113669'
 }
 
 dependencies {

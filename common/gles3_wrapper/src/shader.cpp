@@ -51,6 +51,7 @@ void Shader::LoadFromFile(const std::string_view vertexShaderPath, const std::st
     {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         std::ostringstream oss;
+		
         oss << "[Error] Vertex shader at: " << vertexShaderPath <<" compilation failed: \n" << infoLog<<'\n'<<vertexShaderChar;
         LogDebug(oss.str());
         return;
@@ -70,6 +71,7 @@ void Shader::LoadFromFile(const std::string_view vertexShaderPath, const std::st
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::ostringstream oss;
+		
         oss << "[Error] Fragment shader at: " << fragmentShaderPath <<" compilation failed\n" << infoLog << '\n' << fragmentShaderChar;
         LogDebug(oss.str());
         return;
@@ -185,4 +187,17 @@ void Shader::SetMat4(const std::string& name, const Mat4f& mat) const
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram_, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
 
+void Shader::SetTexture(const std::string& name, const neko::Texture& texture, unsigned slot) const
+{
+    glUniform1i(glGetUniformLocation(shaderProgram_, name.c_str()), slot);
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, texture.GetTextureId());
+}
+
+void Shader::SetTexture(const std::string& name, TextureId texture, unsigned slot) const
+{
+    glUniform1i(glGetUniformLocation(shaderProgram_, name.c_str()), slot);
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, texture);
+}
 }

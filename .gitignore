@@ -45,5 +45,5 @@ build/*
 Build/*
 web_build/*
 
-#validator cache
-__pycache__/
+# glsl validator temp files
+/scripts/validator/__pycache__/

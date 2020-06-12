@@ -22,10 +22,11 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+ 
+#include <SDL.h>
 
 #include "engine/engine.h"
 #include <sdl_engine/sdl_input.h>
-#include <SDL.h>
 
 namespace neko::sdl
 {

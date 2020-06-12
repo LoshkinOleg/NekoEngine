@@ -7,6 +7,7 @@
 #include <graphics/texture.h>
 #include <engine/engine.h>
 
+
 #ifdef EASY_PROFILE_USE
 #include "easy/profiler.h"
 #endif
@@ -38,7 +39,7 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
 #ifdef EASY_PROFILE_USE
     EASY_END_BLOCK;
 #endif
-    Image image = StbImageConvert(textureFile);
+    Image image = StbImageConvert(textureFile,reqComponents);
     /*if (extension == ".hdr")
     {
         //data = stbi_loadf(filename.data(), &width, &height, &reqComponents, 0);
@@ -51,6 +52,7 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     {
         std::ostringstream oss;
         oss << "[Error] Texture: cannot load " << filename << "\n";
+		
         LogDebug(oss.str());
         return INVALID_TEXTURE_ID;
     }
@@ -93,6 +95,46 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     return texture;
 }
 
+TextureId LoadCubemap(std::vector<std::string> facesFilename)
+{
+    TextureId textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+
+    for (unsigned int i = 0; i < facesFilename.size(); i++)
+    {
+        BufferFile textureFile;
+        textureFile.Load(facesFilename[i]);
+        const auto extension = GetFilenameExtension(facesFilename[i]);
+        int reqComponents = 0;
+        if (extension == ".jpg" || extension == ".tga" || extension == ".hdr")
+            reqComponents = 3;
+        else if (extension == ".png")
+            reqComponents = 4;
+        Image image = StbImageConvert(textureFile,reqComponents);
+        textureFile.Destroy();
+        if (image.data != nullptr)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data
+            );
+        }
+        else
+        {
+            LogDebug("[Error] Cubemap tex failed to load at path: "+ facesFilename[i]);
+        }
+        image.Destroy();
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
 void DestroyTexture(TextureId textureId)
 {
     glDeleteTextures(1, &textureId);
@@ -125,31 +167,31 @@ void Texture::CreateTexture()
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Copy Buffer");
 #endif
+    GLenum internalFormat = 0;
+    GLenum dataFormat = 0;
     switch (image_.nbChannels)
     {
         case 1:
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, image_.width, image_.height, 0, GL_R8, GL_UNSIGNED_BYTE, image_.data);
-            break;
-        }
-        case 2:
-        {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, image_.width, image_.height, 0, GL_RG, GL_UNSIGNED_BYTE, image_.data);
-            break;
+            internalFormat = dataFormat = GL_RED;
+        		break;
         }
         case 3:
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_.data);
-            break;
+            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB : GL_RGB;
+            dataFormat = GL_RGB;
+        	break;
         }
         case 4:
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_.width, image_.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_.data);
+            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB : GL_RGBA;
+            dataFormat = GL_RGBA;
             break;
         }
         default:
             break;
     }
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image_.width, image_.height, 0, dataFormat, GL_UNSIGNED_BYTE, image_.data);
 #ifdef EASY_PROFILE_USE
     EASY_END_BLOCK;
 #endif

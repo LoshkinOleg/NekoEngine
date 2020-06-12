@@ -6,6 +6,8 @@
 
 namespace neko::gl
 {
+
+
 class Texture : public neko::Texture
 {
 public:
@@ -28,7 +30,7 @@ public:
         CLAMP_WRAP = 1u << 2u,
         REPEAT_WRAP = 1u << 3u,
         MIRROR_REPEAT_WRAP = 1u << 4u,
-
+        GAMMA_CORRECTION = 1u << 5u,
         DEFAULT = SMOOTH_TEXTURE | MIPMAPS_TEXTURE,
     };
     void SetTextureFlags(TextureFlags textureFlags){flags_ = textureFlags;}
@@ -54,7 +56,7 @@ protected:
 };
 
 TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlags flags = Texture::DEFAULT);
-
+TextureId LoadCubemap(std::vector<std::string> facesFilename);
 void DestroyTexture(TextureId);
 
 

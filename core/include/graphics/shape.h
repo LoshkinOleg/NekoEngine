@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
+
 #include <mathematics/vector.h>
+#include <mathematics/circle.h>
 
 namespace neko
 {
@@ -47,6 +50,15 @@ class RenderCuboid : public RenderShape
 public:
     RenderCuboid()=delete;
     explicit RenderCuboid(Vec3f offset, Vec3f size) : RenderShape(offset), size_(size){}
+
+    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
+    {
+        Sphere3D s;
+        s.center = offset_;
+        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
+        return s;
+    }
+
 protected:
     Vec3f size_;
 };

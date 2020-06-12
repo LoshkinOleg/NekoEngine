@@ -28,8 +28,6 @@ void ChunkRenderer::Init()
 	texture_[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/stone.jpg");
 	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
 	cube_.Init();
-	
-
 	camera_.position = Vec3f::forward * 3;
 
 	glEnable(GL_DEPTH_TEST);
@@ -73,7 +71,6 @@ void ChunkRenderer::Render()
 			}
 		}
 	}
-
 }
 
 void ChunkRenderer::Destroy()

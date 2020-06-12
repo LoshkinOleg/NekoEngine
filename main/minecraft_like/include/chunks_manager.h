@@ -27,5 +27,4 @@ protected:
 	EntityManager& entityManager_;
 	ChunksManager& chunksManager_;
 };
-
 }

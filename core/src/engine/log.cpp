@@ -22,6 +22,7 @@
  SOFTWARE.
  */
 #include <engine/log.h>
+#include <filesystem>
 #include <utilities/file_utility.h>
 
 #include <memory>
@@ -173,7 +174,6 @@ void LogManager::Log(LogType logType, const std::string& log)
 	Log(LogCategory::NONE, logType, log);
 }
 
-
 void LogManager::Log(LogCategory category, LogType logType,
 	const std::string& log)
 {
@@ -228,7 +228,7 @@ void LogManager::WriteToFile()
 		fileContent +=
 			"\\--------------------------------------------------------------------------------/\n\n";
 
-		fileContent += "Program start (=^ ◡ ^=)\n";
+		fileContent += "Program start (=^ O ^=)\n";
 		fileContent +=
 			"--------------------------------------------------------------------------------\n";
 
@@ -241,7 +241,7 @@ void LogManager::WriteToFile()
 			fileContent += line.log;
 		}
 
-		//CreateDirectory(filePath); TODO(Luca@Simon) Check Circular reference
+		//CreateDirectory(filePath); //TODO Fix this
 		WriteStringToFile(filePath + dateTime.str() + ".log", fileContent);
 
 		status_ &= ~IS_WRITING;

@@ -52,6 +52,7 @@ public:
         STARTED = 1u << 0u,
         DONE = 1u << 1u
     };
+    Job():Job([]{}){};
     explicit Job(std::function<void()> task);
     virtual ~Job() = default;
     Job(const Job&) = delete;
@@ -92,6 +93,7 @@ public:
     void AddDependency(const Job* dep);
 
     std::function<void()> GetTask() const { return task_; }
+    void SetTask(std::function<void()> task) { task_ = task; }
     void Reset();
 
 protected:

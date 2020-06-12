@@ -61,7 +61,7 @@ class ResourceJob : public Job
 public:
     ResourceJob();
     void SetFilePath(std::string_view path);
-    std::string GetFilePath() const;
+    std::string GetFilePath() const {return filePath_; }
     BufferFile GetBufferFile() const {return bufferFile_;}
 private:
     std::string filePath_;
@@ -80,7 +80,7 @@ void IterateDirectory(const std::string_view dirname, std::function<void(const s
 
 std::string GetCurrentPath();
 
-bool CreateDirectory(const std::string_view dirname);
+bool CreateDirectory(std::string_view dirname);
 
 bool RemoveDirectory(const std::string_view dirname, bool removeAll = true);
 

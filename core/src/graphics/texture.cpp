@@ -7,6 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "engine/engine.h"
+#include "utilities/file_utility.h"
 
 #ifdef EASY_PROFILE_USE
 #include "easy/profiler.h"
@@ -16,7 +17,7 @@ namespace neko
 {
 
 
-Image StbImageConvert(BufferFile imageFile)
+Image StbImageConvert(BufferFile imageFile, int requireComponents)
 {
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Convert Image");
@@ -36,7 +37,14 @@ Texture::Texture() :
 	}),
     convertImageJob_([this]
     {
-	    image_ = StbImageConvert(diskLoadJob_.GetBufferFile());
+        const auto filename = diskLoadJob_.GetFilePath();
+        const auto extension = GetFilenameExtension(filename);
+        int reqComponents = 0;
+        if (extension == ".jpg" || extension == ".tga" || extension == ".hdr")
+            reqComponents = 3;
+        else if (extension == ".png")
+            reqComponents = 4;
+    	image_ = StbImageConvert(diskLoadJob_.GetBufferFile(),reqComponents);
 	    diskLoadJob_.GetBufferFile().Destroy();
 	    RendererLocator::get().AddPreRenderJob(&uploadToGpuJob_);
     })

@@ -364,7 +364,8 @@ enum class InputAction
 	JUMP = 10,
 	CROUCH = 11,
 	ZOOM = 12,
-	LENGTH = 13
+	MENU = 13,
+	LENGTH = 14
 };
 
 class IInputManager
@@ -395,7 +396,7 @@ public:
 	virtual Vec2f GetMouseScroll() const = 0;
 
 	virtual float GetJoystickAxis(ControllerAxis axis) const = 0;
-
+	
 	/**
 	 * \brief Check if a key input is pressed down
 	 */

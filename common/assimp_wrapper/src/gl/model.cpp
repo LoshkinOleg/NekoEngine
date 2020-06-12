@@ -25,6 +25,8 @@ namespace neko::assimp
 	{
 		for (auto& mesh : meshes_)
 			mesh.Destroy();
+		meshes_.clear();
+		processModelJob_.Reset();
 	}
 
 	Model::Model() : processModelJob_([this]
@@ -38,6 +40,7 @@ namespace neko::assimp
 	{
 		path_ = path;
 		directory_ = path.substr(0, path.find_last_of('/'));
+		LogDebug("ASSIMP: Loading model: " + path_);
 		BasicEngine::GetInstance()->ScheduleJob(&processModelJob_, JobThreadType::OTHER_THREAD);
 	}
 
@@ -75,7 +78,7 @@ namespace neko::assimp
 			import.SetIOHandler(ioSystem);
 
 			scene = import.ReadFile(path_.data(),
-			aiProcess_Triangulate | aiProcess_FlipUVs);
+			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 		});
 		BasicEngine::GetInstance()->ScheduleJob(&loadingModelJob, JobThreadType::RESOURCE_THREAD);
 		loadingModelJob.Join();
@@ -89,22 +92,7 @@ namespace neko::assimp
 			LogDebug(oss.str());
 			return;
 		}
-#ifdef EASY_PROFILE_USE
-		EASY_BLOCK("Count Meshes");
-#endif
-		std::function<size_t(aiNode*)> countChildren = [&countChildren](aiNode* node)
-		{
-			size_t count = node->mNumMeshes;
-			for(size_t i = 0; i < node->mNumChildren; i++)
-			{
-				count += countChildren(node->mChildren[i]);
-			}
-			return count;
-		};
-#ifdef EASY_PROFILE_USE
-		EASY_END_BLOCK;
-#endif
-		meshes_.reserve(countChildren(scene->mRootNode));
+		meshes_.reserve(scene->mNumMeshes);
 #ifdef EASY_PROFILE_USE
 		EASY_BLOCK("Process Nodes");
 #endif

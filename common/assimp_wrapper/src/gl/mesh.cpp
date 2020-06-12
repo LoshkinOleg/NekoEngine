@@ -30,37 +30,9 @@ void Mesh::Init()
 }
 
 
-void Mesh::Draw(const gl::Shader& shader)
+void Mesh::Draw(const gl::Shader& shader) const
 {
-#ifdef EASY_PROFILE_USE
-    EASY_BLOCK("Draw Mesh");
-#endif
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
-    for (unsigned int i = 0; i < textures_.size(); i++)
-    {
-    	// activate proper texture unit before binding
-        glActiveTexture(GL_TEXTURE0 + i);
-        // retrieve texture number (the N in diffuse_textureN)
-        std::string number;
-        std::string name;
-    	switch(textures_[i].type)
-    	{
-        case Texture::TextureType::DIFFUSE:
-            name = "texture_diffuse";
-            number = std::to_string(diffuseNr++);
-    		break;
-        case Texture::TextureType::SPECULAR:
-            name = "texture_specular";
-            number = std::to_string(specularNr++);
-    		break;
-        default: ;
-        }
-        shader.SetInt("material." + name + number, i);
-        glBindTexture(GL_TEXTURE_2D, textures_[i].texture.GetTextureId());
-    }
-    glActiveTexture(GL_TEXTURE0);
-
+    BindTextures(shader);
     // draw mesh
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
@@ -72,6 +44,16 @@ void Mesh::Destroy()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+
+	for(auto& texture : textures_)
+	{
+        gl::DestroyTexture(texture.texture.GetTextureId());
+	}
+    textures_.clear();
+    vertices_.clear();
+    indices_.clear();
+
+    loadMeshToGpu.Reset();
 }
 
 
@@ -84,6 +66,9 @@ void Mesh::ProcessMesh(
     EASY_BLOCK("Process Assimp Mesh");
 #endif
 
+    min_ = Vec3f(mesh->mAABB.mMin);
+    max_ = Vec3f(mesh->mAABB.mMax);
+	
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
@@ -98,6 +83,12 @@ void Mesh::ProcessMesh(
         vector.y = mesh->mNormals[i].y;
         vector.z = mesh->mNormals[i].z;
         vertex.normal = vector;
+
+        vector.x = mesh->mTangents[i].x;
+        vector.y = mesh->mTangents[i].y;
+        vector.z = mesh->mTangents[i].z;
+        vertex.tangent = vector;
+
         if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
         {
             Vec2f vec;
@@ -123,13 +114,17 @@ void Mesh::ProcessMesh(
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-        textures_.reserve(material->GetTextureCount(aiTextureType_SPECULAR) +
-	        material->GetTextureCount(aiTextureType_DIFFUSE));
+        textures_.reserve(
+        material->GetTextureCount(aiTextureType_SPECULAR) +
+	        material->GetTextureCount(aiTextureType_DIFFUSE) + 
+            material->GetTextureCount(aiTextureType_HEIGHT));
     	
         LoadMaterialTextures(material,
             aiTextureType_DIFFUSE, Texture::TextureType::DIFFUSE, directory);
         LoadMaterialTextures(material,
             aiTextureType_SPECULAR, Texture::TextureType::SPECULAR, directory);
+        LoadMaterialTextures(material,
+            aiTextureType_HEIGHT, Texture::TextureType::HEIGHT, directory);
     }
 }
 
@@ -185,15 +180,26 @@ void Mesh::SetupMesh()
 
     // vertex positions
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    // vertex normals
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
     // vertex texture coords
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+    // vertex normals
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    // vertex tangent
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 
     glBindVertexArray(0);
+}
+
+Sphere3D Mesh::GenerateBoundingSphere() const
+{
+    Sphere3D s;
+    s.radius = std::max(std::max(max_.x - min_.x, max_.y - min_.y), max_.z - min_.z);
+    s.center = min_ + (max_ - min_) / 2.0f;
+    return s;
 }
 
 void Mesh::LoadMaterialTextures(
@@ -216,5 +222,41 @@ void Mesh::LoadMaterialTextures(
     	path += str.C_Str();
         glTexture.SetPath(path);
     }
+}
+
+void Mesh::BindTextures(const gl::Shader& shader) const
+{
+    unsigned int diffuseNr = 1;
+    unsigned int specularNr = 1;
+    unsigned int normalNr = 1;
+    for (size_t i = 0; i < textures_.size(); i++)
+    {
+        // activate proper texture unit before binding
+        glActiveTexture(GL_TEXTURE0 + i);
+        // retrieve texture number (the N in diffuse_textureN)
+        std::string number;
+        std::string name;
+        switch(textures_[i].type)
+        {
+            case Texture::TextureType::DIFFUSE:
+                name = "texture_diffuse";
+                number = std::to_string(diffuseNr++);
+                break;
+            case Texture::TextureType::SPECULAR:
+                name = "texture_specular";
+                number = std::to_string(specularNr++);
+                break;
+            case Texture::TextureType::HEIGHT:
+                name = "texture_normal";
+                number = std::to_string(normalNr++);
+                break;
+            default: ;
+        }
+        shader.SetInt("material." + name + number, i);
+        glBindTexture(GL_TEXTURE_2D, textures_[i].texture.GetTextureId());
+    }
+
+    shader.SetBool("enableNormalMap", normalNr > 1);
+    glActiveTexture(GL_TEXTURE0);
 }
 }

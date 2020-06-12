@@ -1,5 +1,9 @@
 #include <sdl_engine/sdl_input.h>
 
+#include <imgui.h>
+
+#include "sdl_engine/sdl_engine.h"
+
 namespace neko::sdl
 {
 InputManager::InputManager(SdlEngine& engine)
@@ -7,6 +11,7 @@ InputManager::InputManager(SdlEngine& engine)
 	  mouse_(0),
 	  engine_(engine)
 {
+	InputLocator::provide(this);
 }
 
 void InputManager::BindFromJson()
@@ -37,6 +42,8 @@ void InputManager::BindFromJson()
 		static_cast<unsigned>(KeyCode::KEY_LEFT_SHIFT);
 	bindingPcInput_[static_cast<unsigned>(InputAction::ZOOM)] =
 		static_cast<unsigned>(KeyCode::KEY_LEFT_CTRL);
+	bindingPcInput_[static_cast<unsigned>(InputAction::MENU)] =
+		static_cast<unsigned>(KeyCode::ESCAPE);
 	/*json tmpJson = PokFileSystem::ReadJsonFile("input_json", FileType::BINDING, FolderType::ROM);
 	for (int i = 0; i < static_cast<int>(InputAction::LENGTH); i++) {
 		if (tmpJson[i] != nullptr) {
@@ -69,8 +76,7 @@ void InputManager::Init()
 		}
 	}
 	controllerAxis_[static_cast<unsigned>(ControllerAxis::LEFT_BUMPER)] = -1.0f;
-	controllerAxis_[static_cast<unsigned>(ControllerAxis::RIGHT_BUMPER)] = -
-		1.0f;
+	controllerAxis_[static_cast<unsigned>(ControllerAxis::RIGHT_BUMPER)] = -1.0f;
 	BindFromJson();
 }
 
@@ -94,14 +100,9 @@ void InputManager::OnPreUserInput()
 	for (size_t i = 0; i < static_cast<int>(MouseButtonCode::LENGTH); i++)
 	{
 		if (buttonState_[i] == ButtonState::UP)
-		{
 			buttonState_[i] = ButtonState::NONE;
-		}
-		else if (
-			buttonState_[i] == ButtonState::DOWN)
-		{
+		else if (buttonState_[i] == ButtonState::DOWN)
 			buttonState_[i] = ButtonState::HELD;
-		}
 	}
 
 	for (size_t i = 0; i < static_cast<int>(ControllerInputs::LENGTH); i++)
@@ -438,20 +439,17 @@ bool InputManager::IsSwitchButtonHeld(SwitchInputs key) const
 
 bool InputManager::IsControllerDown(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		DOWN;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::DOWN;
 }
 
 bool InputManager::IsControllerUp(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		UP;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::UP;
 }
 
 bool InputManager::IsControllerHeld(ControllerInputs key) const
 {
-	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::
-		HELD;
+	return controllerButtonState_[static_cast<unsigned>(key)] == ButtonState::HELD;
 }
 
 Vec2f InputManager::GetMousePosition() const
@@ -523,17 +521,15 @@ bool InputManager::IsActionDown(InputAction button) const
 		return IsKeyDown(static_cast<KeyCode>(bindingPcInput_[actionIndex])) ||
 			IsControllerDown(static_cast<ControllerInputs>(
 					bindingControllerInput_[actionIndex])
-				);
+			);
 	}
 	return IsMouseButtonDown(
 			static_cast<MouseButtonCode>(
-				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::
-					KEYBOARD_SIZE))) ||
+				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerDown(
-			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
-			);
+			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]));
 #else
-		return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
+	return IsSwitchButtonDown(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif
 }
 
@@ -545,17 +541,15 @@ bool InputManager::IsActionUp(InputAction button) const
 	{
 		return IsKeyUp(static_cast<KeyCode>(bindingPcInput_[actionIndex])) |
 			IsControllerUp(
-				static_cast<ControllerInputs>(bindingControllerInput_[
-					actionIndex]));
+				static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]));
 	}
 
 	return IsMouseButtonUp(
 			static_cast<MouseButtonCode>(
-				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::
-					KEYBOARD_SIZE))) |
-		IsControllerUp(
-			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex]
-			));
+				bindingPcInput_[actionIndex] - static_cast<int>(KeyCode::KEYBOARD_SIZE))) |
+		IsControllerUp(static_cast<ControllerInputs>(
+				bindingControllerInput_[actionIndex]
+		));
 #else
 		return IsSwitchButtonUp(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif
@@ -569,8 +563,8 @@ bool InputManager::IsActionHeld(InputAction button) const
 	{
 		return IsKeyHeld(static_cast<KeyCode>(bindingPcInput_[actionIndex])) ||
 			IsControllerHeld(
-				static_cast<ControllerInputs>(bindingControllerInput_[
-					actionIndex]));
+				static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
+			);
 	}
 
 	return IsMouseButtonHeld(
@@ -578,8 +572,7 @@ bool InputManager::IsActionHeld(InputAction button) const
 				static_cast<int>(KeyCode::KEYBOARD_SIZE))) ||
 		IsControllerHeld(
 			static_cast<ControllerInputs>(bindingControllerInput_[actionIndex])
-			);
-
+		);
 #else
 		return IsSwitchButtonHeld(static_cast<SwitchInputs>(bindingSwitchInput_[actionIndex]));
 #endif
@@ -661,20 +654,21 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 {
 	switch (action)
 	{
-		case InputAction::UP: return "Up";
-		case InputAction::DOWN: return "Down";
-		case InputAction::LEFT: return "Left";
-		case InputAction::RIGHT: return "Right";
-		case InputAction::DASH: return "Dash";
-		case InputAction::MAIN_SHOOT: return "Main_Shoot";
-		case InputAction::SECONDARY_TARGET: return "Secondary_Target";
-		case InputAction::SECONDARY_SHOOT: return "Secondary_Shoot";
-		case InputAction::SECONDARY_CANCEL: return "Secondary_cancel";
-		case InputAction::ABILITIES: return "Abilities";
-		case InputAction::JUMP: return "Jump";
-		case InputAction::CROUCH: return "Crouch";
-		case InputAction::ZOOM: return "Zoom";
-		default: return "";
+	case InputAction::UP: return "Up";
+	case InputAction::DOWN: return "Down";
+	case InputAction::LEFT: return "Left";
+	case InputAction::RIGHT: return "Right";
+	case InputAction::DASH: return "Dash";
+	case InputAction::MAIN_SHOOT: return "Main_Shoot";
+	case InputAction::SECONDARY_TARGET: return "Secondary_Target";
+	case InputAction::SECONDARY_SHOOT: return "Secondary_Shoot";
+	case InputAction::SECONDARY_CANCEL: return "Secondary_cancel";
+	case InputAction::ABILITIES: return "Abilities";
+	case InputAction::JUMP: return "Jump";
+	case InputAction::CROUCH: return "Crouch";
+	case InputAction::ZOOM: return "Zoom";
+	case InputAction::MENU: return "Menu";
+	default: return "";
 	}
 }
 

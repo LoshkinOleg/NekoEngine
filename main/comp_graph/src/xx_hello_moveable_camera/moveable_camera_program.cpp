@@ -1,4 +1,4 @@
-#include <10_hello_moveable_camera/moveable_camera_program.h>
+#include <xx_hello_moveable_camera/moveable_camera_program.h>
 
 #include <engine/engine.h>
 #include <gl/texture.h>
@@ -15,7 +15,7 @@ void MoveableCameraProgram::Init()
 	cube_.Init();
 
 	camera_.Init();
-	camera_.position = Vec3f::forward * 3;
+	camera_.position = Vec3f::back * 3;
 
 	glEnable(GL_DEPTH_TEST);
 }

@@ -1,6 +1,4 @@
-#include "../../include/chunks/chunk.h"
-
-#include <vector>
+#include <chunks/chunk.h>
 
 namespace neko
 {
@@ -16,6 +14,6 @@ uint8_t Chunk::GetBlockId(const Vec3i& pos)
 
 Vec3f Chunk::GetChunkPos() const
 {
-	return chunkPos;
+	return chunkPos_;
 }
 }

@@ -28,14 +28,16 @@
 #include <chrono>
 #include <sstream>
 
+#include <imgui.h>
+
 #include <engine/engine.h>
 #include <engine/log.h>
 #include <utilities/file_utility.h>
 
-#include "../../../externals/imgui-1.74/imgui.h"
-#include "graphics/graphics.h"
 #include <engine/window.h>
-#include "imgui.h"
+#include <graphics/graphics.h>
+#include <utilities/file_utility.h>
+
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
@@ -73,20 +75,18 @@ BasicEngine::~BasicEngine()
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_swiss_sae_gpr5300_MainActivity_destroy([[maybe_unused]]JNIEnv *env, [[maybe_unused]]jclass clazz, [[maybe_unused]]jstring directory)
+Java_swiss_sae_gpr5300_MainActivity_finalize([[maybe_unused]]JNIEnv *env, [[maybe_unused]]jclass clazz, [[maybe_unused]]jstring directory)
 {
 
 #ifdef EASY_PROFILE_USE
+    if(env == nullptr)
+    {
+        logDebug("[Error] Android environment is null");
+        return;
+    }
+
     std::string path = env->GetStringUTFChars(directory, nullptr);
 
-    struct stat sb;
-    int32_t res = stat(path.c_str(), &sb);
-    if (0 == res && sb.st_mode && S_IFDIR){
-        logDebug(path+" dir already in app's internal data storage.");
-    }
-    else if (ENOENT == errno){
-        res = mkdir(path.c_str(), 0770);
-    }
 	path += "/Neko_Profile.prof";
 	logDebug("Android data profile data path: "+path);
     auto blockNumber = profiler::dumpBlocksToFile(path.c_str());
@@ -96,7 +96,7 @@ Java_swiss_sae_gpr5300_MainActivity_destroy([[maybe_unused]]JNIEnv *env, [[maybe
     }
     else
     {
-        logDebug("Easy Profile with several blocks.");
+        logDebug("Easy Profile with several blocks: "+std::to_string(blockNumber));
     }
 #endif
 }
@@ -120,7 +120,6 @@ void BasicEngine::Update(seconds dt)
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
 #endif
-
     renderer_->ResetJobs();
     window_->ResetJobs();
 	
@@ -196,7 +195,6 @@ void BasicEngine::EngineLoop()
 		const auto dt = std::chrono::duration_cast<seconds>(start - clock);
 		clock = start;
 		Update(dt);
-
 	}
 #endif
     Destroy();
