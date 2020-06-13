@@ -4,6 +4,7 @@
 
 #include "chunk_renderer.h"
 #include "chunks_manager.h"
+#include "gizmos_renderer.h"
 
 namespace neko
 {
@@ -20,6 +21,7 @@ namespace neko
     protected:
         std::mutex updateMutex_;
         ChunkRenderer chunkRenderer_;
+        GizmosRenderer gizmosRenderer_;
     	
         //ImGui Viewer
         EntityViewer entityViewer_;

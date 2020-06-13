@@ -4,10 +4,8 @@
 
 #include <graphics/graphics.h>
 #include <sdl_engine/sdl_engine.h>
-
-#include "../../inputs/include/input/sample_program.h"
-#include "graphics/camera.h"
-#include "graphics/texture.h"
+#include <graphics/camera.h>
+#include <graphics/texture.h>
 
 
 namespace neko
@@ -15,7 +13,7 @@ namespace neko
 struct MoveableCamera3D;
 class MinecraftLikeEngine;
 
-class ChunkRenderer final : public RenderCommandInterface, public SampleProgram
+class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
 {
 public:
 	ChunkRenderer(MinecraftLikeEngine& engine, MoveableCamera3D& camera, EntityViewer& entityViewer);
@@ -27,10 +25,6 @@ public:
 	void Destroy() override;
 
 	void Render() override;
-
-	void DrawImGui() override;
-
-	void OnEvent(const SDL_Event& event) override;
 
 private:
 

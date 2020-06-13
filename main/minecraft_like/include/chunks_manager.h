@@ -1,7 +1,7 @@
 #pragma once
 #include <engine/component.h>
 
-#include "chunks/chunk.h"
+#include "chunk.h"
 
 namespace neko
 {

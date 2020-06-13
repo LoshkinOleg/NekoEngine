@@ -22,8 +22,8 @@ void ChunkRenderer::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
 	shader_.LoadFromFile(
-		config.dataRootPath + "shaders/minecraft-like/coords.vert",
-		config.dataRootPath + "shaders/minecraft-like/coords.frag");
+		config.dataRootPath + "shaders/minecraft_like/coords.vert",
+		config.dataRootPath + "shaders/minecraft_like/coords.frag");
 	texture_[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.jpg");
 	texture_[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/stone.jpg");
 	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
@@ -51,6 +51,7 @@ void ChunkRenderer::Render()
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
+		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(i);
 
 		for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
 		{
@@ -58,7 +59,7 @@ void ChunkRenderer::Render()
 			int y = std::floor((i - z * chunkSize * chunkSize) / chunkSize);
 			int x = i % chunkSize;
 			Mat4f model = Mat4f::Identity; //model transform matrix
-			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
+			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
 			shader_.SetMat4("model", model);
 			int blockID = chunk.GetBlockId(Vec3i(x, y, z));
 			if (texture_[blockID - 1] == INVALID_TEXTURE_ID) return;
@@ -81,14 +82,6 @@ void ChunkRenderer::Destroy()
 	gl::DestroyTexture(texture_[0]);
 	gl::DestroyTexture(texture_[1]);
 	gl::DestroyTexture(texture_[2]);
-}
-
-void ChunkRenderer::DrawImGui()
-{
-}
-
-void ChunkRenderer::OnEvent(const SDL_Event& event)
-{
 }
 
 }

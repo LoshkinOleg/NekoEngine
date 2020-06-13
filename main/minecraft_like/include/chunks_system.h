@@ -1,8 +1,11 @@
 #pragma once
 #include <engine/system.h>
 
+
 namespace neko
 {
+class EntityManager;
+class Transform3dManager;
 class ChunksManager;
 class MinecraftLikeEngine;
 
@@ -19,5 +22,7 @@ public:
 
 private:
 	ChunksManager& chunksManager_;
+	Transform3dManager& transform3dManager_;
+	EntityManager& entityManager_;
 };
 }

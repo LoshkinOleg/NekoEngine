@@ -2,7 +2,11 @@ include_directories("include/")
 
 file(GLOB_RECURSE minecraft_like_src include/*.h src/*.cpp)
 
-add_executable(minecraft_like ${minecraft_like_src})
+file(GLOB_RECURSE shaders_src ${CMAKE_SOURCE_DIR}/data/shaders/minecraft_like/*.vert ${CMAKE_SOURCE_DIR}/data/shaders/minecraft_like/*.frag)
+
+source_group("Shaders"	FILES ${shaders_src})
+
+add_executable(minecraft_like ${minecraft_like_src} ${shaders_src})
 target_link_libraries(minecraft_like PUBLIC Neko_Core sdl_engine gles3_wrapper)
 neko_bin_config(minecraft_like)
 
