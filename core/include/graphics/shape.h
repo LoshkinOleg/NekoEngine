@@ -63,6 +63,24 @@ protected:
     Vec3f size_;
 };
 
+class RenderWireFrameCuboid : public RenderShape
+{
+public:
+    RenderWireFrameCuboid()=delete;
+    explicit RenderWireFrameCuboid(Vec3f offset, Vec3f size) : RenderShape(offset), size_(size){}
+
+    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
+    {
+        Sphere3D s;
+        s.center = offset_;
+        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
+        return s;
+    }
+
+protected:
+    Vec3f size_;
+};
+
 class RenderLine3d : public RenderShape
 {
 public:

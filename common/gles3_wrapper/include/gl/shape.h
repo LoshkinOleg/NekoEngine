@@ -45,6 +45,17 @@ public:
     void Destroy() override;
 };
 
+class RenderWireFrameCuboid : public neko::RenderWireFrameCuboid, public VertexArrayObject
+{
+public:
+    using neko::RenderWireFrameCuboid::RenderWireFrameCuboid;
+    void Init() override;
+
+    void Draw() const override;
+
+    void Destroy() override;
+};
+
 class RenderLine3d : public neko::RenderLine3d, public VertexArrayObject
 {
 public:

@@ -116,7 +116,7 @@ private:
 
 	MoveableCamera3D& camera_;
 
-	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
+	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
 
 	gl::Shader shaderCube_;

@@ -295,6 +295,70 @@ void RenderCuboid::Destroy()
 	//glDeleteBuffers(2, &EBO);
 }
 
+void RenderWireFrameCuboid::Init()
+{
+	Vec3f position[36] =
+	{
+		//Right face 
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		
+		//Left face                 
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Right
+		
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		
+		//Top face                  
+		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		//Bottom face               
+		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Top Right
+		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+	};
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(4, &VBO[0]);
+
+	glBindVertexArray(VAO);
+	// position attribute
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+}
+
+void RenderWireFrameCuboid::Draw() const
+{
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_LINES, 0, 24);
+}
+
+void RenderWireFrameCuboid::Destroy()
+{
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO[0]);
+}
+
 void RenderCircle::Init()
 {
 	Vec2f vertices[resolution + 2];
