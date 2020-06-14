@@ -18,6 +18,9 @@ namespace neko
 		shaderCube_.LoadFromFile(
 			config.dataRootPath + "shaders/minecraft_like/gizmoCube.vert",
 			config.dataRootPath + "shaders/minecraft_like/gizmoCube.frag");
+		shaderLine_.LoadFromFile(
+			config.dataRootPath + "shaders/minecraft_like/gizmoLine.vert",
+			config.dataRootPath + "shaders/minecraft_like/gizmoLine.frag");
 		cube_.Init();
 		line_.Init();
 		gizmosQueue_.resize(100); //TODO(@Luca) Nombre Magique
@@ -59,23 +62,22 @@ namespace neko
 
 			if (gizmo.shape == GizmoShape::LINE)
 			{
-				if (shaderCube_.GetProgram() == 0)
+				if (shaderLine_.GetProgram() == 0)
 				{
 					continue;
 				}
 
 				std::lock_guard<std::mutex> lock(updateMutex_);
 
-				shaderCube_.Bind();
-				shaderCube_.SetMat4("view", camera_.GenerateViewMatrix());
-				shaderCube_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-
+				shaderLine_.Bind();
+				shaderLine_.SetMat4("view", camera_.GenerateViewMatrix());
+				shaderLine_.SetMat4("projection", camera_.GenerateProjectionMatrix());
 				Mat4f model = Mat4f::Identity; //model transform matrix
-				model = Transform3d::Scale(model, gizmo.lineEndPos);
 				model = Transform3d::Translate(model, gizmo.pos);
-				shaderCube_.SetMat4("model", model);
-				shaderCube_.SetVec4("color", gizmo.color);
-				cube_.Draw();
+				shaderLine_.SetMat4("model", model);
+				shaderLine_.SetVec4("color", gizmo.color);
+				shaderLine_.SetVec3("endPos", gizmo.lineEndPos);
+				line_.Draw();
 			}
 		}
 		gizmosQueue_.clear();

@@ -63,6 +63,16 @@ protected:
     Vec3f size_;
 };
 
+class RenderLine3d : public RenderShape
+{
+public:
+    RenderLine3d() = delete;
+    explicit RenderLine3d(Vec3f startPos, Vec3f endPos) : RenderShape(startPos), relativeEndPos_(endPos-startPos) {}
+
+protected:
+    Vec3f relativeEndPos_;
+};
+
 class RenderSphere : public RenderShape
 {
 public:

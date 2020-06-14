@@ -19,6 +19,7 @@ ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
 
 void ChunksSystem::Init()
 {
+	transform3dManager_.SetPosition(1, Vec3f(1, 1, 1) * 5);
 }
 
 void ChunksSystem::Update(seconds dt)
@@ -27,9 +28,13 @@ void ChunksSystem::Update(seconds dt)
 	{
 		if (entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK)))
 		{
-			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f(7.5f), Vec3f::one * 16.0f, Color4(1, 0, 0, 0.5f));
+			//GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f(7.5f), Vec3f::one * 16.0f, Color4(1, 0, 0, 0.5f));
 		}
 	}
+	GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(0), Vec3f::one, Color4(1, 0, 0, 0.5f));
+	GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(1), Vec3f::one, Color4(1, 0, 0, 0.5f));
+	GizmosLocator::get().DrawLine(transform3dManager_.GetPosition(0), transform3dManager_.GetPosition(1), Color4(0, 0, 1, 1.0f));
+	
 	std::cout << std::endl;
 }
 

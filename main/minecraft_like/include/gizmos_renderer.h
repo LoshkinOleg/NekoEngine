@@ -117,9 +117,10 @@ private:
 	MoveableCamera3D& camera_;
 
 	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
-	gl::RenderCuboid line_{Vec3f::zero, Vec3f::one};
+	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
 
 	gl::Shader shaderCube_;
+	gl::Shader shaderLine_;
 
 	std::vector<Gizmos> gizmosQueue_;
 };

@@ -44,4 +44,15 @@ public:
 
     void Destroy() override;
 };
+
+class RenderLine3d : public neko::RenderLine3d, public VertexArrayObject
+{
+public:
+    using neko::RenderLine3d::RenderLine3d;
+    void Init() override;
+
+    void Draw() const override;
+
+    void Destroy() override;
+};
 }
