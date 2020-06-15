@@ -47,17 +47,17 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	for (size_t i = 0; i < kInitEntityNmb_; i++)
+	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
 		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(i);
 
-		for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
+		for (int i = 0; i < kChunkSize * kChunkSize * kChunkSize; i++)
 		{
-			int z = std::floor(i / (chunkSize * chunkSize));
-			int y = std::floor((i - z * chunkSize * chunkSize) / chunkSize);
-			int x = i % chunkSize;
+			int z = std::floor(i / (kChunkSize * kChunkSize));
+			int y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
+			int x = i % kChunkSize;
 			Mat4f model = Mat4f::Identity; //model transform matrix
 			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
 			shader_.SetMat4("model", model);

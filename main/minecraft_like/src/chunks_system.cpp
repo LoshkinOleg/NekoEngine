@@ -17,18 +17,57 @@ ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
 	chunksManager_.SetComponent(0, chunk);
 }
 
+void ChunksSystem::GenerateChunks()
+{
+	int worldSize = 3;
+	for (size_t i = 0; i < worldSize*worldSize; i++)
+	{
+		int posY= std::floor((i) / worldSize) - worldSize / 2;
+		int posX = i % worldSize - worldSize / 2;
+		transform3dManager_.SetPosition(i, Vec3f(posX*kChunkSize, 0, posY*kChunkSize));
+		Chunk chunk = chunksManager_.GetComponent(i);
+		for (int x = 0; x < kChunkSize; x++)
+		{
+			for (int y = 0; y < kChunkSize / 2; y++)
+			{
+				for (int z = 0; z < kChunkSize; z++)
+				{
+					if (y < kChunkSize / 2 - 2)
+					{
+						if (RandomRange(0.0f, 1.0f) < 0.75f)
+						{
+							chunk.SetBlock(2, Vec3i(x, y, z));
+						}
+						else
+						{
+							chunk.SetBlock(3, Vec3i(x, y, z));
+						}
+					}
+					else
+					{
+						chunk.SetBlock(1, Vec3i(x, y, z));
+					}
+				}
+			}
+		}
+		chunksManager_.SetComponent(i, chunk);
+		transform3dManager_.AddComponent(i);
+		chunksManager_.AddComponent(i);
+	}
+}
+
 void ChunksSystem::Init()
 {
-	transform3dManager_.SetPosition(1, Vec3f(1, 1, 1) * 5);
+	GenerateChunks();
 }
 
 void ChunksSystem::Update(seconds dt)
 {
-	for (Index i = 0; i < 100; i++)
+	for (Index i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK)))
 		{
-			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f(7.5f), Vec3f::one * 16.0f, Color4(1, 0, 0, 0.5f));
+			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f((kChunkSize-1)/2.0f), Vec3f::one * kChunkSize, Color4(1, 0, 0, 0.5f));
 		}
 	}
 	
@@ -38,4 +77,6 @@ void ChunksSystem::Update(seconds dt)
 void ChunksSystem::Destroy()
 {
 }
+
+
 }

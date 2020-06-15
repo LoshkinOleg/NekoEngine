@@ -9,12 +9,6 @@ class ChunksManager final : public neko::ComponentManager<Chunk, ComponentType::
 {
 public:
 	explicit ChunksManager(EntityManager& entityManager);
-
-	Index AddComponent(Entity entity) override;
-
-	void DestroyComponent(Entity entity) override;
-
-	void SetComponent(Entity entity, const Chunk& component) override;
 private:
 };
 
