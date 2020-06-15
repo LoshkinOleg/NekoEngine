@@ -1,6 +1,8 @@
 #pragma once
 #include <engine/transform.h>
 
+
+#include "aabb_manager.h"
 #include "chunks_manager.h"
 #include "chunks_system.h"
 
@@ -23,5 +25,6 @@ public:
 	ChunksManager chunkManager_;
 protected:
 	ChunksSystem chunksSystem_;
+	AabbManager aabbManager_;
 };
 }

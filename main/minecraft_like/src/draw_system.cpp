@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 
+
+#include "aabb_manager.h"
 #include "minecraft_like_engine.h"
 
 namespace neko
@@ -42,6 +44,16 @@ void DrawSystem::Update(seconds dt)
 	gizmosRenderer_.Update(dt);
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
+	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
+	{
+		Block block = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
+		savedCameraDir_ = -camera_.reverseDirection;
+		savedCameraPos_ = camera_.position;
+		std::cout << "BlockPos : " << block.blockPos << std::endl;
+		std::cout << "BlockID : " << static_cast<int>(block.blockType) << std::endl;
+		GizmosLocator::get().DrawCube(Vec3f(block.blockPos), Vec3f::one, Color4(1,1,1,1));
+	}
+	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_*10);
 }
 
 void DrawSystem::Destroy()

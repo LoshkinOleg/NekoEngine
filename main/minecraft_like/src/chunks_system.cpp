@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+
+#include "aabb_manager.h"
 #include "minecraft_like_engine.h"
 #include "chunks_manager.h"
 #include "gizmos_renderer.h"
@@ -31,8 +33,6 @@ void ChunksSystem::Update(seconds dt)
 			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f(7.5f), Vec3f::one * 16.0f, Color4(1, 0, 0, 0.5f));
 		}
 	}
-	
-	std::cout << std::endl;
 }
 
 void ChunksSystem::Destroy()

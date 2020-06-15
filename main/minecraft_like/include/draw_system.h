@@ -29,5 +29,9 @@ namespace neko
         ChunksViewer chunksViewer_;
         MinecraftLikeEngine& engine_;
         MoveableCamera3D camera_;
+
+    	//test
+        Vec3f savedCameraPos_;
+        Vec3f savedCameraDir_;
     };
 }

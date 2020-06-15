@@ -3,6 +3,7 @@
 #include <array>
 
 #include <mathematics/vector.h>
+#include <mathematics/aabb.h>
 
 namespace neko
 {
@@ -24,6 +25,7 @@ public:
 	uint8_t GetBlockId(const Vec3i& pos);
 
 	Vec3f GetChunkPos() const;
+	Aabb3d GetAabb() const;
 private:
 	Vec3f chunkPos_;
 

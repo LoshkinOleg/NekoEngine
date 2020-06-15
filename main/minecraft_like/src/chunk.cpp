@@ -16,4 +16,11 @@ Vec3f Chunk::GetChunkPos() const
 {
 	return chunkPos_;
 }
+
+Aabb3d Chunk::GetAabb() const
+{
+	Aabb3d aabb;
+	aabb.SetFromCenter(chunkPos_, Vec3f(chunkSize / 2, chunkSize / 2, chunkSize / 2));
+	return aabb;
+}
 }
