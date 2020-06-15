@@ -1,6 +1,9 @@
 #include "chunks_system.h"
 
 #include <iostream>
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
 
 #include "minecraft_like_engine.h"
 #include "chunks_manager.h"
@@ -19,6 +22,7 @@ ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
 
 void ChunksSystem::GenerateChunks()
 {
+	EASY_BLOCK("GenerateChunks");
 	int worldSize = 3;
 	for (size_t i = 0; i < worldSize*worldSize; i++)
 	{

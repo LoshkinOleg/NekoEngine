@@ -1,7 +1,9 @@
 #include "chunk_renderer.h"
 
 #include <graphics/camera.h>
-
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
 
 #include "gl/texture.h"
 #include "minecraft_like_engine.h"
@@ -40,6 +42,7 @@ void ChunkRenderer::Update(seconds dt)
 
 void ChunkRenderer::Render()
 {
+	EASY_BLOCK("ChunkRenderer::Render");
 	if (shader_.GetProgram() == 0) return;
 
 	std::lock_guard<std::mutex> lock(updateMutex_);
@@ -53,22 +56,29 @@ void ChunkRenderer::Render()
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
 		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(i);
 
-		for (int i = 0; i < kChunkSize * kChunkSize * kChunkSize; i++)
+		EASY_BLOCK("ChunkRenderer::Render::Chunk");
+		for (int x = 0; x < kChunkSize; x++)
 		{
-			int z = std::floor(i / (kChunkSize * kChunkSize));
-			int y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
-			int x = i % kChunkSize;
-			Mat4f model = Mat4f::Identity; //model transform matrix
-			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
-			shader_.SetMat4("model", model);
-			int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-			if (texture_[blockID - 1] == INVALID_TEXTURE_ID) return;
-			glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			if (blockID != 0)
+			for (int y = 0; y < kChunkSize; y++)
 			{
-				cube_.Draw();
+				for (int z = 0; z < kChunkSize; z++)
+				{
+					EASY_BLOCK("ChunkRenderer::Render::Air");
+					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
+					if (blockID != 0)
+					{
+						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+						EASY_BLOCK("ChunkRenderer::Render::Cube");
+						Mat4f model = Mat4f::Identity; //model transform matrix
+						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
+						shader_.SetMat4("model", model);
+						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+						cube_.Draw();
+					}
+				}
 			}
 		}
 	}
