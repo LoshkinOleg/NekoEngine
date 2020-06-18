@@ -54,7 +54,6 @@ void ChunkRenderer::Render()
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(i);
 
 		EASY_BLOCK("ChunkRenderer::Render::Chunk");
 		for (int x = 0; x < kChunkSize; x++)
@@ -70,7 +69,7 @@ void ChunkRenderer::Render()
 						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
 						EASY_BLOCK("ChunkRenderer::Render::Cube");
 						Mat4f model = Mat4f::Identity; //model transform matrix
-						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
+						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
 						shader_.SetMat4("model", model);
 						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

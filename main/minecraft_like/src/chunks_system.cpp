@@ -4,7 +4,10 @@
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
+#include "engine/transform.h"
 
+
+#include "aabb_manager.h"
 #include "minecraft_like_engine.h"
 #include "chunks_manager.h"
 #include "gizmos_renderer.h"
@@ -26,10 +29,11 @@ void ChunksSystem::GenerateChunks()
 	int worldSize = 3;
 	for (size_t i = 0; i < worldSize*worldSize; i++)
 	{
-		int posY= std::floor((i) / worldSize) - worldSize / 2;
+		int posZ= std::floor((i) / worldSize) - worldSize / 2;
 		int posX = i % worldSize - worldSize / 2;
-		transform3dManager_.SetPosition(i, Vec3f(posX*kChunkSize, 0, posY*kChunkSize));
+		transform3dManager_.SetPosition(i, Vec3f(posX*kChunkSize, 0, posZ*kChunkSize));
 		Chunk chunk = chunksManager_.GetComponent(i);
+		chunk.SetChunkPos(Vec3f(posX * kChunkSize, 0, posZ * kChunkSize));
 		for (int x = 0; x < kChunkSize; x++)
 		{
 			for (int y = 0; y < kChunkSize / 2; y++)
@@ -74,8 +78,6 @@ void ChunksSystem::Update(seconds dt)
 			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f((kChunkSize-1)/2.0f), Vec3f::one * kChunkSize, Color4(1, 0, 0, 0.5f));
 		}
 	}
-	
-	std::cout << std::endl;
 }
 
 void ChunksSystem::Destroy()

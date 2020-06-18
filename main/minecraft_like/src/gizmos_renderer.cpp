@@ -76,7 +76,7 @@ namespace neko
 				model = Transform3d::Translate(model, gizmo.pos);
 				shaderLine_.SetMat4("model", model);
 				shaderLine_.SetVec4("color", gizmo.color);
-				shaderLine_.SetVec3("endPos", gizmo.lineEndPos);
+				shaderLine_.SetVec3("endPos", gizmo.lineEndPos-gizmo.pos);
 				line_.Draw();
 			}
 		}
