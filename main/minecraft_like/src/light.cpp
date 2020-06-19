@@ -16,7 +16,6 @@ void Light::Init() {
 	phongShader_.LoadFromFile(
 		config.dataRootPath + "shaders/07_hello_light/light.vert",
 		config.dataRootPath + "shaders/07_hello_light/light.frag");
-	std::cout << "INIT" << std::endl;
 }
 
 void Light::Update(seconds dt) {
@@ -30,4 +29,26 @@ void Light::Destroy() {
 	lightShader_.Destroy();
 	phongShader_.Destroy();
 }
+
+void Light::BindShader(Mat4f model, Mat4f view, Mat4f projection) {
+	lightShader_.Bind();
+	lightShader_.SetMat4("model", model);
+	lightShader_.SetMat4("view", view);
+	lightShader_.SetMat4("projection", projection);
+
+	lightShader_.SetVec3("lightColor", lightColor_);
+
+	phongShader_.SetMat4("model", model);
+	phongShader_.SetMat4("view", view);
+	phongShader_.SetMat4("projection", projection);
+	phongShader_.SetVec3("lightPos", lightPos_);
+	//phongShader_.SetVec3("viewPos", cam.position);
+	phongShader_.SetVec3("objectColor", objectColor_);
+	phongShader_.SetVec3("lightColor", lightColor_);
+	phongShader_.SetFloat("ambientStrength", ambientStrength_);
+	phongShader_.SetFloat("diffuseStrength", diffuseStrength_);
+	phongShader_.SetFloat("specularStrength", specularStrength_);
+	phongShader_.SetInt("specularPow", specularPow_);
+}
+
 }

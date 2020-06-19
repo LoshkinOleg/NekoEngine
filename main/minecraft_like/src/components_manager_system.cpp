@@ -12,6 +12,7 @@ ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	  light_(engine)
 {
 	engine.RegisterSystem(chunksSystem_);
+	engine.RegisterSystem(light_);
 }
 
 void ComponentsManagerSystem::Init()

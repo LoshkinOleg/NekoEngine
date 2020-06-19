@@ -8,8 +8,9 @@
 
 namespace neko
 {
-class MinecraftLikeEngine;
-	
+
+	class MinecraftLikeEngine;
+	struct MoveableCamera3D;
 class Light final : public SystemInterface
 {
 public:
@@ -17,6 +18,8 @@ public:
 	void Init() override;
 	void Update(seconds dt) override;
 	void Destroy() override;
+
+	void BindShader(Mat4f model, Mat4f view, Mat4f projection);
 	
 private:
 	gl::Shader lightShader_;

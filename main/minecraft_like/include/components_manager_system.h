@@ -23,9 +23,10 @@ public:
 
 	Transform3dManager transform3dManager_;
 	ChunksManager chunkManager_;
+	Light light_;
 protected:
 	ChunksSystem chunksSystem_;
 	AabbManager aabbManager_;
-	Light light_;
+
 };
 }
