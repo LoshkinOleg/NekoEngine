@@ -25,7 +25,9 @@ ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
 
 void ChunksSystem::GenerateChunks()
 {
+#ifdef EASY_PROFILE_USE
 	EASY_BLOCK("GenerateChunks");
+#endif
 	int worldSize = 3;
 	for (size_t i = 0; i < worldSize*worldSize; i++)
 	{
