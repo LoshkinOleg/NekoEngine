@@ -1,7 +1,6 @@
 #pragma once
 #include <engine/system.h>
 
-
 namespace neko
 {
 class EntityManager;

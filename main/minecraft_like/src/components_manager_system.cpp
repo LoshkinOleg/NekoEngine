@@ -8,7 +8,8 @@ ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	: transform3dManager_(engine.entityManager_),
 	  chunkManager_(engine.entityManager_),
 	  aabbManager_(engine),
-	  chunksSystem_(engine)
+	  chunksSystem_(engine),
+	  light_(engine)
 {
 	engine.RegisterSystem(chunksSystem_);
 }

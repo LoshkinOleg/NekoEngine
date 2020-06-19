@@ -14,10 +14,10 @@
 
 namespace neko
 {
-ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
-	: chunksManager_(engine.componentsManagerSystem_.chunkManager_),
-	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_),
-	  entityManager_(engine.entityManager_)
+	ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
+		: chunksManager_(engine.componentsManagerSystem_.chunkManager_),
+		transform3dManager_(engine.componentsManagerSystem_.transform3dManager_),
+		entityManager_(engine.entityManager_)
 {
 	Chunk chunk;
 	chunksManager_.SetComponent(0, chunk);

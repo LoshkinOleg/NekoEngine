@@ -23,7 +23,7 @@ public:
 	EntityManager entityManager_;
 	EntityHierarchy entityHierarchy_;
 	ComponentsManagerSystem componentsManagerSystem_;
-
+	Light light_;
 private :
 	DrawSystem drawSystem_;
 

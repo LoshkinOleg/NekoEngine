@@ -1,10 +1,10 @@
 #pragma once
 #include <engine/transform.h>
 
-
 #include "aabb_manager.h"
 #include "chunks_manager.h"
 #include "chunks_system.h"
+#include "light.h"
 
 namespace neko
 {
@@ -26,5 +26,6 @@ public:
 protected:
 	ChunksSystem chunksSystem_;
 	AabbManager aabbManager_;
+	Light light_;
 };
 }
