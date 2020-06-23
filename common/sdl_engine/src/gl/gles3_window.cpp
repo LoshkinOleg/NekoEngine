@@ -162,7 +162,7 @@ void Gles3Window::LeaveCurrentContext()
 {
 	SDL_GL_MakeCurrent(window_, nullptr);
 #ifndef EMSCRIPTEN
-	const auto currentContext = SDL_GL_GetCurrentContext();
+	/*const auto currentContext = SDL_GL_GetCurrentContext();
 
 	std::ostringstream oss;
 	oss << "Leave current context from thread: " << std::this_thread::get_id();
@@ -170,7 +170,7 @@ void Gles3Window::LeaveCurrentContext()
 	{
 		oss << "[Error] After Leave Current Context, context: " << currentContext;
 	}
-	LogDebug(oss.str());
+	LogDebug(oss.str());*/
 #endif
 }
 }

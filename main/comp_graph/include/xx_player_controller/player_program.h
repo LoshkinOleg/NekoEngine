@@ -39,8 +39,9 @@ public:
     void DrawImGui() override;
 
     void OnEvent(const SDL_Event& event) override;
-
+	
 	void CreateCube(const Vec3f& position);
+	void PlaceCube(const Vec3f& position);
 	
 	void DeleteCube(const size_t& index);
 
@@ -61,25 +62,28 @@ public:
         float distance);
 private:
 	float gravity_ = 36.5f;
+    PlayerCamera camera_;
+	
+	float timer_ = 0.0f;
 	
 	//Player variables
 	Vec3f playerPos_ = Vec3f::back * 3 + Vec3f::up * 2;
-	Aabb3d playerAabb_;
 	Vec3f playerAabbSize_ = Vec3f(0.5f, 0.9f, 0.5f);
+	Aabb3d playerAabb_;
+	uint8_t playerState_ = 0;
+    float maxReach_ = 6.0f;
+	float placeCoolDown_ = 0.2f;
+	float placeTimeStamp_ = 0.0f;
+
+	//Movement variables
+	Vec3f playerVelocity_ = Vec3f::zero;
 	float decelerationSpeed_ = 35.0f;
 	float sprintMultiplier_ = 1.3f;
-	float playerJumpPower_ = 8.5f;
-	bool canJump_ = false;
-	Vec3f playerVelocity_ = Vec3f::zero;
-
 	float speedMultiplier_ = 1.0f;
-	uint8_t playerState_ = 0;
-
-	float timer_ = 0.0f;
 	
-    const float maxReach_ = 6.0f;
-	
-    PlayerCamera camera_;
+	//Jump Variables
+	float playerJumpPower_ = 9.f;
+	bool canJump_ = false;
 
 	//Head Bobbing
 	Vec3f cameraOffset_ = Vec3f::up * 1.5f;
@@ -88,8 +92,6 @@ private:
     float defaultPosY_ = 1.5f;
     float bobbingTimer_ = 0;
 
-	//Jump Variables
-	
 
 	//Cubes
     gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};

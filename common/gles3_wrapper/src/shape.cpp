@@ -100,6 +100,23 @@ void RenderQuad::Destroy()
 
 }
 
+void RenderQuad::SetSize(const Vec2f& newSize)
+{
+	size_ = newSize;
+
+	Init();
+	
+	Vec2f vertices[4] = {
+			Vec2f(0.5f, 0.5f) * size_ + Vec2f(offset_),  // top right
+			Vec2f(0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom right
+			Vec2f(-0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom left
+			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
+	};
+	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+}
+
 void RenderCuboid::Init()
 {
 	Vec3f position[36] =

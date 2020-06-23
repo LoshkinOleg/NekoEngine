@@ -9,7 +9,7 @@ struct VertexArrayObject
 {
     unsigned int VAO = 0;
     unsigned int EBO = 0;
-    unsigned int VBO[4]{};
+    unsigned int VBO[4] = {0};
 	
     unsigned int instanceVbo = 0;
 };
@@ -34,6 +34,8 @@ public:
     void Draw() const override;
 
     void Destroy() override;
+
+	void SetSize(const Vec2f& newSize);
 };
 
 class RenderCuboid : public neko::RenderCuboid, public VertexArrayObject

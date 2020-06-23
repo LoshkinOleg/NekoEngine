@@ -35,6 +35,7 @@ using microseconds = std::chrono::duration<std::uint32_t, std::ratio<1, 1'000'00
 
 struct Time
 {
+	inline static float time = 0.0f;
 	inline static float deltaTime = 1.0f / 60.0f;
 	inline static float fixedDeltaTime = 1.0f / 50.0f;
 };

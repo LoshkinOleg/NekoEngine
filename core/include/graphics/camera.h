@@ -33,6 +33,16 @@ struct Camera
 		return Vec3f::Cross(reverseDirection, right).Normalized();
 	}
 
+	EulerAngles GetRotation() const
+	{
+		const auto inverseView = GenerateViewMatrix().Inverse();
+		return EulerAngles(
+			Atan2(inverseView[1][2], inverseView[2][2]),
+			Atan2(-inverseView[0][2], sqrtf(inverseView[1][2] * inverseView[1][2] + 
+				inverseView[2][2] * inverseView[2][2])),
+			Atan2(inverseView[0][1], inverseView[0][0]));
+	}
+
 	Mat4f GetRotationMat() const
 	{
 		const Vec3f right = GetRight();
@@ -61,7 +71,14 @@ struct Camera
 	
 	void Rotate(const EulerAngles& angles)
 	{
-		const auto pitch = Quaternion::AngleAxis(angles.x, GetRight());
+		const auto camRot = GetRotation();
+		
+		Quaternion pitch;
+		if (Abs(camRot.x.value()) > 89.0f && Sign(reverseDirection.z) == 1 ||
+			Abs(camRot.x.value()) < 91.0f && Sign(reverseDirection.z) != 1) 
+			pitch = Quaternion::Identity;
+		else
+			pitch = Quaternion::AngleAxis(angles.x, GetRight());
 
 		const auto yaw = Quaternion::AngleAxis(angles.y, GetUp());
 
@@ -86,7 +103,7 @@ protected:
 struct Camera2D : Camera
 {
 	float right = 0.0f, left = 0.0f, top = 0.0f, bottom =0.0f;
-	[[nodiscard]] Mat4f GenerateProjectionMatrix() const
+	[[nodiscard]] Mat4f GenerateProjectionMatrix() const override
 	{
 		return Mat4f(std::array<Vec4f, 4>{
 			Vec4f(2.0f / (right - left), 0, 0, 0),
@@ -187,7 +204,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 
 	void OnEvent(const SDL_Event& event) override
 	{
-		if (event.type == SDL_WINDOWEVENT_RESIZED)
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			const auto& config = BasicEngine::GetInstance()->config;
 			SetAspect(config.windowSize.x, config.windowSize.y);
@@ -249,7 +266,7 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 
 	void OnEvent(const SDL_Event& event) override
 	{
-		if (event.type == SDL_WINDOWEVENT_RESIZED)
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			const auto& config = BasicEngine::GetInstance()->config;
 			SetAspect(config.windowSize.x, config.windowSize.y);
@@ -344,6 +361,7 @@ struct PlayerCamera final : MoveableCamera3D
 
 	void Init() override
 	{
+		freezeCam = false;
 		SDL_SetRelativeMouseMode(SDL_TRUE);
 	}
 

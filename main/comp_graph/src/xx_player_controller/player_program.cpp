@@ -62,10 +62,11 @@ void PlayerProgram::Update(const seconds dt)
 	MovePlayer();
 	
 	if (playerVelocity_.y < 0.0f) timer_ += dt.count();
-	if (playerPos_.y < -100.0f)
+	if (playerPos_.y < -50.0f)
 	{
 		playerPos_ = Vec3f(0.0f, 1.5f, 0.0f);
 		playerVelocity_ = Vec3f::zero;
+		camera_.reverseDirection = Vec3f::back;
 	}
 }
 
@@ -101,8 +102,16 @@ void PlayerProgram::Render()
 void PlayerProgram::Destroy()
 {
 	cube_.Destroy();
+	selectCube_.Destroy();
+	crossHair_.Destroy();
 	shader_.Destroy();
+	shaderLine_.Destroy();
+	uiShader_.Destroy();
+
+	cubePositions_.clear();
+	cubeAabbs_.clear();
 	gl::DestroyTexture(texture_);
+	gl::DestroyTexture(crossHairTexture_);
 }
 
 void PlayerProgram::DrawImGui()
@@ -113,7 +122,9 @@ void PlayerProgram::DrawImGui()
 	DragFloat("Gravity", &gravity_, 0.001f, 0.0f, 10.0f, "%.7f");
 	DragFloat("Jump Power", &playerJumpPower_, 0.001f, 0.0f, 10.0f, "%.7f");
 	DragFloat("Deceleration Speed", &decelerationSpeed_, 0.001f, 0.0f, 10.0f, "%.7f");
+	DragFloat("Block Place Cooldown", &placeCoolDown_, 0.001f, 0.0f, 10.0f, "%.7f");
 	Separator();
+	Text("Time = %f", Time::time);
 	Text("Fall Time = %f", timer_);
 	End();
 }
@@ -122,11 +133,12 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 {
 	camera_.OnEvent(event);
 	
-	if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
+	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 	{
 		const Vec2f normalSpaceSize = Vec2f(crossHairSize_) / Vec2f(event.window.data1, event.window.data2);
-		crossHair_ = gl::RenderQuad(Vec3f::zero, normalSpaceSize);
-		crossHair_.Init();
+		crossHair_.SetSize(normalSpaceSize);
+
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 }
 
@@ -140,8 +152,22 @@ void PlayerProgram::CreateCube(const Vec3f& position)
 	cubeAabbs_.emplace_back(aabb);
 }
 
+void PlayerProgram::PlaceCube(const Vec3f& position)
+{
+	Aabb3d aabb;
+	aabb.SetFromCenter(position, Vec3(cubeHalfSize));
+	if (aabb.IntersectAabb(playerAabb_)) return;
+
+	placeTimeStamp_ = Time::time + placeCoolDown_;
+	cubePositions_.emplace_back(position);
+	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	
+	cubeAabbs_.emplace_back(aabb);
+}
+
 void PlayerProgram::DeleteCube(const size_t& index)
 {
+	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.erase(cubePositions_.begin() + index);
 	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
 	cubeAabbs_.erase(cubeAabbs_.begin() + index);
@@ -277,12 +303,13 @@ void PlayerProgram::CheckBlock()
 		shaderLine_.SetVec3("color", Vec3f::zero);
 		glLineWidth(3.0f);
 		selectCube_.Draw();
-
-		if (inputManager.IsMouseButtonDown(sdl::MouseButtonCode::LEFT))
+		
+		if (Time::time < placeTimeStamp_) return;
+		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::LEFT))
 		{
 			DeleteCube(rayOut.hitIndex);
 		}
-		if (inputManager.IsMouseButtonDown(sdl::MouseButtonCode::RIGHT))
+		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
 		{
 			const Vec3f toPoint = camera_.reverseDirection * -1 * rayOut.hitDist;
 			const Vec3f cubePoint = camera_.position + toPoint;
@@ -299,12 +326,7 @@ void PlayerProgram::CheckBlock()
 				Abs(fromCenter.z) > Abs(fromCenter.x)) 
 				offset.z = -Sign(fromCenter.z);
 
-			Aabb3d hitTest;
-			hitTest.SetFromCenter(camera_.position, Vec3f(0.5f));
-			if (!hitTest.ContainsPoint(rayOut.hitPos - offset))
-			{
-				CreateCube(rayOut.hitPos - offset);
-			}
+			PlaceCube(rayOut.hitPos - offset);
 		}
 	}
 }

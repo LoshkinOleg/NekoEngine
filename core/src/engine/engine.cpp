@@ -60,11 +60,6 @@ BasicEngine::BasicEngine(Configuration* config)
 
 BasicEngine::~BasicEngine()
 {
-    logManager_->WriteToFile();
-    LogDebug("Destroy Basic Engine");
-    logManager_->Wait();
-    logManager_->Destroy();
-
 #ifdef EASY_PROFILE_USE
     profiler::dumpBlocksToFile("Neko_Profile.prof");
 #endif
@@ -117,6 +112,7 @@ void BasicEngine::Init()
 void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
+	Time::time += dt_;
 	Time::deltaTime = dt_;
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
@@ -157,13 +153,18 @@ void BasicEngine::Update(seconds dt)
 
 void BasicEngine::Destroy()
 {
-    Job leaveContext([this] {window_->LeaveCurrentContext(); });
+    Job leaveContext([this] { window_->LeaveCurrentContext(); });
     jobSystem_.ScheduleJob(&leaveContext, JobThreadType::RENDER_THREAD);
     leaveContext.Join();
     window_->MakeCurrentContext();
     renderer_->Destroy();
 	jobSystem_.Destroy();
 	instance_ = nullptr;
+	
+    logManager_->WriteToFile();
+    LogDebug("Destroy Basic Engine");
+    logManager_->Wait();
+    logManager_->Destroy();
 }
 
 static std::chrono::time_point<std::chrono::system_clock> clock;
