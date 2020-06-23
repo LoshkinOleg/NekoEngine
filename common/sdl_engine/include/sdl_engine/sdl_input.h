@@ -363,7 +363,7 @@ enum class InputAction
 	ABILITIES = 9,
 	JUMP = 10,
 	CROUCH = 11,
-	ZOOM = 12,
+	SPRINT = 12,
 	MENU = 13,
 	LENGTH = 14
 };

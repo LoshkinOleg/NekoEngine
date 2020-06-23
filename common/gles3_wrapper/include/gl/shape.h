@@ -10,6 +10,8 @@ struct VertexArrayObject
     unsigned int VAO = 0;
     unsigned int EBO = 0;
     unsigned int VBO[4]{};
+	
+    unsigned int instanceVbo = 0;
 };
 
 class RenderCircle : public neko::RenderCircle, public VertexArrayObject
@@ -39,8 +41,10 @@ class RenderCuboid : public neko::RenderCuboid, public VertexArrayObject
 public:
     using neko::RenderCuboid::RenderCuboid;
     void Init() override;
+	void InitInstanced(const Vec3f& positions, int count);
 
     void Draw() const override;
+    void DrawInstanced(unsigned count) const;
 
     void Destroy() override;
 };

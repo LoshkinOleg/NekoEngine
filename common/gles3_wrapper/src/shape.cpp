@@ -282,10 +282,32 @@ void RenderCuboid::Init()
 
 }
 
+void RenderCuboid::InitInstanced(const Vec3f& positions, const int count)
+{
+	Init();
+	
+	glBindVertexArray(VAO);
+	
+	//Instances Positions
+	glGenBuffers(1, &instanceVbo);
+	glBindBuffer(GL_ARRAY_BUFFER, instanceVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * count, &positions, GL_STATIC_DRAW);
+	
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*) 0);
+	glVertexAttribDivisor(5, 1);
+	glEnableVertexAttribArray(5);
+}
+
 void RenderCuboid::Draw() const
 {
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void RenderCuboid::DrawInstanced(const unsigned count) const
+{
+	glBindVertexArray(VAO);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
 }
 
 void RenderCuboid::Destroy()
@@ -448,5 +470,4 @@ void RenderLine3d::Destroy()
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(2, &VBO[0]);
 }
-
 }

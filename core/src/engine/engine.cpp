@@ -117,6 +117,7 @@ void BasicEngine::Init()
 void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
+	Time::deltaTime = dt_;
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
 #endif

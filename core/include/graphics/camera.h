@@ -127,7 +127,7 @@ struct Camera3D : Camera
 struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 {
 	float moveSpeed = 2.5f;
-	float mouseSpeed = 0.1f;
+	float mouseSpeed = 0.2f;
 
 	MovableCamera() :
 		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
@@ -176,7 +176,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 			cameraMove.z -= dt.count();
 		
 		//Boost key test
-		if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 			cameraMove *= 3.0f;
 		
 		//Apply camera movement
@@ -238,7 +238,7 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 			cameraMove.z -= dt.count();
 		
 		//Boost key test
-		if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 			cameraMove *= 3.0f;
 		
 		//Apply camera movement
@@ -277,6 +277,7 @@ struct FpsCamera final : MoveableCamera3D
 	{
 		if (!freezeCam)
 		{
+			mouseMotion_ *= dt.count();
 			Rotate(EulerAngles(
 					degree_t(mouseMotion_.y),
 					degree_t(mouseMotion_.x),
@@ -300,13 +301,62 @@ struct FpsCamera final : MoveableCamera3D
 				cameraMove.z -= dt.count();
 
 			//Boost key test
-			if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+			if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 				cameraMove *= 3.0f;
 			
 			//Apply camera movement
 			position += (GetRight() * cameraMove.x + 
 				Vec3f::up * cameraMove.y - 
 				Vec3f::Cross(GetRight(), Vec3f::up) * cameraMove.z) * moveSpeed;
+		}
+	}
+
+	void OnEvent(const SDL_Event& event) override
+	{
+		if (inputManager_.IsActionDown(sdl::InputAction::MENU))
+		{
+			freezeCam = !freezeCam;
+			SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
+		}
+		
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+		{
+			SetAspect(event.window.data1, event.window.data2);
+		}
+		
+		if (!freezeCam)
+		{
+			if (event.type == SDL_MOUSEMOTION)
+				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+			
+			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
+		}
+	}
+
+	void Destroy() override
+	{
+	}
+};
+
+struct PlayerCamera final : MoveableCamera3D
+{
+	bool freezeCam = false;
+
+	void Init() override
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
+
+	void Update(const seconds dt) override
+	{
+		if (!freezeCam)
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
 		}
 	}
 

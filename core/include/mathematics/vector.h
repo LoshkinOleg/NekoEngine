@@ -173,6 +173,12 @@ struct Vec2
         return *this;
     }
 
+    Vec2<T> operator/(const Vec2<T>& rhs) const
+    {
+    	const T xx = x / rhs.x;
+        return Vec2<T>(x / rhs.x, y / rhs.y);
+    }
+
     Vec2<T> operator/(const T& rhs) const
     {
         return (*this) * (1.0f / rhs);
@@ -441,6 +447,11 @@ struct Vec3
         this->y *= rhs;
         this->z *= rhs;
         return *this;
+    }
+	
+    Vec3<T> operator/(const Vec3<T>& rhs) const
+    {
+        return Vec2<T>(x / rhs.x, y / rhs.y, z / rhs.z);
     }
 
     Vec3<T> operator/(T rhs) const

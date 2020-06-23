@@ -40,7 +40,7 @@ void InputManager::BindFromJson()
 		static_cast<unsigned>(KeyCode::SPACE);
 	bindingPcInput_[static_cast<unsigned>(InputAction::CROUCH)] =
 		static_cast<unsigned>(KeyCode::KEY_LEFT_SHIFT);
-	bindingPcInput_[static_cast<unsigned>(InputAction::ZOOM)] =
+	bindingPcInput_[static_cast<unsigned>(InputAction::SPRINT)] =
 		static_cast<unsigned>(KeyCode::KEY_LEFT_CTRL);
 	bindingPcInput_[static_cast<unsigned>(InputAction::MENU)] =
 		static_cast<unsigned>(KeyCode::ESCAPE);
@@ -666,7 +666,7 @@ std::string InputManager::ActionEnumToString(const InputAction action)
 	case InputAction::ABILITIES: return "Abilities";
 	case InputAction::JUMP: return "Jump";
 	case InputAction::CROUCH: return "Crouch";
-	case InputAction::ZOOM: return "Zoom";
+	case InputAction::SPRINT: return "Zoom";
 	case InputAction::MENU: return "Menu";
 	default: return "";
 	}
