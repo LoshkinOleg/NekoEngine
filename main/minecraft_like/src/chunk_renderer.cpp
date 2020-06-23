@@ -1,7 +1,9 @@
 #include "chunk_renderer.h"
 
 #include <graphics/camera.h>
-
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
 
 #include "gl/texture.h"
 #include "minecraft_like_engine.h"
@@ -40,6 +42,9 @@ void ChunkRenderer::Update(seconds dt)
 
 void ChunkRenderer::Render()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::Render");
+#endif
 	if (shader_.GetProgram() == 0) return;
 
 	std::lock_guard<std::mutex> lock(updateMutex_);
@@ -47,28 +52,40 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	for (size_t i = 0; i < kInitEntityNmb_; i++)
+	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(i);
 
-		for (int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
+#ifdef EASY_PROFILE_USE
+		EASY_BLOCK("ChunkRenderer::Render::Chunk");
+#endif
+		for (int x = 0; x < kChunkSize; x++)
 		{
-			int z = std::floor(i / (chunkSize * chunkSize));
-			int y = std::floor((i - z * chunkSize * chunkSize) / chunkSize);
-			int x = i % chunkSize;
-			Mat4f model = Mat4f::Identity; //model transform matrix
-			model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
-			shader_.SetMat4("model", model);
-			int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-			if (texture_[blockID - 1] == INVALID_TEXTURE_ID) return;
-			glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			if (blockID != 0)
+			for (int y = 0; y < kChunkSize; y++)
 			{
-				cube_.Draw();
+				for (int z = 0; z < kChunkSize; z++)
+				{
+#ifdef EASY_PROFILE_USE
+					EASY_BLOCK("ChunkRenderer::Render::Air");
+#endif
+					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
+					if (blockID != 0)
+					{
+						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+#ifdef EASY_PROFILE_USE
+						EASY_BLOCK("ChunkRenderer::Render::Cube");
+#endif
+						Mat4f model = Mat4f::Identity; //model transform matrix
+						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
+						shader_.SetMat4("model", model);
+						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+						cube_.Draw();
+					}
+				}
 			}
 		}
 	}

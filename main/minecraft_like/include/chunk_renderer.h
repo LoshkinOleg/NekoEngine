@@ -38,9 +38,5 @@ private:
 	std::mutex updateMutex_;
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
-	
-
-	std::vector<Vec3f> cubePositions;
-	const size_t kInitEntityNmb_ = 10;
 };
 }

@@ -14,6 +14,8 @@ class ChunksSystem final : public SystemInterface
 public:
 	explicit ChunksSystem(MinecraftLikeEngine& engine);
 
+	void GenerateChunks();
+	
 	void Init() override;
 
 	void Update(seconds dt) override;
