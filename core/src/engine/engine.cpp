@@ -113,6 +113,7 @@ void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
 	Time::time += dt_;
+	fixedUpdateAccumulator_ += dt_;
 	Time::deltaTime = dt_;
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
@@ -147,6 +148,14 @@ void BasicEngine::Update(seconds dt)
     jobSystem_.ScheduleJob(swapBufferJob, JobThreadType::RENDER_THREAD);
     jobSystem_.ScheduleJob(&eventJob, JobThreadType::MAIN_THREAD);
     jobSystem_.ScheduleJob(&updateJob, JobThreadType::MAIN_THREAD);
+
+    while (fixedUpdateAccumulator_ > Time::fixedDeltaTime)
+    {
+	    fixedUpdateAccumulator_ -= Time::fixedDeltaTime;
+	
+        Job fixedUpdateJob([this]{fixedUpdateAction_.Execute();});
+		jobSystem_.ScheduleJob(&fixedUpdateJob, JobThreadType::MAIN_THREAD);
+    }
 
     swapBufferJob->Join();
 }
@@ -229,7 +238,8 @@ void BasicEngine::GenerateUiFrame()
 void BasicEngine::RegisterSystem(SystemInterface& system)
 {
     initAction_.RegisterCallback([&system]{system.Init();});
-    updateAction_.RegisterCallback([&system](seconds dt){system.Update(dt);});
+    updateAction_.RegisterCallback([&system](const seconds dt){system.Update(dt);});
+    fixedUpdateAction_.RegisterCallback([&system]{system.FixedUpdate();});
     destroyAction_.RegisterCallback([&system]{system.Destroy();});
 }
 

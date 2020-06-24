@@ -31,6 +31,7 @@ public:
     void Init() override;
 
     void Update(seconds dt) override;
+	void FixedUpdate() override;
 
     void Destroy() override;
 
@@ -61,10 +62,12 @@ public:
 		const Vec3f& direction,
         float distance);
 private:
-	float gravity_ = 36.5f;
+	float gravity_ = 36.0f;
     PlayerCamera camera_;
 	
 	float timer_ = 0.0f;
+	float test_ = 0.0f;
+	float testStamp_ = 0.0f;
 	
 	//Player variables
 	Vec3f playerPos_ = Vec3f::back * 3 + Vec3f::up * 2;
@@ -77,12 +80,12 @@ private:
 
 	//Movement variables
 	Vec3f playerVelocity_ = Vec3f::zero;
-	float decelerationSpeed_ = 35.0f;
+	float decelerationSpeed_ = 9.0f;
 	float sprintMultiplier_ = 1.3f;
 	float speedMultiplier_ = 1.0f;
 	
 	//Jump Variables
-	float playerJumpPower_ = 9.f;
+	float playerJumpPower_ = 9.8f;
 	bool canJump_ = false;
 
 	//Head Bobbing
@@ -94,7 +97,7 @@ private:
 
 
 	//Cubes
-    gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
+	gl::RenderCuboidUnique uniqueCube_{Vec3f::zero, Vec3f::one};
     gl::Shader shader_;
     gl::RenderWireFrameCuboid selectCube_{Vec3f::zero, Vec3f(1.015f)};
     gl::Shader shaderLine_;

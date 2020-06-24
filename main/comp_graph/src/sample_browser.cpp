@@ -77,7 +77,11 @@ void SampleBrowser::Update(seconds dt)
 {
     programs_[currentProgramIndex_]->Update(dt);
     RendererLocator::get().Render(programs_[currentProgramIndex_].get());
-    
+}
+
+void SampleBrowser::FixedUpdate()
+{
+    programs_[currentProgramIndex_]->FixedUpdate();
 }
 
 void SampleBrowser::Destroy()

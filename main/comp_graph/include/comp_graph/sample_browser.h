@@ -20,6 +20,10 @@ public:
      */
     void Update(seconds dt) override;
     /**
+     * \brief Executed on the main thread
+     */
+    void FixedUpdate() override;
+    /**
      * \brief Executed on the render thread
      */
     void DrawImGui() override;

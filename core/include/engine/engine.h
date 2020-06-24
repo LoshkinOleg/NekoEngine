@@ -78,6 +78,7 @@ public:
 	void Init() override;
 
 	void Update(seconds dt) final;
+	void FixedUpdate() final {}
 
 	void Destroy() override;
 
@@ -119,7 +120,10 @@ protected:
 	std::atomic<float> dt_;
 	Action<> initAction_;
 	Action<seconds> updateAction_;
+	Action<> fixedUpdateAction_;
 	Action<> drawImGuiAction_;
 	Action<> destroyAction_;
+
+	float fixedUpdateAccumulator_ = 0.0f;
 };
 }

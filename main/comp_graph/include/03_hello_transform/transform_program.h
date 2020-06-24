@@ -14,6 +14,7 @@ class HelloTransformProgram : public SampleProgram
 public:
     void Init() override;
     void Update(seconds) override;
+	void FixedUpdate() override {}
     void Render() override;
     void Destroy() override;
 

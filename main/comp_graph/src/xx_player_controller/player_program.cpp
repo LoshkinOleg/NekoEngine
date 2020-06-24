@@ -1,6 +1,7 @@
 #include <xx_player_controller/player_program.h>
 
 #include <sdl_engine/sdl_input.h>
+#include <stb_image.h>
 
 #include <engine/engine.h>
 #include <gl/texture.h>
@@ -9,6 +10,8 @@ namespace neko
 {
 void PlayerProgram::Init()
 {
+	stbi_set_flip_vertically_on_load(true);
+	
 	const auto& config = BasicEngine::GetInstance()->config;
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/base_instance.vert",
@@ -28,6 +31,21 @@ void PlayerProgram::Init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+	std::array<TextureId, 3> cubeTex;
+	cubeTex[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png");
+	glBindTexture(GL_TEXTURE_2D, cubeTex[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	cubeTex[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_top.png");
+	glBindTexture(GL_TEXTURE_2D, cubeTex[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	cubeTex[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.png");
+	glBindTexture(GL_TEXTURE_2D, cubeTex[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	uniqueCube_.SetTextures(cubeTex);
+
 	const Vec2f normalSpaceSize = Vec2f(crossHairSize_) / Vec2f(config.windowSize);
 	crossHair_ = gl::RenderQuad(Vec3f::zero, normalSpaceSize);
 	crossHair_.Init();
@@ -38,14 +56,14 @@ void PlayerProgram::Init()
 
 	playerAabb_.SetFromCenter(playerPos_ + Vec3f::up, playerAabbSize_);
 
-	for (int x = -16; x < 16; ++x)
+	for (int x = -32; x < 32; ++x)
 	{
-		for (int z = -16; z < 16; ++z)
+		for (int z = -32; z < 32; ++z)
 		{
 			CreateCube(Vec3f(x, 0, z));
 		}
 	}
-	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -56,10 +74,28 @@ void PlayerProgram::Init()
 void PlayerProgram::Update(const seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
+	
+	const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
+	if (inputManager.IsActionDown(sdl::InputAction::SPRINT) && inputManager.IsActionHeld(sdl::InputAction::UP))
+	{
+		speedMultiplier_ = sprintMultiplier_;
+		playerState_ &= SPRINTING;
+	}
 
-	camera_.Update(dt);
+	if (inputManager.IsActionUp(sdl::InputAction::UP))
+	{
+		playerState_ |= ~SPRINTING;
+		speedMultiplier_ = 1.0f;
+	}
+	
+	if (canJump_ && inputManager.IsActionDown(sdl::InputAction::JUMP))
+	{
+		playerVelocity_.y = playerJumpPower_;
+		canJump_ = false;
+		timer_ = 0.0f;
+	}
 
-	MovePlayer();
+	if (Equal(Abs(playerVelocity_.y), 0.0f)) HeadBobbing();
 	
 	if (playerVelocity_.y < 0.0f) timer_ += dt.count();
 	if (playerPos_.y < -50.0f)
@@ -68,6 +104,16 @@ void PlayerProgram::Update(const seconds dt)
 		playerVelocity_ = Vec3f::zero;
 		camera_.reverseDirection = Vec3f::back;
 	}
+}
+
+void PlayerProgram::FixedUpdate()
+{
+	std::lock_guard<std::mutex> lock(updateMutex_);
+	test_ = Time::time - testStamp_;
+	testStamp_ = Time::time;
+
+	camera_.FixedUpdate();
+	MovePlayer();
 }
 
 void PlayerProgram::Render()
@@ -85,7 +131,7 @@ void PlayerProgram::Render()
 	CheckBlock();
 
 	shader_.Bind();
-	cube_.DrawInstanced(cubePositions_.size());
+	uniqueCube_.DrawInstanced(cubePositions_.size());
 
 	//UI
 	{
@@ -101,8 +147,8 @@ void PlayerProgram::Render()
 
 void PlayerProgram::Destroy()
 {
-	cube_.Destroy();
 	selectCube_.Destroy();
+	uniqueCube_.Destroy();
 	crossHair_.Destroy();
 	shader_.Destroy();
 	shaderLine_.Destroy();
@@ -126,6 +172,7 @@ void PlayerProgram::DrawImGui()
 	Separator();
 	Text("Time = %f", Time::time);
 	Text("Fall Time = %f", timer_);
+	Text("Test = %f", test_);
 	End();
 }
 
@@ -145,7 +192,7 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 void PlayerProgram::CreateCube(const Vec3f& position)
 {
 	cubePositions_.emplace_back(position);
-	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
 	
 	Aabb3d aabb;
 	aabb.SetFromCenter(position, Vec3(cubeHalfSize));
@@ -160,7 +207,7 @@ void PlayerProgram::PlaceCube(const Vec3f& position)
 
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.emplace_back(position);
-	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
 	
 	cubeAabbs_.emplace_back(aabb);
 }
@@ -169,58 +216,34 @@ void PlayerProgram::DeleteCube(const size_t& index)
 {
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.erase(cubePositions_.begin() + index);
-	cube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
 	cubeAabbs_.erase(cubeAabbs_.begin() + index);
 }
 
 void PlayerProgram::MovePlayer()
 {
 	const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
-	
 	if (inputManager.IsActionHeld(sdl::InputAction::RIGHT))
-		playerVelocity_.x += Time::fixedDeltaTime;
+		playerVelocity_.x += Time::fixedDeltaTime * speedMultiplier_;
 	if (inputManager.IsActionHeld(sdl::InputAction::LEFT))
-		playerVelocity_.x -= Time::fixedDeltaTime;
+		playerVelocity_.x -= Time::fixedDeltaTime * speedMultiplier_;
 
 	if (inputManager.IsActionHeld(sdl::InputAction::UP))
-		playerVelocity_.z += Time::fixedDeltaTime;
+		playerVelocity_.z += Time::fixedDeltaTime * speedMultiplier_;
 	if (inputManager.IsActionHeld(sdl::InputAction::DOWN))
-		playerVelocity_.z -= Time::fixedDeltaTime;
+		playerVelocity_.z -= Time::fixedDeltaTime * speedMultiplier_;
 	
-	if (inputManager.IsActionDown(sdl::InputAction::SPRINT) && inputManager.IsActionHeld(sdl::InputAction::UP))
-	{
-		speedMultiplier_ = sprintMultiplier_;
-		playerState_ &= SPRINTING;
-	}
-
-	if (inputManager.IsActionUp(sdl::InputAction::UP))
-	{
-		playerState_ |= ~SPRINTING;
-		speedMultiplier_ = 1.0f;
-	}
-
-	playerVelocity_.x *= speedMultiplier_;
-	playerVelocity_.z *= speedMultiplier_;
 	playerVelocity_.x = Lerp(playerVelocity_.x, 0.0f, decelerationSpeed_ * Time::fixedDeltaTime);
 	playerVelocity_.z = Lerp(playerVelocity_.z, 0.0f, decelerationSpeed_ * Time::fixedDeltaTime);
 	
-	playerVelocity_.y -= gravity_ * Time::deltaTime;
+	playerVelocity_.y -= gravity_ * Time::fixedDeltaTime;
 	
 	CheckPlayerPos();
-	
-	if (canJump_ && inputManager.IsActionDown(sdl::InputAction::JUMP))
-	{
-		playerVelocity_.y = playerJumpPower_;
-		canJump_ = false;
-		timer_ = 0.0f;
-	}
 
 	playerPos_ += camera_.GetRight() * playerVelocity_.x +
-		Vec3f::up * playerVelocity_.y * Time::deltaTime - 
+		Vec3f::up * playerVelocity_.y * Time::fixedDeltaTime - 
 		Vec3f::Cross(camera_.GetRight(), Vec3f::up) * playerVelocity_.z;
 	playerAabb_.SetFromCenter(playerPos_ + Vec3f::up, playerAabbSize_);
-
-	if (Equal(Abs(playerVelocity_.y), 0.0f)) HeadBobbing();
 	
 	camera_.position = playerPos_ + cameraOffset_;
 }
@@ -246,7 +269,7 @@ void PlayerProgram::CheckPlayerPos()
 			const float sideSign = Sign(cubePositions_[i].x - playerPos_.x);
 			playerPos_.x = cubePositions_[i].x - (cubeHalfSize + playerAabbSize_.x + 0.01f) * sideSign;
 		}
-		else if (cubeAabbs_[i].ContainsPoint(playerPos_ + Vec3f(0, playerVelocity_.y * Time::deltaTime, 0)) &&
+		else if (cubeAabbs_[i].ContainsPoint(playerPos_ + Vec3f(0, playerVelocity_.y * Time::fixedDeltaTime, 0)) &&
 			Abs(fromCenter.y) > Abs(fromCenter.x) && 
 			Abs(fromCenter.y) > Abs(fromCenter.z))
 		{

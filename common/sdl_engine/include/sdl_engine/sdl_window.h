@@ -10,7 +10,8 @@ class SdlWindow : public Window
 {
 public:
     virtual void Init() override;
-    void Update([[maybe_unused]]seconds dt) override{};
+    void Update([[maybe_unused]]seconds dt) override{}
+    void FixedUpdate() override{}
 
     void Destroy() override;
 

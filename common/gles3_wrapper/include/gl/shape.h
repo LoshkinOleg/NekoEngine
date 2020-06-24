@@ -51,6 +51,19 @@ public:
     void Destroy() override;
 };
 
+class RenderCuboidUnique final : public neko::RenderCuboidUnique, public VertexArrayObject
+{
+public:
+    using neko::RenderCuboidUnique::RenderCuboidUnique;
+    void Init() override;
+	void InitInstanced(const Vec3f& positions, int count);
+
+	void Draw() const override;
+    void DrawInstanced(unsigned count) const;
+
+    void Destroy() override;
+};
+
 class RenderWireFrameCuboid : public neko::RenderWireFrameCuboid, public VertexArrayObject
 {
 public:

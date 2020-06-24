@@ -40,6 +40,7 @@ public:
 	virtual void Init() = 0;
 
     virtual void Update(seconds dt) = 0;
+    virtual void FixedUpdate() = 0;
 
     virtual void Destroy() = 0;
 };
