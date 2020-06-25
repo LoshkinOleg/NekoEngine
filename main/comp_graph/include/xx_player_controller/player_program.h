@@ -95,7 +95,6 @@ private:
     float defaultPosY_ = 1.5f;
     float bobbingTimer_ = 0;
 
-
 	//Cubes
 	gl::RenderCuboidUnique uniqueCube_{Vec3f::zero, Vec3f::one};
     gl::Shader shader_;

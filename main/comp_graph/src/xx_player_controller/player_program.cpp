@@ -31,7 +31,7 @@ void PlayerProgram::Init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	std::array<TextureId, 3> cubeTex;
+	std::array<TextureId, 3> cubeTex{};
 	cubeTex[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png");
 	glBindTexture(GL_TEXTURE_2D, cubeTex[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

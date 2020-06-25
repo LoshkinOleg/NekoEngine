@@ -1,4 +1,7 @@
 #pragma once
+#include <engine/engine.h>
+#include <sdl_engine/sdl_input.h>
+#include <sdl_engine/sdl_engine.h>
 
 #include <mathematics/vector.h>
 #include <mathematics/matrix.h>
@@ -144,7 +147,7 @@ struct Camera3D : Camera
 struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 {
 	float moveSpeed = 2.5f;
-	float mouseSpeed = 0.3f;
+	float mouseSpeed = 0.1f;
 
 	MovableCamera() :
 		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
@@ -263,6 +266,8 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 			Vec3f::up * cameraMove.y - 
 			reverseDirection * cameraMove.z) * moveSpeed;
 	}
+	
+	void FixedUpdate() override {}
 
 	void OnEvent(const SDL_Event& event) override
 	{

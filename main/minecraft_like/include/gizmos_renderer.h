@@ -2,15 +2,17 @@
 #include <gl/shader.h>
 #include <gl/shape.h>
 
-#include <graphics/graphics.h>
-#include <sdl_engine/sdl_engine.h>
 #include <graphics/camera.h>
-#include <graphics/line.h>
+#include <graphics/color.h>
+#include <graphics/graphics.h>
+#include <utilities/service_locator.h>
 
 namespace neko
 {
 struct MoveableCamera3D;
 class MinecraftLikeEngine;
+
+const static size_t kGizmoReserveSize = 128;
 
 enum class GizmoShape : std::uint8_t
 {
@@ -26,7 +28,7 @@ struct Gizmos
 	}
 
 	GizmoShape shape = GizmoShape::NONE;
-	Color4 color = Color4(1.0f, 0.0f, 0.0f, 1.0f);
+	Color4 color = Color::red;
 	Vec3f pos = Vec3f(0.0f, 0.0f, 0.0f);
 
 	union
@@ -50,23 +52,17 @@ public:
 	 * \brief Generate a wire cube.
 	 */
 	virtual void DrawCube(
-		Vec3f pos = Vec3f::zero,
-		Vec3f size = Vec3f::one,
-		Color4 color = Color4(1.0f, 0.0f, 0.0f, 1.0f)) = 0;
+		const Vec3f& pos,
+		const Vec3f& size = Vec3f::one,
+		const Color4& color = Color::red) = 0;
 
 	/**
 	 * \brief Generate a wire cube.
 	 */
 	virtual void DrawLine(
-		Vec3f startPos = Vec3f::zero,
-		Vec3f endPos = Vec3f::one,
-		Color4 color = Color4(1.0f, 0.0f, 0.0f, 1.0f)) = 0;
-
-protected:
-	/**
-	 * \brief Retrieves the gizmo history
-	 */
-	std::vector<Gizmos> gizmosQueue_;
+		const Vec3f& startPos,
+		const Vec3f& endPos,
+		const Color4& color = Color::red) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -75,15 +71,15 @@ protected:
 /// \brief Used for the service locator
 class NullGizmoManager final : public GizmosManagerInterface
 {
-	void DrawCube(Vec3f pos, Vec3f size, Color4 color) override
-	{
-		return;
-	}
+	void DrawCube(
+		[[maybe_unused]] const Vec3f& pos,
+		[[maybe_unused]] const Vec3f& size = Vec3f::one,
+		[[maybe_unused]] const Color4& color = Color::red) override {}
 
-	void DrawLine(Vec3f startPos, Vec3f endPos, Color4 color) override
-	{
-		return;
-	}
+	void DrawLine(
+		[[maybe_unused]] const Vec3f& startPos,
+		[[maybe_unused]] const Vec3f& endPos,
+		[[maybe_unused]] const Color4& color = Color::red) override {}
 };
 
 //-----------------------------------------------------------------------------
@@ -95,26 +91,31 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public GizmosManagerInterface
 {
 public:
-	GizmosRenderer(MinecraftLikeEngine& engine, MoveableCamera3D& camera);
+	GizmosRenderer(Camera3D& camera);
 
 	void Init() override;
 
 	void Update(seconds dt) override;
+	void FixedUpdate() override {}
 
 	void Render() override;
 	
 	void Destroy() override;
 
-	void DrawCube(Vec3f pos, Vec3f size, Color4 color) override;
+	void DrawCube(
+		const Vec3f& pos,
+		const Vec3f& size = Vec3f::one,
+		const Color4& color = Color::red) override;
 
-	void DrawLine(Vec3f startPos, Vec3f endPos, Color4 color) override;
+	void DrawLine(
+		const Vec3f& startPos,
+		const Vec3f& endPos,
+		const Color4& color = Color::red) override;
 
 private:
-
 	std::mutex updateMutex_;
-	MinecraftLikeEngine& engine_;
 
-	MoveableCamera3D& camera_;
+	Camera3D& camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
