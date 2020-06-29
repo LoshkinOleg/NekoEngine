@@ -21,8 +21,8 @@ public:
 	void Update(seconds dt) override;
 	void Destroy() override;
 
-	void BindShader(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos, gl::RenderCuboid& cube);
-	
+	void BindShader(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos);
+	void InitLight();
 private:
 	gl::Shader lightShader_;
 	gl::Shader phongShader_;
@@ -32,7 +32,7 @@ private:
 	float time_ = 0.0f;
 	const float lightDist_ = 3.5f;
 	Color3 lightColor_{ 1,1,1 };
-	Color3 objectColor_{ 1.0f,0.23f, 0.1f };
+	Color3 objectColor_{ 1.0f,1.0f, 1.0f };
 	float ambientStrength_ = 0.1f;
 	float diffuseStrength_ = 1.0f;
 	float specularStrength_ = 0.5f;

@@ -42,7 +42,7 @@ void ChunksSystem::GenerateChunks()
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-					if (y < kChunkSize / 2 - 2)
+					if (y < kChunkSize / 2 - 1)
 					{
 						if (RandomRange(0.0f, 1.0f) < 0.75f)
 						{
