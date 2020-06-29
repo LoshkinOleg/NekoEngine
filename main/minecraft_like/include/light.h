@@ -5,7 +5,9 @@
 #include "graphics/color.h"
 #include <engine/system.h>
 #include "engine/engine.h"
+#include <gl/shape.h>
 
+#include <graphics/graphics.h>
 namespace neko
 {
 
@@ -19,7 +21,7 @@ public:
 	void Update(seconds dt) override;
 	void Destroy() override;
 
-	void BindShader(Mat4f model, Mat4f view, Mat4f projection);
+	void BindShader(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos, gl::RenderCuboid& cube);
 	
 private:
 	gl::Shader lightShader_;

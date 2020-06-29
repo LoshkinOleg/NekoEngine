@@ -49,9 +49,12 @@ void ChunkRenderer::Render()
 
 	std::lock_guard<std::mutex> lock(updateMutex_);
 
-	shader_.Bind();
+	/*shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
-	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
+	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());*/
+	Mat4f view = camera_.GenerateViewMatrix();
+	Mat4f projection = camera_.GenerateProjectionMatrix();
+	
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
@@ -60,7 +63,8 @@ void ChunkRenderer::Render()
 #ifdef EASY_PROFILE_USE
 		EASY_BLOCK("ChunkRenderer::Render::Chunk");
 #endif
-		for (int x = 0; x < kChunkSize; x++)
+
+		/*for (int x = 0; x < kChunkSize; x++)
 		{
 			for (int y = 0; y < kChunkSize; y++)
 			{
@@ -77,12 +81,12 @@ void ChunkRenderer::Render()
 						EASY_BLOCK("ChunkRenderer::Render::Cube");
 #endif
 						Mat4f model = Mat4f::Identity; //model transform matrix
-						Mat4f view = camera_.GenerateViewMatrix();
-						Mat4f projection = camera_.GenerateProjectionMatrix();
+
 						
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
-						//shader_.SetMat4("model", model);
-						engine_.componentsManagerSystem_.light_.BindShader(model, view, projection);
+						shader_.SetMat4("model", model);
+						//engine_.componentsManagerSystem_.light_.BindShader(model, view, projection);
+
 						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -91,14 +95,26 @@ void ChunkRenderer::Render()
 					}
 				}
 			}
-		}
+		}*/
+
+		Mat4f model = Mat4f::Identity; //model transform matrix
+
+
+		model = Transform3d::Translate(model, Vec3f(0, 0, 0));
+		//shader_.SetMat4("model", model);
+		engine_.componentsManagerSystem_.light_.BindShader(model, view, projection, camera_.position, cube_);
+
+		glBindTexture(GL_TEXTURE_2D, texture_[1]); //bind texture id to texture slot
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		//cube_.Draw();
 	}
 }
 
 void ChunkRenderer::Destroy()
 {
 	cube_.Destroy();
-
 	shader_.Destroy();
 	gl::DestroyTexture(texture_[0]);
 	gl::DestroyTexture(texture_[1]);
