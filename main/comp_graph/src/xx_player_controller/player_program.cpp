@@ -26,29 +26,50 @@ void PlayerProgram::Init()
 	uiShader_.LoadFromFile(
 		config.dataRootPath + "shaders/base_ui.vert",
 		config.dataRootPath + "shaders/base.frag");
-	crossHairTexture_ = gl::stbCreateTexture(config.dataRootPath + "sprites/ui/crosshair.png");
-	glBindTexture(GL_TEXTURE_2D, crossHairTexture_);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+	
 	std::array<TextureId, 3> cubeTex{};
-	cubeTex[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png");
-	glBindTexture(GL_TEXTURE_2D, cubeTex[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	cubeTex[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_top.png");
-	glBindTexture(GL_TEXTURE_2D, cubeTex[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	cubeTex[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.png");
-	glBindTexture(GL_TEXTURE_2D, cubeTex[2]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	cubeTex[0] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png", gl::Texture::CLAMP_WRAP);
+	cubeTex[1] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_top.png", gl::Texture::CLAMP_WRAP);
+	cubeTex[2] = stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.png", gl::Texture::CLAMP_WRAP);
 	uniqueCube_.SetTextures(cubeTex);
 
-	const Vec2f normalSpaceSize = Vec2f(crossHairSize_) / Vec2f(config.windowSize);
-	crossHair_ = gl::RenderQuad(Vec3f::zero, normalSpaceSize);
-	crossHair_.Init();
+	blockManager_.Init();
+	
+	std::fill(toolBarBlockIds_.begin(), toolBarBlockIds_.end(), -1);
+	toolBarBlockIds_[0] = 0;
+	toolBarBlockIds_[1] = 1;
+	toolBarBlockIds_[2] = 2;
+	toolBarBlockIds_[3] = 3;
+	std::fill(blockPreviews_.begin(), blockPreviews_.end(), UiElement(Vec3f::zero, Vec2u(80, 80)));
+	
+	uiManager_.Init();
+	{
+		const Vec2f toolBarSize = Vec2f(toolBar_.size) / Vec2f(config.windowSize);
+		toolBar_.position.y = toolBarSize.y / 2 - 1.0;
+	
+		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(config.windowSize);
+	
+		blockSelect_.position.y = toolBar_.position.y;
+		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
+
+		crossHair_.texturePath = config.dataRootPath + "sprites/ui/crosshair.png";
+		toolBar_.texturePath = config.dataRootPath + "sprites/ui/toolbar.png";
+		blockSelect_.texturePath = config.dataRootPath + "sprites/ui/selection_sprite.png";
+		uiManager_.AddUiElement(&crossHair_);
+		uiManager_.AddUiElement(&toolBar_);
+		uiManager_.AddUiElement(&blockSelect_);
+
+		for (int i = 0; i < toolbarSize; ++i)
+		{
+			if (toolBarBlockIds_[i] == -1) continue;
+			
+			blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
+			blockPreviews_[i].position.y = toolBar_.position.y;
+			blockPreviews_[i].textureId = blockManager_.GetBlock(toolBarBlockIds_[i])->previewTexture;
+			uiManager_.AddUiElement(&blockPreviews_[i]);
+		}
+		
+	}
 
 	camera_.Init();
 	camera_.position = playerPos_ + Vec3f::up;
@@ -67,15 +88,28 @@ void PlayerProgram::Init()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void PlayerProgram::Update(const seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
+
+	camera_.Update(dt);
 	
 	const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
+	const auto scrollAmount = inputManager.GetMouseScroll();
+	if (scrollAmount.y != 0)
+	{
+		selectIndex_ += -Sign(scrollAmount.y);
+		if (selectIndex_ > toolbarSize - 1) selectIndex_ = 0;
+		if (selectIndex_ < 0) selectIndex_ = toolbarSize - 1;
+		
+		const auto& config = BasicEngine::GetInstance()->config;
+		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(config.windowSize);
+		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
+		blockSelect_.position.y = toolBar_.position.y;
+	}
+	
 	if (inputManager.IsActionDown(sdl::InputAction::SPRINT) && inputManager.IsActionHeld(sdl::InputAction::UP))
 	{
 		speedMultiplier_ = sprintMultiplier_;
@@ -133,16 +167,8 @@ void PlayerProgram::Render()
 	shader_.Bind();
 	uniqueCube_.DrawInstanced(cubePositions_.size());
 
-	//UI
-	{
-		uiShader_.Bind();
-		glBindTexture(GL_TEXTURE_2D, crossHairTexture_);
-		uiShader_.SetInt("tex", 0);
-		
-		glCullFace(GL_FRONT);
-		crossHair_.Draw();
-		glCullFace(GL_BACK);
-	}
+	blockManager_.Render();
+	uiManager_.Render();
 }
 
 void PlayerProgram::Destroy()
@@ -157,7 +183,8 @@ void PlayerProgram::Destroy()
 	cubePositions_.clear();
 	cubeAabbs_.clear();
 	gl::DestroyTexture(texture_);
-	gl::DestroyTexture(crossHairTexture_);
+
+	blockManager_.Destroy();
 }
 
 void PlayerProgram::DrawImGui()
@@ -182,17 +209,30 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 	
 	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 	{
-		const Vec2f normalSpaceSize = Vec2f(crossHairSize_) / Vec2f(event.window.data1, event.window.data2);
-		crossHair_.SetSize(normalSpaceSize);
-
-		glClear(GL_COLOR_BUFFER_BIT);
+		const Vec2f newWindowSire = Vec2f(event.window.data1, event.window.data2);
+		{
+			const Vec2f normalSpaceSize = Vec2f(toolBar_.size) / newWindowSire;
+			toolBar_.position.y = normalSpaceSize.y / 2 - 1.0;
+		}
+		{
+			const Vec2f tileSize = Vec2f(tileSize_) / newWindowSire;
+			for (int i = 0; i < toolbarSize; ++i)
+			{
+				if (toolBarBlockIds_[i] == -1) continue;
+				blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
+				blockPreviews_[i].position.y = toolBar_.position.y;
+			}
+			
+			blockSelect_.position.y = toolBar_.position.y;
+			blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
+		}
 	}
 }
 
 void PlayerProgram::CreateCube(const Vec3f& position)
 {
 	cubePositions_.emplace_back(position);
-	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	Aabb3d aabb;
 	aabb.SetFromCenter(position, Vec3(cubeHalfSize));
@@ -207,7 +247,7 @@ void PlayerProgram::PlaceCube(const Vec3f& position)
 
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.emplace_back(position);
-	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	cubeAabbs_.emplace_back(aabb);
 }
@@ -216,7 +256,7 @@ void PlayerProgram::DeleteCube(const size_t& index)
 {
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.erase(cubePositions_.begin() + index);
-	uniqueCube_.InitInstanced(cubePositions_[0], cubePositions_.size());
+	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	cubeAabbs_.erase(cubeAabbs_.begin() + index);
 }
 
@@ -332,7 +372,7 @@ void PlayerProgram::CheckBlock()
 		{
 			DeleteCube(rayOut.hitIndex);
 		}
-		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
+		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlockIds_[selectIndex_] != -1)
 		{
 			const Vec3f toPoint = camera_.reverseDirection * -1 * rayOut.hitDist;
 			const Vec3f cubePoint = camera_.position + toPoint;

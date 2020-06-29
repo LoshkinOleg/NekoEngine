@@ -100,11 +100,40 @@ void RenderQuad::Destroy()
 
 }
 
+void RenderQuad::SetValues(const Vec2f& newSize, const Vec3f& newOffset)
+{
+	size_ = newSize;
+	offset_ = newOffset;
+	
+	Vec2f vertices[4] = {
+			Vec2f(0.5f, 0.5f) * size_ + Vec2f(offset_),  // top right
+			Vec2f(0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom right
+			Vec2f(-0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom left
+			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
+	};
+	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+}
+
 void RenderQuad::SetSize(const Vec2f& newSize)
 {
 	size_ = newSize;
+	
+	Vec2f vertices[4] = {
+			Vec2f(0.5f, 0.5f) * size_ + Vec2f(offset_),  // top right
+			Vec2f(0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom right
+			Vec2f(-0.5f, -0.5f) * size_ + Vec2f(offset_),  // bottom left
+			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
+	};
+	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+}
 
-	Init();
+void RenderQuad::SetOffset(const Vec3f& newOffset)
+{
+	offset_ = newOffset;
 	
 	Vec2f vertices[4] = {
 			Vec2f(0.5f, 0.5f) * size_ + Vec2f(offset_),  // top right
@@ -513,7 +542,7 @@ void RenderCuboidUnique::Init()
 	glEnableVertexAttribArray(3);
 }
 
-void RenderCuboidUnique::InitInstanced(const Vec3f& positions, int count)
+void RenderCuboidUnique::InitInstanced(const Vec3f& positions, const int count)
 {
 	Init();
 	
@@ -527,6 +556,12 @@ void RenderCuboidUnique::InitInstanced(const Vec3f& positions, int count)
 	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*) 0);
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);
+}
+
+void RenderCuboidUnique::UpdateInstance(const Vec3f& positions, const int count) const
+{
+	glBindBuffer(GL_ARRAY_BUFFER, instanceVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * count, &positions, GL_STATIC_DRAW);
 }
 
 void RenderCuboidUnique::Draw() const
