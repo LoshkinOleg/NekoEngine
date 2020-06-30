@@ -107,6 +107,9 @@ void ChunksSystem::Init()
 
 void ChunksSystem::UpdateVisibleChunks()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::UpdateVisibleChunks");
+#endif
 	const auto visibleChunks = chunksManager_.GetVisibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
@@ -127,16 +130,17 @@ void ChunksSystem::UpdateVisibleChunks()
 		{
 			Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, 0, zOffset);
 			bool find = false;
-			for (size_t chunkIndex = 1; chunkIndex < entityManager_.GetEntitiesSize(); chunkIndex++)
+			const auto loadedChunks = chunksManager_.GetLoadedChunks();
+			for (auto loadedChunk : loadedChunks)
 			{
-				if (entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK)))
+				if (entityManager_.HasComponent(loadedChunk, static_cast<EntityMask>(ComponentType::CHUNK)))
 				{
-					Chunk chunk = chunksManager_.GetComponent(chunkIndex);
+					Chunk chunk = chunksManager_.GetComponent(loadedChunk);
 					if (chunk.GetChunkPos() == viewedChunkPos)
 					{
 						chunk.SetVisible(true);
-						chunksManager_.SetComponent(chunkIndex, chunk);
-						chunksManager_.AddVisibleChunk(chunkIndex);
+						chunksManager_.SetComponent(loadedChunk, chunk);
+						chunksManager_.AddVisibleChunk(loadedChunk);
 						find = true;
 						break;
 					}

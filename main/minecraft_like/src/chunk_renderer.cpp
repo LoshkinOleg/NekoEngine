@@ -57,10 +57,13 @@ void ChunkRenderer::Render()
 	{
 		if (!engine_.entityManager_.HasComponent(visibleChunk, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(visibleChunk);
+#ifdef EASY_PROFILE_USE
+		EASY_BLOCK("chunk.IsVisible");
+#endif
 		if (!chunk.IsVisible()) continue;
 		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(visibleChunk);
 #ifdef EASY_PROFILE_USE
-		EASY_BLOCK("ChunkRenderer::Render::Chunk");
+		//EASY_BLOCK("ChunkRenderer::Render::Chunk");
 #endif
 		for (int x = 0; x < kChunkSize; x++)
 		{
@@ -68,16 +71,10 @@ void ChunkRenderer::Render()
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-#ifdef EASY_PROFILE_USE
-					EASY_BLOCK("ChunkRenderer::Render::Air");
-#endif
 					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
 					if (blockID != 0)
 					{
 						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
-#ifdef EASY_PROFILE_USE
-						EASY_BLOCK("ChunkRenderer::Render::Cube");
-#endif
 						Mat4f model = Mat4f::Identity; //model transform matrix
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
 						shader_.SetMat4("model", model);

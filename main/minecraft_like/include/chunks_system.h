@@ -32,7 +32,7 @@ public:
 	void Destroy() override;
 
 private:
-	const float kMaxViewDist_ = 50;
+	const float kMaxViewDist_ = 15;
 	ChunksManager& chunksManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
