@@ -68,7 +68,6 @@ void PlayerProgram::Init()
 			blockPreviews_[i].textureId = blockManager_.GetBlock(toolBarBlockIds_[i])->previewTexture;
 			uiManager_.AddUiElement(&blockPreviews_[i]);
 		}
-		
 	}
 
 	camera_.Init();
@@ -232,6 +231,7 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 void PlayerProgram::CreateCube(const Vec3f& position)
 {
 	cubePositions_.emplace_back(position);
+	cubeIds_.emplace_back(0);
 	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	Aabb3d aabb;
@@ -247,6 +247,7 @@ void PlayerProgram::PlaceCube(const Vec3f& position)
 
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.emplace_back(position);
+	cubeIds_.emplace_back(toolBarBlockIds_[selectIndex_]);
 	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	cubeAabbs_.emplace_back(aabb);

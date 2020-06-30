@@ -110,6 +110,7 @@ private:
     TextureId texture_ = 0;
 
 	std::vector<Vec3f> cubePositions_;
+	std::vector<uint8_t> cubeIds_;
 	std::vector<Aabb3d> cubeAabbs_;
 
 	//UI
@@ -123,7 +124,7 @@ private:
 	const static short toolbarSize = 9;
 	std::array<short, toolbarSize> toolBarBlockIds_{-1};
 	
-	//Block preview
+	//Block previews
 	std::array<UiElement, toolbarSize> blockPreviews_{};
 	
 	//Block Select
