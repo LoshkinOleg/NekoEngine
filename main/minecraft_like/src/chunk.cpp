@@ -4,20 +4,20 @@ namespace neko
 {
 void Chunk::SetBlock(const uint8_t blockId, const Vec3i& pos)
 {
-	blocksIds[pos.x + pos.y * kChunkSize + pos.z *kChunkSize * kChunkSize] = blockId;
+	blocksIds[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize] = blockId;
 }
 
 uint8_t Chunk::GetBlockId(const Vec3i& pos)
 {
-	return blocksIds[pos.x + pos.y * kChunkSize + pos.z *kChunkSize * kChunkSize];
+	return blocksIds[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize];
 }
 
-Vec3f Chunk::GetChunkPos() const
+Vec3i Chunk::GetChunkPos() const
 {
 	return chunkPos_;
 }
 
-void Chunk::SetChunkPos(Vec3f chunkPos)
+void Chunk::SetChunkPos(const Vec3i& chunkPos)
 {
 	chunkPos_ = chunkPos;
 }
@@ -25,7 +25,17 @@ void Chunk::SetChunkPos(Vec3f chunkPos)
 Aabb3d Chunk::GetAabb() const
 {
 	Aabb3d aabb;
-	aabb.SetFromCenter(chunkPos_, Vec3f(kChunkSize / 2, kChunkSize / 2, kChunkSize / 2));
+	aabb.SetFromCenter(Vec3f(chunkPos_*kChunkSize), Vec3f(kChunkSize / 2, kChunkSize / 2, kChunkSize / 2));
 	return aabb;
+}
+
+bool Chunk::IsVisible() const
+{
+	return visible_;
+}
+
+void Chunk::SetVisible(bool visible)
+{
+	visible_ = visible;
 }
 }

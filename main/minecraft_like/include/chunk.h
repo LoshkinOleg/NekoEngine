@@ -7,7 +7,7 @@
 
 namespace neko
 {
-const static int kChunkSize = 16;
+const static int kChunkSize = 5;
 
 enum class ChunkFlags : uint8_t
 {
@@ -23,13 +23,19 @@ public:
 	
 	void SetBlock(const uint8_t blockId, const Vec3i& pos);
 	uint8_t GetBlockId(const Vec3i& pos);
-	Vec3f GetChunkPos() const;
-	void SetChunkPos(Vec3f chunkPos);
+	Vec3i GetChunkPos() const;
+	void SetChunkPos(const Vec3i& chunkPos);
 	Aabb3d GetAabb() const;
+	bool IsVisible() const;
+
+	void SetVisible(bool visible);
+
 private:
-	Vec3f chunkPos_;
+	Vec3i chunkPos_;
+	bool visible_ = false;
 
 	uint8_t chunkFlags_ = 0;
-	std::array<uint8_t, kChunkSize * kChunkSize * kChunkSize> blocksIds = { 0 };
+	std::array<uint8_t, kChunkSize* kChunkSize* kChunkSize> blocksIds = { 0 };
+	
 };
 }

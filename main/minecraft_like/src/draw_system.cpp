@@ -26,7 +26,7 @@ void DrawSystem::Init()
 	chunkRenderer_.Init();
 	gizmosRenderer_.Init();
 	
-	camera_.position = Vec3f::up * 9.0f;
+	camera_.position = Vec3f::up;
 }
 
 void DrawSystem::DrawImGui()
@@ -38,6 +38,13 @@ void DrawSystem::DrawImGui()
 	transformViewer_.DrawImGui();
 	chunksViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
 	ImGui::End();
+	ImGui::Begin("Player");
+	Vec3f blockPos = viewBlock.blockPos;
+	int blockId = viewBlock.blockType;
+	ImGui::InputFloat3("BlockPos", &blockPos[0]);
+	ImGui::DragInt("BlockId", &blockId);
+	ImGui::End();
+	
 }
 
 void DrawSystem::Update(seconds dt)
@@ -48,12 +55,10 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
 	{
-		Block block = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
+		viewBlock = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		std::cout << "BlockPos : " << block.blockPos << std::endl;
-		std::cout << "BlockID : " << static_cast<int>(block.blockType) << std::endl;
-		GizmosLocator::get().DrawCube(block.blockPos, Vec3f::one, Color4(1,1,1,1));
+		GizmosLocator::get().DrawCube(viewBlock.blockPos, Vec3f::one, Color4(1,1,1,1));
 	}
 	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_*10);
 }

@@ -4,9 +4,39 @@
 
 namespace neko
 {
-ChunksManager::ChunksManager(EntityManager& entityManager)
-	: ComponentManager<Chunk, ComponentType::CHUNK>(entityManager)
+void ChunksManager::AddVisibleChunk(Entity chunkIndex)
 {
+	visibleChunks_.push_back(chunkIndex);
+}
+
+void ChunksManager::RemoveVisibleChunk(Entity chunkIndex)
+{
+	visibleChunks_.erase(std::remove(visibleChunks_.begin(), visibleChunks_.end(), chunkIndex));
+}
+
+void ChunksManager::ClearVisibleChunks()
+{
+	visibleChunks_.clear();
+}
+
+void ChunksManager::ReserveVisibleChunks(const float size)
+{
+	visibleChunks_.reserve(size);
+}
+
+void ChunksManager::AddLoadedChunk(Entity chunkIndex)
+{
+	loadedChunks_.push_back(chunkIndex);
+}
+
+std::vector<Entity> ChunksManager::GetVisibleChunks()
+{
+	return visibleChunks_;
+}
+
+std::vector<Entity> ChunksManager::GetLoadedChunks()
+{
+	return loadedChunks_;
 }
 
 ChunksViewer::ChunksViewer(EntityManager& entityManager, ChunksManager& chunksManager) :
@@ -24,21 +54,10 @@ void ChunksViewer::DrawImGui(Entity selectedEntity)
 		if (ImGui::CollapsingHeader("Chunk"))
 		{
 			Chunk chunk = chunksManager_.GetComponent(selectedEntity);
-
-			for (int x = 0; x < kChunkSize; x++)
-			{
-				for (int y = 0; y < kChunkSize / 2; y++)
-				{
-					for (int z = 0; z < kChunkSize; z++)
-					{
-						int id = chunk.GetBlockId(Vec3i(x, y, z));
-						std::string text = "Pos " + std::to_string(x) + ", " + std::to_string(y) +	", " + std::to_string(z) + " Id : " + std::to_string(id);
-						if (ImGui::Selectable(text.c_str(), false))
-						{
-						}
-					}
-				}
-			}
+			bool visible = chunk.IsVisible();
+			ImGui::Checkbox("Visible", &visible);
+			auto chunkPos = chunk.GetChunkPos();
+			ImGui::DragInt3("ChunkPos", &chunkPos[0]);
 		}
 	}
 }
