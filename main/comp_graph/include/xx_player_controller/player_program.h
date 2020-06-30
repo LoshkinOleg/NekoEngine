@@ -7,6 +7,9 @@
 #include <graphics/camera.h>
 #include <graphics/texture.h>
 #include <mathematics/aabb.h>
+#include <xx_player_controller/block_manager.h>
+
+#include "ui_manager.h"
 
 namespace neko
 {
@@ -64,6 +67,9 @@ public:
 private:
 	float gravity_ = 36.0f;
     PlayerCamera camera_;
+
+	BlockManager blockManager_;
+	UiManager uiManager_;
 	
 	float timer_ = 0.0f;
 	float test_ = 0.0f;
@@ -106,10 +112,24 @@ private:
 	std::vector<Vec3f> cubePositions_;
 	std::vector<Aabb3d> cubeAabbs_;
 
-	//UI Test
-	gl::RenderQuad crossHair_{Vec3f::zero, Vec2f::one};
+	//UI
     gl::Shader uiShader_;
-    TextureId crossHairTexture_ = 0;
-	Vec2u crossHairSize_ = Vec2u(100, 100);
+	
+	//Crosshair
+	UiElement crossHair_{Vec3f::zero, Vec2u(64, 64)};
+	
+	//Toolbar
+	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
+	const static short toolbarSize = 9;
+	std::array<short, toolbarSize> toolBarBlockIds_{-1};
+	
+	//Block preview
+	std::array<UiElement, toolbarSize> blockPreviews_{};
+	
+	//Block Select
+	UiElement blockSelect_{Vec3f::zero, Vec2u(96, 96)};
+	short selectIndex_ = 0;
+	
+	Vec2u tileSize_ = Vec2u(80u);
 };
 }
