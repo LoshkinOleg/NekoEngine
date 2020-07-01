@@ -39,8 +39,8 @@ void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, floa
 	m_Planes[1] = farP;
 	m_Planes[2] = rightP;
 	m_Planes[3] = leftP;
-	m_Planes[5] = topP;
-	m_Planes[6] = rightP;
+	m_Planes[4] = topP;
+	m_Planes[5] = rightP;
 }
 
 bool Frustum::ContainsPoint(neko::Vec3f point)
