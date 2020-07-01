@@ -1,5 +1,7 @@
 #include "frustum.h"
 
+Plane::Plane(){}
+
 float Plane::Distance(neko::Vec3f point)
 {
 	float distance = _normal.Dot(point - _point, _normal);
@@ -12,6 +14,8 @@ neko::Vec3f Plane::GetNormal(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f
 	neko::Vec3f vecB = pointC - pointB;
 	return pointA.Cross(vecA, vecB).Normalized();
 }
+
+Frustum::Frustum(){}
 
 void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, float nearPlaneDistance, float farPlaneDistance, neko::degree_t fovx, neko::degree_t fovy, neko::Vec3f up, neko::Vec3f right) //TODO clean and optimize
 {
