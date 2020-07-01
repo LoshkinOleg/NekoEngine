@@ -23,7 +23,7 @@ public:
 	void Destroy() override;
 
 	Transform3dManager transform3dManager_;
-	ChunksManager chunkManager_;
+	ChunksManager chunksManager_;
 protected:
 	ChunksSystem chunksSystem_;
 	AabbManager aabbManager_;

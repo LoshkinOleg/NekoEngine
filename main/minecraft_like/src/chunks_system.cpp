@@ -1,6 +1,5 @@
 #include "chunks_system.h"
 
-#include <iostream>
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
@@ -14,84 +13,40 @@
 namespace neko
 {
 ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
-	: chunksManager_(engine.componentsManagerSystem_.chunkManager_),
+	: chunksManager_(engine.componentsManagerSystem_.chunksManager_),
 	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_),
 	  entityManager_(engine.entityManager_)
 {
-	//Chunk chunk;
-	//chunksManager_.SetComponent(0, chunk);
 }
 
-void ChunksSystem::GenerateChunks()
+Chunk ChunksSystem::GenerateChunk(const Vec3i& pos) const
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("GenerateChunks");
-#endif
-	int worldSize = 10;
-	for (size_t i = 0; i < worldSize * worldSize; i++)
-	{
-		int posZ = std::floor((i) / worldSize) - worldSize / 2;
-		int posX = i % worldSize - worldSize / 2;
-		transform3dManager_.SetPosition(i + 1, Vec3f(posX * kChunkSize, 0, posZ * kChunkSize));
-		Chunk chunk = chunksManager_.GetComponent(i);
-		chunk.SetChunkPos(Vec3i(posX, 0, posZ));
-		for (int x = 0; x < kChunkSize; x++)
-		{
-			for (int y = 0; y < 1; y++)
-			{
-				for (int z = 0; z < kChunkSize; z++)
-				{
-					if (y < kChunkSize / 2 - 2)
-					{
-						if (RandomRange(0.0f, 1.0f) < 0.75f)
-						{
-							chunk.SetBlock(2, Vec3i(x, y, z));
-						}
-						else
-						{
-							chunk.SetBlock(3, Vec3i(x, y, z));
-						}
-					}
-					else
-					{
-						chunk.SetBlock(1, Vec3i(x, y, z));
-					}
-				}
-			}
-		}
-		chunksManager_.SetComponent(i + 1, chunk);
-		transform3dManager_.AddComponent(i + 1);
-		chunksManager_.AddComponent(i + 1);
-	}
-}
-
-Chunk ChunksSystem::GenerateChunk(const Vec3i& pos)
-{
-#ifdef EASY_PROFILE_USE
-	EASY_BLOCK("GenerateChunk");
+	EASY_BLOCK("ChunksSystem::GenerateChunk");
 #endif
 	Chunk chunk;
+	const uint8_t randBlockId = RandomRange(1, 4);
 	chunk.SetChunkPos(pos);
-	for (int x = 0; x < kChunkSize; x++)
+	for (unsigned x = 0; x < kChunkSize; x++)
 	{
-		for (int y = 0; y < 1; y++)
+		for (unsigned y = 0; y < 1; y++)
 		{
-			for (int z = 0; z < kChunkSize; z++)
+			for (unsigned z = 0; z < kChunkSize; z++)
 			{
-				if (y < kChunkSize / 2 - 2)
+				//if (y < kChunkSize / 2 - 2)
+				//{
+				//	if (RandomRange(0.0f, 1.0f) < 0.75f)
+				//	{
+				//		chunk.SetBlock(2, Vec3i(x, y, z));
+				//	}
+				//	else
+				//	{
+				//		chunk.SetBlock(3, Vec3i(x, y, z));
+				//	}
+				//}
+				//else
 				{
-					if (RandomRange(0.0f, 1.0f) < 0.75f)
-					{
-						chunk.SetBlock(2, Vec3i(x, y, z));
-					}
-					else
-					{
-						chunk.SetBlock(3, Vec3i(x, y, z));
-					}
-				}
-				else
-				{
-					chunk.SetBlock(1, Vec3i(x, y, z));
+					chunk.SetBlock(randBlockId, Vec3i(x, y, z));
 				}
 			}
 		}
@@ -102,14 +57,15 @@ Chunk ChunksSystem::GenerateChunk(const Vec3i& pos)
 
 void ChunksSystem::Init()
 {
-	//GenerateChunks();
 }
 
-void ChunksSystem::UpdateVisibleChunks()
+void ChunksSystem::UpdateVisibleChunks() const
 {
+	const unsigned int maxViewChunks = (kMaxViewDist_ / kChunkSize);
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("Chunks_System::UpdateVisibleChunks");
 #endif
+	//Remove last visible chunks
 	const auto visibleChunks = chunksManager_.GetVisibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
@@ -118,9 +74,11 @@ void ChunksSystem::UpdateVisibleChunks()
 		chunksManager_.SetComponent(visibleChunk, chunk);
 	}
 	chunksManager_.ClearVisibleChunks();
-	chunksManager_.ReserveVisibleChunks((kMaxViewDist_ / kChunkSize) * (kMaxViewDist_ / kChunkSize));
+	chunksManager_.
+		ReserveVisibleChunks((kMaxViewDist_ / kChunkSize) * (kMaxViewDist_ / kChunkSize));
+
 	const Vec3f viewerPos = transform3dManager_.GetPosition(0);
-	const Vec3i currentChunkPos = Vec3i(viewerPos.x / kChunkSize, 0, viewerPos.z/kChunkSize);
+	const Vec3i currentChunkPos = Vec3i(viewerPos.x / kChunkSize, 0, viewerPos.z / kChunkSize);
 
 	for (int xOffset = -(kMaxViewDist_ / kChunkSize); xOffset <= (kMaxViewDist_ / kChunkSize);
 	     xOffset++)
@@ -129,26 +87,23 @@ void ChunksSystem::UpdateVisibleChunks()
 		     zOffset++)
 		{
 			Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, 0, zOffset);
-			bool find = false;
+			bool found = false;
 			const auto loadedChunks = chunksManager_.GetLoadedChunks();
 			for (auto loadedChunk : loadedChunks)
 			{
-				if (entityManager_.HasComponent(loadedChunk, static_cast<EntityMask>(ComponentType::CHUNK)))
+				Chunk chunk = chunksManager_.GetComponent(loadedChunk);
+				if (chunk.GetChunkPos() == viewedChunkPos)
 				{
-					Chunk chunk = chunksManager_.GetComponent(loadedChunk);
-					if (chunk.GetChunkPos() == viewedChunkPos)
-					{
-						chunk.SetVisible(true);
-						chunksManager_.SetComponent(loadedChunk, chunk);
-						chunksManager_.AddVisibleChunk(loadedChunk);
-						find = true;
-						break;
-					}
+					chunk.SetVisible(true);
+					chunksManager_.SetComponent(loadedChunk, chunk);
+					chunksManager_.AddVisibleChunk(loadedChunk);
+					found = true;
+					break;
 				}
 			}
-			if (!find)
+			if (!found)
 			{
-				Entity newChunkIndex = entityManager_.CreateEntity();
+				const Entity newChunkIndex = entityManager_.CreateEntity();
 				Chunk newChunk = GenerateChunk(viewedChunkPos);
 				transform3dManager_.AddComponent(newChunkIndex);
 				chunksManager_.AddComponent(newChunkIndex);
@@ -163,21 +118,24 @@ void ChunksSystem::UpdateVisibleChunks()
 
 void ChunksSystem::Update(seconds dt)
 {
+	//Update Visible Chunks
+	UpdateVisibleChunks();
+
+	//Display Chunks Gizmos
+	const Vec3f cubeOffset = Vec3f((kChunkSize - 1) / 2.0f);
 	const auto loadedChunks = chunksManager_.GetLoadedChunks();
 	for (auto loadedChunk : loadedChunks)
 	{
 		if (entityManager_.HasComponent(loadedChunk, static_cast<EntityMask>(ComponentType::CHUNK)))
 		{
 			GizmosLocator::get().DrawCube(
-				transform3dManager_.GetPosition(loadedChunk) + Vec3f((kChunkSize - 1) / 2.0f),
+				transform3dManager_.GetPosition(loadedChunk),
 				Vec3f::one * kChunkSize,
-				Color4(1, 0, 0, 0.5f));
+				chunksManager_.GetComponent(loadedChunk).IsVisible()
+					? Color4(1.0f, 0.0f, 0.0f, 1.0f)
+					: Color4(0.0f, 0.0f, 1.0f, 1.0f));
 		}
 	}
-	UpdateVisibleChunks();
-	GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(0),
-	                              Vec3f::one,
-	                              Color4(0, 0, 1, 0.5f));
 }
 
 void ChunksSystem::Destroy()

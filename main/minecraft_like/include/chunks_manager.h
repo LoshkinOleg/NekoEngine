@@ -9,14 +9,19 @@ class ChunksManager final : public neko::ComponentManager<Chunk, ComponentType::
 {
 	using ComponentManager::ComponentManager;
 public :
-	void AddVisibleChunk(Entity chunkIndex);
-	void RemoveVisibleChunk(Entity chunkIndex);
+	void AddVisibleChunk(const Entity chunkIndex);
+
+	void RemoveVisibleChunk(const Entity chunkIndex);
+
 	void ClearVisibleChunks();
+
 	void ReserveVisibleChunks(const float size);
-	void AddLoadedChunk(Entity chunkIndex);
-	std::vector<Entity> GetVisibleChunks();
-	std::vector<Entity> GetLoadedChunks();
-	
+
+	void AddLoadedChunk(const Entity chunkIndex);
+
+	std::vector<Entity> GetVisibleChunks() const;
+
+	std::vector<Entity> GetLoadedChunks() const;
 
 private:
 	std::vector<Entity> loadedChunks_;
@@ -27,7 +32,9 @@ class ChunksViewer
 {
 public:
 	explicit ChunksViewer(EntityManager& entityManager, ChunksManager& chunksManager);
-	void DrawImGui(Entity selectedEntity);
+
+	void DrawImGui(const Entity selectedEntity);
+
 protected:
 	EntityManager& entityManager_;
 	ChunksManager& chunksManager_;

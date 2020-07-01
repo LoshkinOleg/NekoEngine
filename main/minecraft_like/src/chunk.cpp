@@ -4,12 +4,12 @@ namespace neko
 {
 void Chunk::SetBlock(const uint8_t blockId, const Vec3i& pos)
 {
-	blocksIds[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize] = blockId;
+	blocksIds_[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize] = blockId;
 }
 
-uint8_t Chunk::GetBlockId(const Vec3i& pos)
+uint8_t Chunk::GetBlockId(const Vec3i& pos) const
 {
-	return blocksIds[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize];
+	return blocksIds_[pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize];
 }
 
 Vec3i Chunk::GetChunkPos() const

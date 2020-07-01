@@ -4,7 +4,8 @@
 
 namespace neko
 {
-GizmosRenderer::GizmosRenderer(Camera3D& camera) : camera_(camera)
+GizmosRenderer::GizmosRenderer(Camera3D& camera)
+	: camera_(camera)
 {
 	GizmosLocator::provide(this);
 }
@@ -32,7 +33,7 @@ void GizmosRenderer::Render()
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+
 	for (auto gizmo : gizmosQueue_)
 	{
 		if (gizmo.shape == GizmoShape::CUBE)
@@ -62,7 +63,7 @@ void GizmosRenderer::Render()
 			shaderLine_.Bind();
 			shaderLine_.SetMat4("view", camera_.GenerateViewMatrix());
 			shaderLine_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-			
+
 			Mat4f model = Transform3d::Translate(Mat4f::Identity, gizmo.pos);
 			shaderLine_.SetMat4("model", model);
 			shaderLine_.SetVec4("color", gizmo.color);

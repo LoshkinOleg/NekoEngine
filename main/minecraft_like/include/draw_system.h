@@ -4,7 +4,7 @@
 
 
 #include "aabb_manager.h"
-#include "chunk_renderer.h"
+#include "chunks_renderer.h"
 #include "chunks_manager.h"
 #include "gizmos_renderer.h"
 
@@ -23,7 +23,7 @@ namespace neko
         void OnEvent(const SDL_Event& event) override;
     protected:
         std::mutex updateMutex_;
-        ChunkRenderer chunkRenderer_;
+        ChunksRenderer chunkRenderer_;
         GizmosRenderer gizmosRenderer_;
     	
         //ImGui Viewer

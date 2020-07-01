@@ -7,21 +7,28 @@
 #include <graphics/camera.h>
 #include <graphics/texture.h>
 
-
 namespace neko
 {
+class ChunksManager;
+class Transform3dManager;
 struct MoveableCamera3D;
 class MinecraftLikeEngine;
 
-class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
+class ChunksRenderer final : public RenderCommandInterface, public SystemInterface
 {
 public:
-	ChunkRenderer(MinecraftLikeEngine& engine, MoveableCamera3D& camera, EntityViewer& entityViewer);
+	ChunksRenderer(
+		MinecraftLikeEngine& engine,
+		MoveableCamera3D& camera,
+		EntityViewer& entityViewer);
 
 	void Init() override;
 
 	void Update(seconds dt) override;
-	void FixedUpdate() override {}
+
+	void FixedUpdate() override
+	{
+	}
 
 	void Destroy() override;
 
@@ -31,7 +38,7 @@ private:
 
 	MoveableCamera3D& camera_;
 
-	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::Shader shader_;
 
 	TextureId texture_[3];
@@ -39,5 +46,8 @@ private:
 	std::mutex updateMutex_;
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
+	EntityManager& entityManager_;
+	ChunksManager& chunksManager_;
+	Transform3dManager& transform3dManager_;
 };
 }

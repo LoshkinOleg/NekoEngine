@@ -13,7 +13,7 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	  gizmosRenderer_(camera_),
 	  entityViewer_(engine.entityManager_, engine.entityHierarchy_),
 	  transformViewer_(engine.entityManager_, engine.componentsManagerSystem_.transform3dManager_),
-	  chunksViewer_(engine.entityManager_, engine.componentsManagerSystem_.chunkManager_),
+	  chunksViewer_(engine.entityManager_, engine.componentsManagerSystem_.chunksManager_),
 	  engine_(engine)
 {
 	engine.RegisterSystem(camera_);

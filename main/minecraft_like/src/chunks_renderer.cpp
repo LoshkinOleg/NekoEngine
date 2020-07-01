@@ -1,26 +1,32 @@
-#include "chunk_renderer.h"
+#include "chunks_renderer.h"
 
-#include <graphics/camera.h>
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
+#include <gl/texture.h>
 
-#include "gl/texture.h"
+#include <graphics/camera.h>
+#include <engine/transform.h>
+
 #include "minecraft_like_engine.h"
+#include "chunks_manager.h"
 
 namespace neko
 {
-ChunkRenderer::ChunkRenderer(
+ChunksRenderer::ChunksRenderer(
 	MinecraftLikeEngine& engine,
 	MoveableCamera3D& camera,
 	EntityViewer& entityViewer)
 	: camera_(camera),
-	engine_(engine),
-	entityViewer_(entityViewer)
+	  engine_(engine),
+	  entityViewer_(entityViewer),
+	  entityManager_(engine.entityManager_),
+	  chunksManager_(engine.componentsManagerSystem_.chunksManager_),
+	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_)
 {
 }
 
-void ChunkRenderer::Init()
+void ChunksRenderer::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
 	shader_.LoadFromFile(
@@ -34,16 +40,16 @@ void ChunkRenderer::Init()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void ChunkRenderer::Update(seconds dt)
+void ChunksRenderer::Update(seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
-	engine_.componentsManagerSystem_.transform3dManager_.SetPosition(0, camera_.position);
+	transform3dManager_.SetPosition(0, camera_.position);
 }
 
-void ChunkRenderer::Render()
+void ChunksRenderer::Render()
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkRenderer::Render");
+	EASY_BLOCK("ChunksRenderer::Render");
 #endif
 	if (shader_.GetProgram() == 0) return;
 
@@ -52,33 +58,28 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	const auto visibleChunks = engine_.componentsManagerSystem_.chunkManager_.GetVisibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto loadedChunks = chunksManager_.GetLoadedChunks();
+	for (auto loadedChunk : loadedChunks)
 	{
-		if (!engine_.entityManager_.HasComponent(visibleChunk, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
-		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(visibleChunk);
-#ifdef EASY_PROFILE_USE
-		EASY_BLOCK("chunk.IsVisible");
-#endif
+		const Chunk chunk = chunksManager_.GetComponent(loadedChunk);
 		if (!chunk.IsVisible()) continue;
-		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(visibleChunk);
-#ifdef EASY_PROFILE_USE
-		//EASY_BLOCK("ChunkRenderer::Render::Chunk");
-#endif
-		for (int x = 0; x < kChunkSize; x++)
+		const Vec3f chunkPos = transform3dManager_.GetPosition(
+			loadedChunk);
+		for (unsigned x = 0; x < kChunkSize; x++)
 		{
-			for (int y = 0; y < kChunkSize; y++)
+			for (unsigned y = 0; y < kChunkSize; y++)
 			{
-				for (int z = 0; z < kChunkSize; z++)
+				for (unsigned z = 0; z < kChunkSize; z++)
 				{
-					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-					if (blockID != 0)
+					const int blockId = chunk.GetBlockId(Vec3i(x, y, z));
+					if (blockId != 0)
 					{
-						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+						if (texture_[blockId - 1] == INVALID_TEXTURE_ID) continue;
 						Mat4f model = Mat4f::Identity; //model transform matrix
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
 						shader_.SetMat4("model", model);
-						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+						glBindTexture(GL_TEXTURE_2D, texture_[blockId - 1]);
+						//bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -90,7 +91,7 @@ void ChunkRenderer::Render()
 	}
 }
 
-void ChunkRenderer::Destroy()
+void ChunksRenderer::Destroy()
 {
 	cube_.Destroy();
 
@@ -99,5 +100,4 @@ void ChunkRenderer::Destroy()
 	gl::DestroyTexture(texture_[1]);
 	gl::DestroyTexture(texture_[2]);
 }
-
 }
