@@ -4,6 +4,17 @@
 
 struct Plane
 {
+	Plane(neko::Vec3f point, neko::Vec3f normal)
+	{
+		_point = point;
+		_normal = normal;
+	}
+	Plane(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) //TODO clean + optimize
+	{
+		_point = pointA;
+		_normal = GetNormal(pointA, pointB, pointC);
+	}
+	neko::Vec3f GetNormal(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC);
 	float Distance(neko::Vec3f point);
 	neko::Vec3f _normal; //Towards inside
 	neko::Vec3f _point;

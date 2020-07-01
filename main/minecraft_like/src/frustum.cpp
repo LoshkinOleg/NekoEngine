@@ -6,6 +6,13 @@ float Plane::Distance(neko::Vec3f point)
 	return distance;
 }
 
+neko::Vec3f Plane::GetNormal(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC)
+{
+	neko::Vec3f vecA = pointA - pointB;
+	neko::Vec3f vecB = pointC - pointB;
+	return pointA.Cross(vecA, vecB).Normalized();
+}
+
 void Frustum::ConstructFrustum()
 {
 
