@@ -29,6 +29,7 @@ void HelloDepthProgram::Init()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthTexture_, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
+<<<<<<< HEAD
 	CheckFramebuffer();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -38,6 +39,36 @@ void HelloDepthProgram::Init()
                                config.dataRootPath + "shaders/13_hello_depth/screen.frag");
     depthOnlyShader_.LoadFromFile(config.dataRootPath + "shaders/13_hello_depth/screen.vert",
                                   config.dataRootPath + "shaders/13_hello_depth/screen_depth.frag");
+=======
+	const auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE)
+	{
+
+		switch (status)
+		{
+		case GL_FRAMEBUFFER_UNDEFINED:
+			LogDebug("[Error] Framebuffer is undefined!");
+			break;
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+			LogDebug("[Error] Framebuffer is unsupported!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+			LogDebug("[Error] Framebuffer has incomplete attachment!");
+			break;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+			LogDebug("[Error] Framebuffer has incomplete missing attachment!");
+			break;
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	sceneShader_.LoadFromFile(config.dataRootPath + "shaders/99_hello_scene/cube.vert",
+		config.dataRootPath + "shaders/99_hello_scene/cube.frag");
+	screenShader_.LoadFromFile(config.dataRootPath + "shaders/13_hello_depth/screen.vert",
+		config.dataRootPath + "shaders/13_hello_depth/screen.frag");
+	depthOnlyShader_.LoadFromFile(config.dataRootPath + "shaders/13_hello_depth/screen.vert",
+		config.dataRootPath + "shaders/13_hello_depth/screen_depth.frag");
+>>>>>>> develop
 	camera_.position = Vec3f(0, 4, 4);
 	camera_.LookAt(Vec3f::zero);
 }

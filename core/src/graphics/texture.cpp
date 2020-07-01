@@ -17,14 +17,12 @@ namespace neko
 {
 
 
-Image StbImageConvert(BufferFile imageFile, int requireComponents, bool flipY)
+Image StbImageConvert(BufferFile imageFile, int requireComponents)
 {
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Convert Image");
 #endif
     Image image;
-	
-    stbi_set_flip_vertically_on_load(flipY);
     image.data = stbi_load_from_memory((unsigned char*) (imageFile.dataBuffer),
                                        imageFile.dataLength, &image.width, &image.height, &image.nbChannels, 0);
     return image;
@@ -46,7 +44,7 @@ Texture::Texture() :
             reqComponents = 3;
         else if (extension == ".png")
             reqComponents = 4;
-    	image_ = StbImageConvert(diskLoadJob_.GetBufferFile(), reqComponents, flags_ & FLIP_Y);
+    	image_ = StbImageConvert(diskLoadJob_.GetBufferFile(),reqComponents);
 	    diskLoadJob_.GetBufferFile().Destroy();
 	    RendererLocator::get().AddPreRenderJob(&uploadToGpuJob_);
     })

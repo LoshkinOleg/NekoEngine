@@ -2,40 +2,38 @@
 // Created by efarhan on 26.01.20.
 //
 
+#include <comp_graph/sample_browser.h>
 #include <imgui.h>
-#include "comp_graph/sample_browser.h"
 
-#include "01_hello_triangle/triangle_program.h"
-#include "02_hello_texture/texture_program.h"
-#include "03_hello_transform/transform_program.h"
-#include "04_hello_coords/coords_program.h"
-#include "05_hello_camera/camera_program.h"
-#include "06_hello_model/model_program.h"
-#include "07_hello_light/light_program.h"
-#include "08_hello_lightmaps/lightmaps_program.h"
-#include "09_hello_lightcasters/lightcasters_program.h"
-#include "10_hello_instancing/instancing_program.h"
-#include "11_hello_framebuffer/framebuffer_program.h"
-#include "12_hello_stencil/stencil_program.h"
-#include "13_hello_depth/depth_program.h"
-#include "14_hello_outline/outline_program.h"
-#include "15_hello_cubemaps/cubemaps_program.h"
-#include "16_hello_culling/culling_program.h"
-#include "17_hello_frustum/frustum_program.h"
-#include "18_hello_normal/normal_program.h"
-#include "19_hello_hdr/hdr_program.h"
-#include "20_hello_bloom/bloom_program.h"
-#include "21_hello_shadow/shadow_program.h"
-#include "22_hello_blinn/blinn_program.h"
-#include "23_hello_point_shadow/point_shadow_program.h"
-#include "24_hello_cascaded_shadow/cascaded_shadow_program.h"
-#include "25_hello_deferred/deferred_progam.h"
-#include "26_hello_ssao/ssao_program.h"
-#include "27_hello_cutoff/cutoff_program.h"
-#include "28_hello_blending/blending_program.h"
+#include <01_hello_triangle/triangle_program.h>
+#include <02_hello_texture/texture_program.h>
+#include <03_hello_transform/transform_program.h>
+#include <04_hello_coords/coords_program.h>
+#include <05_hello_camera/camera_program.h>
+#include <06_hello_model/model_program.h>
+#include <07_hello_light/light_program.h>
+#include <08_hello_lightmaps/lightmaps_program.h>
+#include <09_hello_lightcasters/lightcasters_program.h>
+#include <10_hello_instancing/instancing_program.h>
+#include <11_hello_framebuffer/framebuffer_program.h>
+#include <12_hello_stencil/stencil_program.h>
+#include <13_hello_depth/depth_program.h>
+#include <14_hello_outline/outline_program.h>
+#include <15_hello_cubemaps/cubemaps_program.h>
+#include <16_hello_culling/culling_program.h>
+#include <17_hello_frustum/frustum_program.h>
+#include <18_hello_normal/normal_program.h>
+#include <19_hello_hdr/hdr_program.h>
+#include <20_hello_bloom/bloom_program.h>
+#include <21_hello_shadow/shadow_program.h>
+#include <22_hello_blinn/blinn_program.h>
 
-#include "98_hello_line/line_program.h"
-#include "99_hello_scene/scene_program.h"
+#include <xx_hello_logger/logger_program.h>
+#include <xx_hello_moveable_camera/moveable_camera_program.h>
+#include <xx_player_controller/player_program.h>
+
+#include <98_hello_line/line_program.h>
+#include <99_hello_scene/scene_program.h>
 
 namespace neko
 {
@@ -43,7 +41,7 @@ namespace neko
 void SampleBrowser::Init()
 {
     RegisterRenderProgram("01 Hello Triangle", std::make_unique<HelloTriangleProgram>());
-    RegisterRenderProgram("02 Hello Texture", std::make_unique<HelloTextureProgram>());
+    RegisterRenderProgram("02 Hello Texture", std::make_unique<TextureProgram>());
     RegisterRenderProgram("03 Hello Transform", std::make_unique<HelloTransformProgram>());
     RegisterRenderProgram("04 Hello Coords", std::make_unique<HelloCoordsProgram>());
     RegisterRenderProgram("05 Hello Camera", std::make_unique<HelloCameraProgram>());
@@ -64,15 +62,13 @@ void SampleBrowser::Init()
     RegisterRenderProgram("20 Hello Bloom", std::make_unique<HelloBloomProgram>());
     RegisterRenderProgram("21 Hello Shadow", std::make_unique<HelloShadowProgram>());
     RegisterRenderProgram("22 Hello Blinn", std::make_unique<HelloBlinnProgram>());
-    RegisterRenderProgram("23 Hello Point Shadow", std::make_unique<HelloPointShadowProgram>());
-    RegisterRenderProgram("24 Hello Cascade Shadow", std::make_unique<HelloCascadedShadowProgram>());
-    RegisterRenderProgram("25 Hello Deferred Shading", std::make_unique<HelloDeferredProgram>());
-    RegisterRenderProgram("26 Hello SSAO", std::make_unique<HelloSsaoProgram>());
-    RegisterRenderProgram("27 Hello Cutoff", std::make_unique<HelloCutoffProgram>());
-    RegisterRenderProgram("28 Hello Blending", std::make_unique<HelloBlendingProgram>());
-	
+
     RegisterRenderProgram("98 Hello Line", std::make_unique<HelloLineProgram>());
-    RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+	RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+	
+    RegisterRenderProgram("XX Hello Logger", std::make_unique<HelloLoggerProgram>());
+    RegisterRenderProgram("XX Moveable Camera", std::make_unique<MoveableCameraProgram>());
+    RegisterRenderProgram("XX Block Placement", std::make_unique<PlayerProgram>());
 	
 	programs_[currentProgramIndex_]->Init();
 }
@@ -81,6 +77,11 @@ void SampleBrowser::Update(seconds dt)
 {
     programs_[currentProgramIndex_]->Update(dt);
     RendererLocator::get().Render(programs_[currentProgramIndex_].get());
+}
+
+void SampleBrowser::FixedUpdate()
+{
+    programs_[currentProgramIndex_]->FixedUpdate();
 }
 
 void SampleBrowser::Destroy()

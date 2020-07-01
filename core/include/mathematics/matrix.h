@@ -12,6 +12,15 @@
 namespace neko
 {
 template<typename T>
+class Mat2;
+
+template<typename T>
+class Mat3;
+
+template<typename T>
+class Mat4;
+
+template<typename T>
 class Mat2
 {
 
@@ -61,6 +70,16 @@ public:
 	{
 		return columns_[column];
 	}
+
+	Vec3f operator*(const Vec3f& rhs) const
+	{
+		Vec3f v;
+		v.x = columns_[0][0] * rhs.x + columns_[1][0] * rhs.y + columns_[2][0] * rhs.z;
+		v.y = columns_[0][1] * rhs.x + columns_[1][1] * rhs.y + columns_[2][1] * rhs.z;
+		v.z = columns_[0][2] * rhs.x + columns_[1][2] * rhs.y + columns_[2] * rhs.z;
+		return v;
+	}
+
 	inline Mat3<T> Transpose() const
 	{
 		std::array<Vec3<T>, 3> v;
@@ -84,6 +103,20 @@ public:
 			columns_[0][0] * columns_[2][1] * columns_[1][2] -
 			columns_[1][0] * columns_[0][1] * columns_[2][2];
 	}
+	
+	static EulerAngles ToEuler(const Mat4<T>& mat)
+	{
+		EulerAngles angles;
+
+		angles.y = -Asin(mat[2][0]);
+		
+		auto cosY = Cos(angles.y);
+		angles.x = Atan2(mat[2][1] / cosY, mat[2][2] / cosY);
+		angles.z = Atan2(mat[1][0] / cosY, mat[0][0] / cosY);
+		
+		return angles;
+	}
+	
 	const static Mat3<T> Identity;
 	const static Mat3<T> Zero;
 private:

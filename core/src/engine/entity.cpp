@@ -99,7 +99,7 @@ bool EntityManager::HasComponent(Entity entity, EntityMask componentType) const
     {
 	    std::ostringstream oss;
 	    oss << "[Error] Accessing entity: "<<entity<<" while entity mask array is of size: "<<entityMaskArray_.size();
-	    logDebug(oss.str());
+        LogDebug(oss.str());
 	    return false;
     }
     return (entityMaskArray_[entity] & EntityMask(componentType)) == EntityMask(componentType);
@@ -295,7 +295,7 @@ void EntityViewer::DrawEntityHierarchy(neko::Entity entity, bool draw, bool dest
         const std::string entityPopupName = "Entity Popup " + std::to_string(entity);
         if (ImGui::IsItemClicked(1))
         {
-            logDebug("Left Clicked on Entity: " + std::to_string(entity));
+            LogDebug("Left Clicked on Entity: " + std::to_string(entity));
 
             ImGui::OpenPopup(entityPopupName.c_str());
         }
@@ -487,7 +487,7 @@ bool EntityManager::SetEntityParent(Entity child, Entity parent)
     {
 	    if(p == child)
 	    {
-            logDebug("[Warning] Child entity: " + std::to_string(child) + " cannot have parent entity: " + std::to_string(parent));
+            LogDebug("[Warning] Child entity: " + std::to_string(child) + " cannot have parent entity: " + std::to_string(parent));
             return false;
 	    }
         p = GetEntityParent(p);

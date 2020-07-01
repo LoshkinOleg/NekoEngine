@@ -17,6 +17,10 @@ public:
 	void Init() override;
 
 	void Update(seconds dt) override;
+<<<<<<< HEAD
+=======
+	void FixedUpdate() override {}
+>>>>>>> develop
 
 	void Destroy() override;
 
@@ -27,8 +31,12 @@ private:
 	enum BloomFlags : std::uint8_t
 	{
 		NONE = 0u,
+<<<<<<< HEAD
 		ENABLE_BLOOM = 1u,
 		RESIZE_FRAMEBUFFER = 1u << 1u
+=======
+		ENABLE_BLOOM = 1u
+>>>>>>> develop
 	};
 	struct Light
 	{
@@ -42,9 +50,12 @@ private:
 		radian_t angle = radian_t(0.0f);
 		Vec3f axis = Vec3f::up;
 	};
+<<<<<<< HEAD
 
 	void CreateFramebuffer();
 	
+=======
+>>>>>>> develop
 	gl::Shader cubeShader_;
 	gl::Shader lightShader_;
 	gl::Shader blurShader_;

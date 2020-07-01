@@ -16,12 +16,39 @@ void HelloHdrProgram::Init()
     cubeTexture_.SetPath(config.dataRootPath+"sprites/brickwall/brickwall.jpg");
     cubeTexture_.LoadFromDisk();
 
+<<<<<<< HEAD
     CreateFramebuffer();
     
     hdrPlane_.Init();
     hdrShader_.LoadFromFile(
             config.dataRootPath + "shaders/19_hello_hdr/hdr_screen.vert",
             config.dataRootPath + "shaders/19_hello_hdr/hdr_screen.frag");
+=======
+    glGenFramebuffers(1, &hdrFbo_);
+    // create floating point color buffer
+    glGenTextures(1, &hdrColorBuffer_);
+    glBindTexture(GL_TEXTURE_2D, hdrColorBuffer_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, config.windowSize.x, config.windowSize.y, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // create depth buffer (renderbuffer)
+    glGenRenderbuffers(1, &hdrRbo_);
+    glBindRenderbuffer(GL_RENDERBUFFER, hdrRbo_);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, config.windowSize.x, config.windowSize.y);
+    // attach buffers
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFbo_);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hdrColorBuffer_, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, hdrRbo_);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        LogDebug("[Error] Framebuffer not complete!");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    hdrPlane_.Init();
+    hdrShader_.LoadFromFile(
+        config.dataRootPath + "shaders/19_hello_hdr/hdr_screen.vert",
+        config.dataRootPath + "shaders/19_hello_hdr/hdr_screen.frag");
+>>>>>>> develop
     camera_.position = Vec3f::zero;
     camera_.LookAt(camera_.position+Vec3f::forward);
 
@@ -64,6 +91,7 @@ void HelloHdrProgram::Render()
     {
         return;
     }
+<<<<<<< HEAD
 	if(flags_ & RESIZE_FRAMEBUFFER)
 	{
         glDeleteFramebuffers(1, &hdrFbo_);
@@ -74,6 +102,8 @@ void HelloHdrProgram::Render()
     }   
 		
 	
+=======
+>>>>>>> develop
     std::lock_guard<std::mutex> lock(updateMutex_);
 
     glBindFramebuffer(GL_FRAMEBUFFER, hdrFbo_);
@@ -98,8 +128,15 @@ void HelloHdrProgram::Render()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     hdrShader_.Bind();
+<<<<<<< HEAD
     hdrShader_.SetTexture("hdrBuffer", hdrColorBuffer_);
     hdrShader_.SetBool("hdr", flags_ & ENABLE_HDR);
+=======
+    hdrShader_.SetInt("hdrBuffer", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hdrColorBuffer_);
+    hdrShader_.SetBool("hdr", flags_&ENABLE_HDR);
+>>>>>>> develop
     hdrShader_.SetFloat("exposure", exposure_);
     hdrPlane_.Draw();
 
@@ -108,6 +145,7 @@ void HelloHdrProgram::Render()
 void HelloHdrProgram::OnEvent(const SDL_Event& event)
 {
     camera_.OnEvent(event);
+<<<<<<< HEAD
     if (event.type == SDL_WINDOWEVENT)
     {
         if (event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -144,3 +182,7 @@ void HelloHdrProgram::CreateFramebuffer()
     glCheckError();
 }
 }
+=======
+}
+}
+>>>>>>> develop

@@ -10,7 +10,7 @@ class CompGraphEngine : public sdl::SdlEngine
 public:
 	explicit CompGraphEngine(Configuration* config = nullptr);
 
-    void Destroy() override;
+	void Destroy() override;
 
 private:
 	SampleBrowser sampleBrowser_;

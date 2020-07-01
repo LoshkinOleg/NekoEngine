@@ -22,20 +22,18 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+ 
+#include <SDL.h>
 
 #include "engine/engine.h"
-#include "sdl_engine/sdl_window.h"
-#include "graphics/graphics.h"
-#include <SDL.h>
-#include <SDL_main.h>
+#include <sdl_engine/sdl_input.h>
 
 namespace neko::sdl
 {
-
 class SdlEventSystemInterface
 {
 public:
-    virtual void OnEvent(const SDL_Event& event) = 0;
+	virtual void OnEvent(const SDL_Event& event) = 0;
 };
 
 class SdlEngine : public BasicEngine
@@ -48,15 +46,12 @@ public:
 
 	void RegisterOnEvent(SdlEventSystemInterface& eventInterface);
 
-    void ManageEvent() override;
+	void ManageEvent() override;
 
-    void GenerateUiFrame() override;
+	void GenerateUiFrame() override;
 
 protected:
-    Action<const SDL_Event&> onEventAction_;
-
-
+	Action<const SDL_Event&> onEventAction_;
+	InputManager inputManager_;
 };
-
 }
-

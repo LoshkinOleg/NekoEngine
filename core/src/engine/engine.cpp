@@ -28,12 +28,16 @@
 #include <chrono>
 #include <sstream>
 
+#include <imgui.h>
+
 #include <engine/engine.h>
 #include <engine/log.h>
 #include <utilities/file_utility.h>
-#include "graphics/graphics.h"
+
 #include <engine/window.h>
-#include "imgui.h"
+#include <graphics/graphics.h>
+#include <utilities/file_utility.h>
+
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
@@ -44,22 +48,20 @@ BasicEngine* BasicEngine::instance_ = nullptr;
 
 BasicEngine::BasicEngine(Configuration* config)
 {
-	if (config != nullptr)
-	{
-		this->config = *config;
-	}
+    if (config != nullptr)
+    {
+        this->config = *config;
+    }
 
 #ifdef EASY_PROFILE_USE
-	EASY_PROFILER_ENABLE;
+    EASY_PROFILER_ENABLE;
 #endif
 }
 
 BasicEngine::~BasicEngine()
 {
-	logDebug("Destroy Basic Engine");
-
 #ifdef EASY_PROFILE_USE
-	profiler::dumpBlocksToFile("Neko_Profile.prof");
+    profiler::dumpBlocksToFile("Neko_Profile.prof");
 #endif
 }
 #ifdef __ANDROID__
@@ -97,22 +99,25 @@ Java_swiss_sae_gpr5300_MainActivity_finalize([[maybe_unused]]JNIEnv *env, [[mayb
 
 void BasicEngine::Init()
 {
-
+    logManager_ = new LogManager;
+	
 #ifdef EASY_PROFILE_USE
-	EASY_FUNCTION(profiler::colors::Magenta);
+    EASY_FUNCTION(profiler::colors::Magenta);
 #endif
 	instance_ = this;
-	logDebug("Current path: " + GetCurrentPath());
+	LogDebug("Current path: " + GetCurrentPath());
 	jobSystem_.Init();
 }
 
 void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
+	Time::time += dt_;
+	fixedUpdateAccumulator_ += dt_;
+	Time::deltaTime = dt_;
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("Basic Engine Update");
+    EASY_BLOCK("Basic Engine Update");
 #endif
-
     renderer_->ResetJobs();
     window_->ResetJobs();
 	
@@ -144,29 +149,42 @@ void BasicEngine::Update(seconds dt)
     jobSystem_.ScheduleJob(&eventJob, JobThreadType::MAIN_THREAD);
     jobSystem_.ScheduleJob(&updateJob, JobThreadType::MAIN_THREAD);
 
+    while (fixedUpdateAccumulator_ > Time::fixedDeltaTime)
+    {
+	    fixedUpdateAccumulator_ -= Time::fixedDeltaTime;
+	
+        Job fixedUpdateJob([this]{fixedUpdateAction_.Execute();});
+		jobSystem_.ScheduleJob(&fixedUpdateJob, JobThreadType::MAIN_THREAD);
+    }
+
     swapBufferJob->Join();
 }
 
 void BasicEngine::Destroy()
 {
-    Job leaveContext([this] {window_->LeaveCurrentContext(); });
+    Job leaveContext([this] { window_->LeaveCurrentContext(); });
     jobSystem_.ScheduleJob(&leaveContext, JobThreadType::RENDER_THREAD);
     leaveContext.Join();
     window_->MakeCurrentContext();
     renderer_->Destroy();
 	jobSystem_.Destroy();
 	instance_ = nullptr;
+	
+    logManager_->WriteToFile();
+    LogDebug("Destroy Basic Engine");
+    logManager_->Wait();
+    logManager_->Destroy();
 }
 
 static std::chrono::time_point<std::chrono::system_clock> clock;
 #ifdef EMSCRIPTEN
 void EmLoop(void* arg)
 {
-	BasicEngine* engine = static_cast<BasicEngine*>(arg);
-	const auto start = std::chrono::system_clock::now();
-	const auto dt = std::chrono::duration_cast<seconds>(start - clock);
-	clock = start;
-	(engine)->Update(dt);
+    BasicEngine* engine = static_cast<BasicEngine*>(arg);
+    const auto start = std::chrono::system_clock::now();
+    const auto dt = std::chrono::duration_cast<seconds>(start - clock);
+    clock = start;
+    (engine)->Update(dt);
 }
 #endif
 
@@ -178,9 +196,9 @@ void BasicEngine::EngineLoop()
 	jobSystem_.ScheduleJob(&initRenderJob, JobThreadType::RENDER_THREAD);
 	clock = std::chrono::system_clock::now();
 #ifdef EMSCRIPTEN
-	// void emscripten_set_main_loop(em_callback_func func, int fps, int simulate_infinite_loop);
+    // void emscripten_set_main_loop(em_callback_func func, int fps, int simulate_infinite_loop);
 
-	emscripten_set_main_loop_arg(&EmLoop, this, 0, 1);
+    emscripten_set_main_loop_arg(&EmLoop, this, 0, 1);
 #else
 	while (isRunning_)
 	{
@@ -188,18 +206,17 @@ void BasicEngine::EngineLoop()
 		const auto dt = std::chrono::duration_cast<seconds>(start - clock);
 		clock = start;
 		Update(dt);
-
 	}
 #endif
-	Destroy();
+    Destroy();
 }
 
 void BasicEngine::SetWindowAndRenderer(Window* window, Renderer* renderer)
 {
-	window_ = window;
-	renderer_ = renderer;
-	renderer_->SetWindow(window);
-	RendererLocator::provide(renderer);
+    window_ = window;
+    renderer_ = renderer;
+    renderer_->SetWindow(window);
+    RendererLocator::provide(renderer);
 }
 
 void BasicEngine::GenerateUiFrame()
@@ -221,7 +238,8 @@ void BasicEngine::GenerateUiFrame()
 void BasicEngine::RegisterSystem(SystemInterface& system)
 {
     initAction_.RegisterCallback([&system]{system.Init();});
-    updateAction_.RegisterCallback([&system](seconds dt){system.Update(dt);});
+    updateAction_.RegisterCallback([&system](const seconds dt){system.Update(dt);});
+    fixedUpdateAction_.RegisterCallback([&system]{system.FixedUpdate();});
     destroyAction_.RegisterCallback([&system]{system.Destroy();});
 }
 

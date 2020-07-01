@@ -14,6 +14,10 @@ public:
     virtual ~HelloBlinnProgram()= default;
 	void Init() override;
 	void Update(seconds dt) override;
+<<<<<<< HEAD
+=======
+	void FixedUpdate() override {}
+>>>>>>> develop
 	void Destroy() override;
 	void DrawImGui() override;
 	void Render() override;

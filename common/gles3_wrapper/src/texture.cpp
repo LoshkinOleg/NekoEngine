@@ -1,7 +1,5 @@
 #include "gl/texture.h"
 #include "gl/gles3_include.h"
-#include "gli/gli.hpp"
-
 #include "utilities/file_utility.h"
 
 #include <sstream>
@@ -15,41 +13,6 @@
 #endif
 namespace neko::gl
 {
-TextureId gliCreateTexture(const std::string_view filename, Texture::TextureFlags flags)
-{
-#ifdef EASY_PROFILE_USE
-    EASY_BLOCK("Create GLI Texture");
-#endif
-    gli::texture texture = gli::load(filename.data());
-    if (texture.empty())
-        return 0;
-
-    gli::gl GL(gli::gl::PROFILE_ES30);
-    const gli::gl::format  format = GL.translate(texture.format(), texture.swizzles());
-    GLenum target = GL.translate(texture.target());
-    assert(gli::is_compressed(texture.format()) && target == gli::TARGET_2D);
-
-    GLuint textureId = 0;
-    glGenTextures(1, &textureId);
-    glBindTexture(target, textureId);
-    glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, static_cast<GLint>(texture.levels() - 1));
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, format.Swizzles[0]);
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, format.Swizzles[1]);
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, format.Swizzles[2]);
-    glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, format.Swizzles[3]);
-    const Vec3<GLsizei>  extent(texture.extent());
-    glTexStorage2D(target, static_cast<GLint>(texture.levels()), format.Internal, extent.x, extent.y);
-    for (std::size_t level = 0; level < texture.levels(); ++level)
-    {
-        const Vec3<GLsizei> extent(texture.extent(level));
-        glCompressedTexSubImage2D(
-            target, static_cast<GLint>(level), 0, 0, extent.x, extent.y,
-            format.Internal, static_cast<GLsizei>(texture.size(level)), texture.data(0, 0, level));
-    }
-
-    return textureId;
-}
 
 TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlags flags)
 {
@@ -62,7 +25,7 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     {
         std::ostringstream oss;
         oss << "[Error] Texture: " << filename << " does not exist\n";
-        logDebug(oss.str());
+        LogDebug(oss.str());
         return 0;
     }
 
@@ -89,7 +52,8 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     {
         std::ostringstream oss;
         oss << "[Error] Texture: cannot load " << filename << "\n";
-        logDebug(oss.str());
+		
+        LogDebug(oss.str());
         return INVALID_TEXTURE_ID;
     }
 #ifdef EASY_PROFILE_USE
@@ -158,7 +122,7 @@ TextureId LoadCubemap(std::vector<std::string> facesFilename)
         }
         else
         {
-            logDebug("[Error] Cubemap tex failed to load at path: "+ facesFilename[i]);
+            LogDebug("[Error] Cubemap tex failed to load at path: "+ facesFilename[i]);
         }
         image.Destroy();
     }
@@ -168,7 +132,6 @@ TextureId LoadCubemap(std::vector<std::string> facesFilename)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    
     return textureID;
 }
 
@@ -181,33 +144,26 @@ void DestroyTexture(TextureId textureId)
 
 void Texture::CreateTexture()
 {
-    glCheckError();
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Generate Texture");
 #endif
     glGenTextures(1, &textureId_);
-    
 #ifdef EASY_PROFILE_USE
     EASY_END_BLOCK;
 #endif
     glBindTexture(GL_TEXTURE_2D, textureId_);
-    glCheckError();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, flags_ & CLAMP_WRAP ? GL_CLAMP_TO_EDGE : GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, flags_ & CLAMP_WRAP ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, flags_ & SMOOTH_TEXTURE ? GL_LINEAR : GL_NEAREST);
-    glCheckError();
-	if (flags_ & MIPMAPS_TEXTURE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, flags_ & SMOOTH_TEXTURE ? GL_LINEAR : GL_NEAREST);
+    if (flags_ & MIPMAPS_TEXTURE)
     {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                         flags_ & SMOOTH_TEXTURE ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR);
-        glCheckError();
     }
     else
     {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, flags_ & SMOOTH_TEXTURE ? GL_LINEAR : GL_NEAREST);
-        glCheckError();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, flags_ & SMOOTH_TEXTURE ? GL_LINEAR : GL_NEAREST);
     }
-    
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Copy Buffer");
 #endif
@@ -217,18 +173,18 @@ void Texture::CreateTexture()
     {
         case 1:
         {
-            internalFormat = dataFormat = GL_R8;
+            internalFormat = dataFormat = GL_RED;
         		break;
         }
         case 3:
         {
-            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB8 : GL_RGB8;
+            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB : GL_RGB;
             dataFormat = GL_RGB;
         	break;
         }
         case 4:
         {
-            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+            internalFormat = flags_ & GAMMA_CORRECTION ? GL_SRGB : GL_RGBA;
             dataFormat = GL_RGBA;
             break;
         }
@@ -236,7 +192,6 @@ void Texture::CreateTexture()
             break;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image_.width, image_.height, 0, dataFormat, GL_UNSIGNED_BYTE, image_.data);
-    glCheckError();
 #ifdef EASY_PROFILE_USE
     EASY_END_BLOCK;
 #endif
@@ -252,7 +207,6 @@ void Texture::CreateTexture()
 #endif
         glGenerateMipmap(GL_TEXTURE_2D);
     }
-    glCheckError();
     
 }
 

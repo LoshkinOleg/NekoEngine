@@ -55,11 +55,9 @@ void JobSystem::ScheduleJob(Job* func, JobThreadType threadType)
 
 void JobSystem::Work(JobQueue& jobQueue)
 {
-    {
-        std::lock_guard<std::mutex> lock(statusMutex_);
-        ++workersStarted_;
-    }
-    while (IsRunning())
+    ++initializedWorkers_; // Atomic increment.
+
+    while (status_ & Status::RUNNING) // Atomic check.
     {
         Job* job = nullptr;
         {// CRITICAL
@@ -83,7 +81,7 @@ void JobSystem::Work(JobQueue& jobQueue)
             }
             else
             {
-                if (IsRunning()) // Atomic check.
+                if (status_ & RUNNING) // Atomic check.
                 {
                     jobQueue.cv_.wait(lock); // !CRITICAL
                 }
@@ -96,9 +94,10 @@ void JobSystem::Work(JobQueue& jobQueue)
 
 void JobSystem::Init()
 {
-    numberOfWorkers = std::max(3u, std::thread::hardware_concurrency() - 1);
+    numberOfWorkers = std::thread::hardware_concurrency() - 1;
+    //TODO@Oleg: Add neko assert to check number of worker threads is valid!
     workers_.resize(numberOfWorkers);
-    status_ = RUNNING;
+
     const size_t len = numberOfWorkers;
     for (size_t i = 0; i < len; ++i)
     {
@@ -127,20 +126,13 @@ void JobSystem::Init()
 void JobSystem::Destroy()
 {
 // Spin-lock waiting for all threads to become ready for shutdown.
-    std::function<bool()> checkFunc = [this]()
-    {
-        std::lock_guard<std::mutex> lock(statusMutex_);
-        return workersStarted_ != numberOfWorkers ||
-                  !jobs_.jobs_.empty() ||
-                  !renderJobs_.jobs_.empty() ||
-                  !resourceJobs_.jobs_.empty();
-    };
-    while (checkFunc())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds (1));
-    }
+    while (initializedWorkers_ != numberOfWorkers ||
+        !jobs_.jobs_.empty() ||
+        !renderJobs_.jobs_.empty() ||
+        !resourceJobs_.jobs_.empty())
+    {} // WARNING: Not locking mutex for task_ access here!
 
-    status_ = NONE;
+    status_ = 0u; // Atomic assign.
     renderJobs_.cv_.notify_all();
     resourceJobs_.cv_.notify_all();
 	jobs_.cv_.notify_all(); // Wake all workers.
@@ -149,18 +141,6 @@ void JobSystem::Destroy()
     {
         workers_[i].join(); // Join all workers.
     }
-}
-
-bool JobSystem::IsRunning()
-{
-    std::lock_guard<std::mutex> lock(statusMutex_);
-    return status_ & Status::RUNNING;
-}
-
-std::uint8_t JobSystem::CountStartedWorkers()
-{
-    std::lock_guard<std::mutex> lock(statusMutex_);
-    return workersStarted_;
 }
 
 
@@ -174,26 +154,26 @@ Job::Job(std::function<void()> task) :
 
 Job::Job(Job&& job) noexcept
 {
-    promise_ = std::move(job.promise_);
-    dependencies_ = std::move(job.dependencies_);
-    task_ = std::move(job.task_);
-    taskDoneFuture_ = std::move(job.taskDoneFuture_);
-    status_ = job.status_;
+	promise_ = std::move(job.promise_);
+	dependencies_ = std::move(job.dependencies_);
+	task_ = std::move(job.task_);
+	taskDoneFuture_ = std::move(job.taskDoneFuture_);
+	status_ = job.status_.load();
 }
 
 Job& Job::operator=(Job&& job) noexcept
 {
-    promise_ = std::move(job.promise_);
-    dependencies_ = std::move(job.dependencies_);
-    task_ = std::move(job.task_);
-    taskDoneFuture_ = std::move(job.taskDoneFuture_);
-    status_ = job.status_;
-    return *this;
+	promise_ = std::move(job.promise_);
+	dependencies_ = std::move(job.dependencies_);
+	task_ = std::move(job.task_);
+	taskDoneFuture_ = std::move(job.taskDoneFuture_);
+	status_ = job.status_.load();
+	return *this;
 }
 
 void Job::Join() const
 {
-    if(!IsDone())
+    if(!(status_ & DONE))
         taskDoneFuture_.get();
 }
 
@@ -208,15 +188,9 @@ void Job::Execute()
         }
     }
 
-    {
-        std::lock_guard<std::mutex> lock(statusLock_);
-        status_ |= STARTED;
-    }
+    status_ |= STARTED;
     task_();
-    {
-        std::lock_guard<std::mutex> lock(statusLock_);
-        status_ |= DONE;
-    }
+    status_ |= DONE;
     promise_.set_value();
 }
 
@@ -224,21 +198,14 @@ bool Job::CheckDependenciesStarted()
 {
 	for(auto& dep : dependencies_)
 	{
-		if(!dep->HasStarted())
+		if(!(dep->status_ & STARTED))
             return false;
 	}
     return true;
 }
 
-bool Job::HasStarted() const
-{
-    std::lock_guard<std::mutex> lock(statusLock_);
-    return status_ & STARTED;
-}
-
 bool Job::IsDone() const
 {
-    std::lock_guard<std::mutex> lock(statusLock_);
     return status_ & DONE;
 }
 
@@ -274,8 +241,4 @@ void Job::Reset()
     status_ = 0;
     dependencies_.clear();
 }
-
-
-
-
 }

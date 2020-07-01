@@ -14,6 +14,7 @@ class HelloTransformProgram : public SampleProgram
 public:
     void Init() override;
     void Update(seconds) override;
+	void FixedUpdate() override {}
     void Render() override;
     void Destroy() override;
 
@@ -38,6 +39,6 @@ private:
     degree_t angle_{0.0f};
     EulerAngles eulerAngle_{Vec3f::zero};
     gl::Shader shaderProgram_;
-    TextureId textureWall_;
+    TextureId textureWall_ = 0u;
 };
 }

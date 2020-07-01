@@ -80,7 +80,7 @@ void IterateDirectory(const std::string_view dirname, std::function<void(const s
 
 std::string GetCurrentPath();
 
-bool CreateDirectory(const std::string_view dirname);
+bool CreateDirectory(std::string_view dirname);
 
 bool RemoveDirectory(const std::string_view dirname, bool removeAll = true);
 

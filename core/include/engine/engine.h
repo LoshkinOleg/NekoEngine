@@ -30,6 +30,8 @@
 #include <graphics/color.h>
 #include <utilities/time_utility.h>
 #include <mathematics/vector.h>
+#include <atomic>
+#include <engine/log.h>
 
 #include "jobsystem.h"
 
@@ -37,6 +39,7 @@
 namespace neko
 {
 class Renderer;
+
 class Window;
 
 /**
@@ -45,17 +48,17 @@ class Window;
 struct Configuration
 {
 	std::string windowName = "NekoEngine 0.1";
-    Vec2u windowSize = Vec2u(1024, 1024);
-    Vec2u gameWindowSize{1280, 720};
-    bool fullscreen = false;
-    bool vSync = true;
-    unsigned int framerateLimit = 0u;
+	Vec2u windowSize = Vec2u(1024, 1024);
+	Vec2u gameWindowSize{1280, 720};
+	bool fullscreen = false;
+	bool vSync = true;
+	unsigned int framerateLimit = 0u;
 #if defined(EMSCRIPTEN)
     std::string dataRootPath = "./";
 #elif defined(__ANDROID__)
     std::string dataRootPath = "data/";
 #else
-    std::string dataRootPath = "../../data/";
+	std::string dataRootPath = "../../data/";
 #endif
 };
 
@@ -66,45 +69,61 @@ struct Configuration
 class BasicEngine : public SystemInterface
 {
 public:
-    explicit BasicEngine(Configuration* config = nullptr);
+	explicit BasicEngine(Configuration* config = nullptr);
+
 	BasicEngine() = delete;
-    ~BasicEngine();
-    void Init() override;
-    void Update(seconds dt) final;
-    void Destroy() override;
 
-    //Update functions
-    virtual void ManageEvent() = 0;
-    virtual void GenerateUiFrame();
+	~BasicEngine();
 
-    void EngineLoop();
+	void Init() override;
 
-    void SetWindowAndRenderer(Window* window, Renderer* renderer);
+	void Update(seconds dt) final;
+	void FixedUpdate() final {}
 
-    Configuration config;
+	void Destroy() override;
 
-    void RegisterSystem(SystemInterface& system);
-    void RegisterOnDrawUi(DrawImGuiInterface& drawUi);
+	//Update functions
+	virtual void ManageEvent() = 0;
 
-    float GetDeltaTime() const { return dt_; };
+	virtual void GenerateUiFrame();
 
-    static BasicEngine* GetInstance(){return instance_;}
+	void EngineLoop();
 
-    void ScheduleJob(Job* job, JobThreadType threadType);
-    //template <typename T = BasicEngine>
-    //static T* GetInstance(){ return dynamic_cast<T*>(instance_);};
+	void SetWindowAndRenderer(Window* window, Renderer* renderer);
+
+	Configuration config;
+
+	void RegisterSystem(SystemInterface& system);
+	void RegisterOnDrawUi(DrawImGuiInterface& drawUi);
+
+	float GetDeltaTime() const
+	{
+		return dt_;
+	};
+
+	static BasicEngine* GetInstance()
+	{
+		return instance_;
+	}
+
+	void ScheduleJob(Job* job, JobThreadType threadType);
+	//template <typename T = BasicEngine>
+	//static T* GetInstance(){ return dynamic_cast<T*>(instance_);};
 protected:
-    static BasicEngine* instance_;
-    Renderer* renderer_ = nullptr;
-    Window* window_ = nullptr;
-    JobSystem jobSystem_;
+	static BasicEngine* instance_;
+	Renderer* renderer_ = nullptr;
+	LogManager* logManager_ = nullptr;
+	Window* window_ = nullptr;
+	JobSystem jobSystem_;
+	
 	bool isRunning_;
-    float dt_ = 0.0f;
-    Action<> initAction_;
-    Action<seconds> updateAction_;
-    Action<> drawImGuiAction_;
-    Action<> destroyAction_;
+	std::atomic<float> dt_;
+	Action<> initAction_;
+	Action<seconds> updateAction_;
+	Action<> fixedUpdateAction_;
+	Action<> drawImGuiAction_;
+	Action<> destroyAction_;
 
+	float fixedUpdateAccumulator_ = 0.0f;
 };
-
 }

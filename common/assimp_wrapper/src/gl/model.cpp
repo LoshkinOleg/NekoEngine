@@ -40,7 +40,7 @@ namespace neko::assimp
 	{
 		path_ = path;
 		directory_ = path.substr(0, path.find_last_of('/'));
-		logDebug("ASSIMP: Loading model: " + path_);
+		LogDebug("ASSIMP: Loading model: " + path_);
 		BasicEngine::GetInstance()->ScheduleJob(&processModelJob_, JobThreadType::OTHER_THREAD);
 	}
 
@@ -78,8 +78,7 @@ namespace neko::assimp
 			import.SetIOHandler(ioSystem);
 
 			scene = import.ReadFile(path_.data(),
-			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals |
-				aiProcess_CalcTangentSpace);
+			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 		});
 		BasicEngine::GetInstance()->ScheduleJob(&loadingModelJob, JobThreadType::RESOURCE_THREAD);
 		loadingModelJob.Join();
@@ -90,7 +89,7 @@ namespace neko::assimp
 		{
 			std::ostringstream oss;
 			oss << "[ERROR] ASSIMP " << import.GetErrorString();
-			logDebug(oss.str());
+			LogDebug(oss.str());
 			return;
 		}
 		meshes_.reserve(scene->mNumMeshes);
