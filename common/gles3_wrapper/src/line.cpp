@@ -21,15 +21,9 @@ void LineRenderer::Init()
 	glBindVertexArray(0);
 
 	const auto& config = BasicEngine::GetInstance()->config;
-<<<<<<< HEAD
-    lineShader_.LoadFromFile(
-            config.dataRootPath + "shaders/engine/line.vert",
-            config.dataRootPath + "shaders/engine/line.frag");
-=======
 	lineShader_.LoadFromFile(
 		config.dataRootPath + "shaders/engine/line.vert", 
 		config.dataRootPath + "shaders/engine/line.frag");
->>>>>>> develop
 }
 
 void LineRenderer::Render()

@@ -8,10 +8,12 @@
 
 namespace neko::gl
 {
-class Shader : public neko::Shader
+class Shader : neko::Shader
 {
 public:
-    void LoadFromFile(const std::string_view vertexShaderPath, const std::string_view fragmentShaderPath) override;
+    void LoadFromFile(
+            const std::string_view vertexShaderPath,
+            const std::string_view fragmentShaderPath) override;
 
 
     void Bind() const;

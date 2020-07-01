@@ -23,6 +23,7 @@
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <atomic>
 #include <future>
 #include "engine/system.h"
 
@@ -72,9 +73,8 @@ public:
 	 *  \brief Check if all dependencies started
 	 *  used when we want to start the job to know if we should join or wait for other dependencies
 	 */
-    [[nodiscard]] bool CheckDependenciesStarted();
-    [[nodiscard]] bool IsDone() const;
-    [[nodiscard]] bool HasStarted() const;
+    bool CheckDependenciesStarted();
+    bool IsDone() const;
     void AddDependency(const Job* dep);
 
     std::function<void()> GetTask() const { return task_; }
@@ -86,9 +86,7 @@ protected:
     std::function<void()> task_;
     std::promise<void> promise_;
     std::shared_future<void> taskDoneFuture_;
-    mutable std::mutex statusLock_;
-    std::uint8_t status_;
-
+    std::atomic<std::uint8_t> status_;
 };
 
 struct JobQueue
@@ -101,8 +99,7 @@ struct JobQueue
 class JobSystem : SystemInterface
 {
     enum Status : uint8_t
-    {
-        NONE = 0u,
+    { // Q: Why declaring this as an enum CLASS makes status_ & Status::RUNNING an invalid operation?
         RUNNING = 1u
     };
 
@@ -116,23 +113,21 @@ public:
     void FixedUpdate() override{}
 
     void Destroy() override;
+
 private:
 	void Work(JobQueue& jobQueue);
 
-    [[nodiscard]] bool IsRunning();
-    [[nodiscard]] std::uint8_t CountStartedWorkers();
+
+
+    const static std::uint8_t OCCUPIED_THREADS = 3; // Define number of threads used by engine.
     std::uint8_t numberOfWorkers;
-    Status status_ = NONE;
-    std::uint8_t workersStarted_ = 0;
     JobQueue jobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
     JobQueue renderJobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
     JobQueue resourceJobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
     std::vector<std::thread> workers_; // TODO: replace with fixed vector when those are implemented.
-
-
-
-    mutable std::mutex statusMutex_;
-
+    
+    std::atomic<std::uint8_t> status_ = RUNNING;
+    std::atomic<std::uint8_t> initializedWorkers_ = 0;
 };
 
 }

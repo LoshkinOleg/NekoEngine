@@ -19,11 +19,6 @@ inline bool Equal(const float a, const float b, const float epsilon = 0.0000001f
 {
 	return Abs(a - b) < epsilon;
 }
-	
-inline float Lerp(float start, float end, float t)
-{
-	return start + (end - start) * t;
-}
 
 float RandomRange(float start, float end);
 

@@ -139,13 +139,11 @@ void Renderer::Destroy()
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ClosingFromEngine");
 #endif
-    std::lock_guard<std::mutex> lock(statusMutex_);
 	flags_ &= ~IS_RUNNING;
 }
 
 void Renderer::SetFlag(Renderer::RendererFlag flag)
 {
-    std::lock_guard<std::mutex> lock(statusMutex_);
 	flags_ |= flag;
 }
 
@@ -179,11 +177,6 @@ void Renderer::AfterRenderLoop()
 #endif
 }
 
-std::uint8_t Renderer::GetFlag() const
-{
-    std::lock_guard<std::mutex> lock(statusMutex_);
-    return flags_;
-}
 
 
 }

@@ -6,7 +6,6 @@
 #include <sdl_engine/sdl_engine.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
-#include "frustum.h"
 
 
 namespace neko
@@ -31,7 +30,6 @@ public:
 private:
 
 	MoveableCamera3D& camera_;
-	Frustum frustum_;
 
 	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
 	gl::Shader shader_;

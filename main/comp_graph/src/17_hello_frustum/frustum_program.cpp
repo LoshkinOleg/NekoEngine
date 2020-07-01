@@ -33,14 +33,6 @@ void HelloFrustumProgram::Init()
     const auto& config = BasicEngine::GetInstance()->config;
     model_.LoadModel(config.dataRootPath + "model/rock/rock.obj");
 
-<<<<<<< HEAD
-
-    vertexInstancingDrawShader_.LoadFromFile(
-            config.dataRootPath + "shaders/17_hello_frustum/asteroid_vertex_instancing.vert",
-            config.dataRootPath + "shaders/17_hello_frustum/asteroid.frag");
-    screenShader_.LoadFromFile(config.dataRootPath + "shaders/17_hello_frustum/screen.vert",
-                               config.dataRootPath + "shaders/17_hello_frustum/screen.frag");
-=======
     
     vertexInstancingDrawShader_.LoadFromFile(
         config.dataRootPath + "shaders/17_hello_frustum/asteroid_vertex_instancing.vert",
@@ -48,7 +40,6 @@ void HelloFrustumProgram::Init()
     screenShader_.LoadFromFile(config.dataRootPath + "shaders/17_hello_frustum/screen.vert",
         config.dataRootPath + "shaders/17_hello_frustum/screen.frag"
     );
->>>>>>> develop
 
     camera_.position = Vec3f(0.0f, 600.0f, -500.0f);
     camera_.farPlane = 1'000.0f;
@@ -83,11 +74,7 @@ void HelloFrustumProgram::Init()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo_);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-<<<<<<< HEAD
-        logDebug("[Error] Framebuffer is not complete!");
-=======
         LogDebug("[Error] Framebuffer is not complete!");
->>>>>>> develop
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -231,13 +218,8 @@ void HelloFrustumProgram::Render()
     glDisable(GL_DEPTH_TEST);
     screenShader_.Bind();
     const float miniMapSize = 0.2f;
-<<<<<<< HEAD
-    screenShader_.SetVec2("offset", Vec2f((1.0f - miniMapSize/camera_.aspect) , 1.0f - miniMapSize));
-    screenShader_.SetVec2("scale", Vec2f( miniMapSize/camera_.aspect, miniMapSize));
-=======
     screenShader_.SetVec2("offset", Vec2f((1.0f - miniMapSize/camera_.GetAspect()) , 1.0f - miniMapSize));
     screenShader_.SetVec2("scale", Vec2f( miniMapSize/camera_.GetAspect(), miniMapSize));
->>>>>>> develop
 
     screenShader_.SetInt("screenTexture", 0);
     glActiveTexture(GL_TEXTURE0);
@@ -298,17 +280,10 @@ void HelloFrustumProgram::Culling(size_t begin, size_t end)
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Culling");
 #endif
-<<<<<<< HEAD
-	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius_;
-    const auto cameraDir = -camera_.reverseDir;
-    const auto cameraRight = camera_.rightDir;
-    const auto cameraUp = camera_.upDir;
-=======
 	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius;
     const auto cameraDir = -camera_.reverseDirection;
     const auto cameraRight = camera_.GetRight();
     const auto cameraUp = camera_.GetUp();
->>>>>>> develop
     const auto fovX = camera_.GetFovX();
 	
     const auto rightQuaternion = Quaternion::AngleAxis(fovX / 2.0f, cameraUp);
@@ -336,11 +311,7 @@ void HelloFrustumProgram::Culling(size_t begin, size_t end)
         {
             const auto planePos = camera_.position + cameraDir * camera_.farPlane;
             const auto asterPos = asteroidPos - planePos;
-<<<<<<< HEAD
-            const auto v = Vec3f::Dot(camera_.reverseDir, asterPos);
-=======
             const auto v = Vec3f::Dot(camera_.reverseDirection, asterPos);
->>>>>>> develop
             if (v < -asteroidRadius)
                 continue;
         }

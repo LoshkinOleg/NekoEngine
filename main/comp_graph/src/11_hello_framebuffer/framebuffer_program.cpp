@@ -41,36 +41,11 @@ void HelloFramebufferProgram::Init()
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo_);
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-<<<<<<< HEAD
-        logDebug("[Error] Framebuffer is not complete!");
-=======
         LogDebug("[Error] Framebuffer is not complete!");
->>>>>>> develop
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     screenShader_.LoadFromFile(
-<<<<<<< HEAD
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.vert",
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.frag");
-    screenInverseShader_.LoadFromFile(
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.vert",
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen_inverse.frag");
-    screenGrayscaleShader_.LoadFromFile(
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.vert",
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen_grayscale.frag");
-    screenBlurShader_.LoadFromFile(
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.vert",
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen_blur.frag");
-    screenEdgeDetectionShader_.LoadFromFile(
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen.vert",
-            config.dataRootPath + "shaders/11_hello_framebuffer/screen_edge_detection.frag");
-    containerTexture_.SetPath(config.dataRootPath + "sprites/container.jpg");
-    containerTexture_.LoadFromDisk();
-
-    modelShader_.LoadFromFile(config.dataRootPath + "shaders/11_hello_framebuffer/model.vert",
-                              config.dataRootPath + "shaders/11_hello_framebuffer/model.frag");
-=======
             config.dataRootPath+"shaders/11_hello_framebuffer/screen.vert",
             config.dataRootPath+"shaders/11_hello_framebuffer/screen.frag"
             );
@@ -95,7 +70,6 @@ void HelloFramebufferProgram::Init()
 
     modelShader_.LoadFromFile(config.dataRootPath+"shaders/11_hello_framebuffer/model.vert",
             config.dataRootPath+"shaders/11_hello_framebuffer/model.frag");
->>>>>>> develop
     camera_.position = Vec3f(0.0f,-5.0f,-5.0f);
     camera_.LookAt(Vec3f::zero);
 }
@@ -179,20 +153,12 @@ void HelloFramebufferProgram::Render()
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo_);
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-<<<<<<< HEAD
-            logDebug("[Error] Framebuffer is not complete afetr resize!");
-=======
             LogDebug("[Error] Framebuffer is not complete afetr resize!");
->>>>>>> develop
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         hasScreenResize_ = false;
 
-<<<<<<< HEAD
-        logDebug("Framebuffer resized with size: "+std::to_string(config.windowSize.x)+", "+std::to_string(config.windowSize.y));
-=======
         LogDebug("Framebuffer resized with size: "+std::to_string(config.windowSize.x)+", "+std::to_string(config.windowSize.y));
->>>>>>> develop
     }
 
     //Bind framebuffer

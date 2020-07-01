@@ -4,6 +4,7 @@
 #include <map>
 #include <array>
 #include <thread>
+#include <atomic>
 #include <condition_variable>
 
 #ifdef WIN32

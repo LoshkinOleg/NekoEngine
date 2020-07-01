@@ -1,23 +1,4 @@
 #pragma once
-<<<<<<< HEAD
-#include "vector.h"
-
-namespace neko
-{
-
-struct Circle
-{
-	Vec2f center_;
-	float radius_;
-};
-
-struct Sphere
-{
-	Vec3f center_;
-	float radius_;
-};
-
-=======
 /*
  MIT License
 
@@ -104,5 +85,4 @@ struct Circle
 
 using Circle2D = Circle<Vec2f>;
 using Sphere3D = Circle<Vec3f>;
->>>>>>> develop
 }

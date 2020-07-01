@@ -9,9 +9,9 @@ namespace neko
 void HelloCameraProgram::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
-    shader_.LoadFromFile(
-            config.dataRootPath + "shaders/04_hello_coords/coords.vert",
-            config.dataRootPath + "shaders/04_hello_coords/coords.frag");
+	shader_.LoadFromFile(
+		config.dataRootPath + "shaders/04_hello_coords/coords.vert",
+		config.dataRootPath + "shaders/04_hello_coords/coords.frag");
 	textureWall_ = gl::stbCreateTexture(config.dataRootPath + "sprites/wall.jpg");
 
 	cube_.Init();
@@ -90,8 +90,8 @@ void HelloCameraProgram::Update(seconds dt)
 			cameraMove.y -= 1.0f * dt.count();
 		}
 		camera_.position += 
-			(camera_.rightDir * cameraMove.x -
-			camera_.reverseDir * cameraMove.y)*
+			(camera_.GetRight() * cameraMove.x - 
+			camera_.reverseDirection * cameraMove.y)*
 			(cameraMovement_ & ACCELERATE ? cameraFast_ : cameraSpeed_);
 	}
 }
@@ -107,7 +107,7 @@ void HelloCameraProgram::DrawImGui()
 {
 	ImGui::Begin("Camera Controls");
 	ImGui::InputFloat3("Position", &camera_.position[0]);
-	ImGui::InputFloat3("Direction", &camera_.reverseDir[0]);
+	ImGui::InputFloat3("Direction", &camera_.reverseDirection[0]);
 	Vec3f eulerAngles = Vec3f(cameraAngles.x.value(), cameraAngles.y.value(), cameraAngles.z.value());
 	if(ImGui::InputFloat3("Euler Angles", &eulerAngles[0]))
 	{

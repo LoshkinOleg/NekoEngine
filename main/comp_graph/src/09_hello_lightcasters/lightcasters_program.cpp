@@ -18,26 +18,27 @@ void HelloLightCastersProgram::Init()
 	const auto& config = BasicEngine::GetInstance()->config;
 	containerDiffuse_ = gl::stbCreateTexture(config.dataRootPath + "material/container2.png");
 	containerSpecular_ = gl::stbCreateTexture(config.dataRootPath + "material/container2_specular.png");
-    containerShaders_[0].LoadFromFile(
-            config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
-            config.dataRootPath + "shaders/09_hello_lightcasters/container_directional.frag");
-    containerShaders_[1].LoadFromFile(
-            config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
-            config.dataRootPath + "shaders/09_hello_lightcasters/container_point.frag");
-    containerShaders_[2].LoadFromFile(
-            config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
-            config.dataRootPath + "shaders/09_hello_lightcasters/container_flash.frag");
-    containerShaders_[3].LoadFromFile(
-            config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
-            config.dataRootPath + "shaders/09_hello_lightcasters/container_spot.frag");
+	containerShaders_[0].LoadFromFile(
+		config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
+		config.dataRootPath + "shaders/09_hello_lightcasters/container_directional.frag");
+	containerShaders_[1].LoadFromFile(
+		config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
+		config.dataRootPath + "shaders/09_hello_lightcasters/container_point.frag");
+	containerShaders_[2].LoadFromFile(
+		config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
+		config.dataRootPath + "shaders/09_hello_lightcasters/container_flash.frag");
+	containerShaders_[3].LoadFromFile(
+		config.dataRootPath + "shaders/09_hello_lightcasters/container.vert",
+		config.dataRootPath + "shaders/09_hello_lightcasters/container_spot.frag");
 
-    lampShader_.LoadFromFile(
-            config.dataRootPath + "shaders/07_hello_light/lamp.vert",
-            config.dataRootPath + "shaders/07_hello_light/lamp.frag");
+	lampShader_.LoadFromFile(
+		config.dataRootPath + "shaders/07_hello_light/lamp.vert",
+		config.dataRootPath + "shaders/07_hello_light/lamp.frag"
+	);
 	cube_.Init();
 	camera_.Init();
 	camera_.position = Vec3f(15.0f, 12.0f, -14.0f);
-	camera_.reverseDir = Vec3f(7, 5, -2).Normalized();
+	camera_.reverseDirection = Vec3f(7, 5, -2).Normalized();
 }
 
 void HelloLightCastersProgram::Update(seconds dt)
@@ -71,7 +72,7 @@ void HelloLightCastersProgram::DrawImGui()
 	ImGui::Text("Camera Position: %f, %f, %f", 
 		camera_.position.x, camera_.position.y, camera_.position.z);
 	ImGui::Text("Camera Direction: %f, %f, %f", 
-		-camera_.reverseDir.x, -camera_.reverseDir.y, -camera_.reverseDir.z);
+		-camera_.reverseDirection.x, -camera_.reverseDirection.y, -camera_.reverseDirection.z);
 	ImGui::InputFloat("ambientStrength", &ambientStrength_);
 	ImGui::InputFloat("diffuseStrength", &diffuseStrength_);
 	ImGui::InputFloat("specularStrength", &specularStrength_);
@@ -174,7 +175,7 @@ void HelloLightCastersProgram::Render()
 	case LightCasterType::FLASH: {
 		containerShader.SetVec3("light.color", Vec3f(1, 1, 1));
 		containerShader.SetVec3("light.position", camera_.position);
-		containerShader.SetVec3("light.direction", Vec3f::zero - camera_.reverseDir);
+		containerShader.SetVec3("light.direction", Vec3f::zero - camera_.reverseDirection);
 		containerShader.SetFloat("light.cutOff", Cos(lightCutOffAngle_));
 		break;
 	}
@@ -182,7 +183,7 @@ void HelloLightCastersProgram::Render()
 	{
 		containerShader.SetVec3("light.color", Vec3f(1, 1, 1));
 		containerShader.SetVec3("light.position", camera_.position);
-		containerShader.SetVec3("light.direction", Vec3f::zero - camera_.reverseDir);
+		containerShader.SetVec3("light.direction", Vec3f::zero - camera_.reverseDirection);
 		containerShader.SetFloat("light.cutOff", Cos(lightCutOffAngle_));
 		containerShader.SetFloat("light.outerCutOff", Cos(lightOuterCutOffAngle_));
 		break;
