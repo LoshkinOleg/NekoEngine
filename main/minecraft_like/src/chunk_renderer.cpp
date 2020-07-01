@@ -51,38 +51,46 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
+
+	frustum_.ConstructFrustum(camera_.position,-camera_.reverseDirection,camera_.nearPlane,camera_.farPlane,camera_.GetFovX(),camera_.fovY,camera_.GetUp(),camera_.GetRight()); //TODO do this on camera movement instead of here
+
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-
-#ifdef EASY_PROFILE_USE
-		EASY_BLOCK("ChunkRenderer::Render::Chunk");
-#endif
-		for (int x = 0; x < kChunkSize; x++)
+		if (frustum_.ContainsCube(chunk.GetAabb()))
 		{
-			for (int y = 0; y < kChunkSize; y++)
+#ifdef EASY_PROFILE_USE
+			EASY_BLOCK("ChunkRenderer::Render::Chunk");
+#endif
+			for (int x = 0; x < kChunkSize; x++)
 			{
-				for (int z = 0; z < kChunkSize; z++)
+				for (int y = 0; y < kChunkSize; y++)
 				{
-#ifdef EASY_PROFILE_USE
-					EASY_BLOCK("ChunkRenderer::Render::Air");
-#endif
-					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-					if (blockID != 0)
+					for (int z = 0; z < kChunkSize; z++)
 					{
-						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+						if (frustum_.ContainsSphere(Vec3f(x,y,z), 2)) //TODO replace by if contains block's aabb
+						{
 #ifdef EASY_PROFILE_USE
-						EASY_BLOCK("ChunkRenderer::Render::Cube");
+							EASY_BLOCK("ChunkRenderer::Render::Air");
 #endif
-						Mat4f model = Mat4f::Identity; //model transform matrix
-						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
-						shader_.SetMat4("model", model);
-						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+							int blockID = chunk.GetBlockId(Vec3i(x, y, z));
+							if (blockID != 0)
+							{
+								if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+#ifdef EASY_PROFILE_USE
+								EASY_BLOCK("ChunkRenderer::Render::Cube");
+#endif
+								Mat4f model = Mat4f::Identity; //model transform matrix
+								model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
+								shader_.SetMat4("model", model);
+								glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+								glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+								glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-						cube_.Draw();
+								cube_.Draw();
+							}
+						}
 					}
 				}
 			}

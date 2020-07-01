@@ -2,7 +2,7 @@
 #include "mathematics/vector.h"
 #include "mathematics/aabb.h"
 
-struct Plane
+struct Plane //TODO change syntax to project standards
 {
 	Plane(neko::Vec3f point, neko::Vec3f normal)
 	{
