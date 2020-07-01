@@ -27,12 +27,12 @@ void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, floa
 	float heightFar = neko::Cos(fovx / 2) * farPlaneDistance;
 	float widthFar = neko::Cos(fovy / 2) * farPlaneDistance;
 
-	neko::Vec3f ntr = nearP._point + up * heightNear/2 + right * widthNear/2; //Near Top Right
-	neko::Vec3f nbr = nearP._point - up * heightNear/2 + right * widthNear/2;
-	neko::Vec3f nbl = nearP._point - up * heightNear/2 - right * widthNear/2;
-	neko::Vec3f ftr = farP._point + up * heightFar/2 + right * widthFar/2;
-	neko::Vec3f ftl = farP._point + up * heightFar / 2 - right * widthFar / 2;
-	neko::Vec3f fbl = farP._point - up * heightFar / 2 - right * widthFar / 2; //Far Bottom Left
+	neko::Vec3f ntr = nearP._point + up * heightNear + right * widthNear; //Near Top Right
+	neko::Vec3f nbr = nearP._point - up * heightNear + right * widthNear;
+	neko::Vec3f nbl = nearP._point - up * heightNear - right * widthNear;
+	neko::Vec3f ftr = farP._point + up * heightFar + right * widthFar;
+	neko::Vec3f ftl = farP._point + up * heightFar - right * widthFar;
+	neko::Vec3f fbl = farP._point - up * heightFar - right * widthFar; //Far Bottom Left
 
 	Plane rightP = Plane(ntr, nbr, ftr);
 	Plane leftP = Plane(nbl, ftl, fbl);

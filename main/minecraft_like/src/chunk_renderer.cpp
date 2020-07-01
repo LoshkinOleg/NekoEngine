@@ -69,7 +69,7 @@ namespace neko
 					{
 						for (int z = 0; z < kChunkSize; z++)
 						{
-							if (frustum_.ContainsSphere(Vec3f(x, y, z), 2)) //TODO replace by if contains block's aabb
+							if (frustum_.ContainsCube(Aabb3d(Vec3f(x, y, z)+chunk.GetChunkPos(),Vec3f(0.5,0.5,0.5))))
 							{
 #ifdef EASY_PROFILE_USE
 								EASY_BLOCK("ChunkRenderer::Render::Air");
