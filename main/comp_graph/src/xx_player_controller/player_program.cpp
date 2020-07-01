@@ -70,6 +70,23 @@ void PlayerProgram::Init()
 		}
 	}
 
+	const auto start = std::chrono::high_resolution_clock::now();
+	for (auto& chunk : chunks_)
+	{
+		for (uint16_t x = 0; x < kChunkSize; ++x)
+		{
+			for (uint16_t y = 0; y < kChunkSize; ++y)
+			{
+				for (uint16_t z = 0; z < kChunkSize; ++z)
+				{
+					chunk.SetBlock(1, Vec3i(x, y, z));
+				}
+			}
+		}
+	}
+	const auto stop = std::chrono::high_resolution_clock::now();
+	std::cout << (stop - start).count() << '\n';
+	
 	camera_.Init();
 	camera_.position = playerPos_ + Vec3f::up;
 	camera_.farPlane = 10'000.0f;

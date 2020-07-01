@@ -81,5 +81,5 @@ private:
 	std::vector<UiElement*> uiElements_{};
 };
 
-using BlockManagerLocator = Locator<IBlockManager, NullBlockManager>;
+using UiManagerLocator = Locator<IUiManager, NullUiManager>;
 }

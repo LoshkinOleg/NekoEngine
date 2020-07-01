@@ -8,6 +8,7 @@
 #include <graphics/texture.h>
 #include <mathematics/aabb.h>
 #include <xx_player_controller/block_manager.h>
+#include <xx_player_controller/chunk.h>
 
 #include "ui_manager.h"
 
@@ -70,6 +71,8 @@ private:
 
 	BlockManager blockManager_;
 	UiManager uiManager_;
+
+	std::array<Chunk, 16> chunks_;
 	
 	float timer_ = 0.0f;
 	float test_ = 0.0f;

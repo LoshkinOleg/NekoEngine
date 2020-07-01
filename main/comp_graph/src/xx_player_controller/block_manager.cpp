@@ -9,6 +9,8 @@ BlockManager::BlockManager()
 	registeredBlocks_.reserve(kMaxBlocksNum);
 	
 	const auto& config = BasicEngine::GetInstance()->config;
+	RegisterBlock(new BaseBlock());
+	registeredBlocks_[0]->name = "Air";
 	RegisterBlock(new Block("Dirt", config.dataRootPath + "sprites/blocks/dirt.png"));
 
 	const std::array<std::string, 3> grassCubeTex
