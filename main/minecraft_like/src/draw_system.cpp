@@ -10,7 +10,7 @@ namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	: chunkRenderer_(engine, camera_, entityViewer_),
-	  gizmosRenderer_(engine, camera_),
+	  gizmosRenderer_(camera_),
 	  entityViewer_(engine.entityManager_, engine.entityHierarchy_),
 	  transformViewer_(engine.entityManager_, engine.componentsManagerSystem_.transform3dManager_),
 	  chunksViewer_(engine.entityManager_, engine.componentsManagerSystem_.chunkManager_),
@@ -25,6 +25,8 @@ void DrawSystem::Init()
 	camera_.Init();
 	chunkRenderer_.Init();
 	gizmosRenderer_.Init();
+	
+	camera_.position = Vec3f::up * 9.0f;
 }
 
 void DrawSystem::DrawImGui()

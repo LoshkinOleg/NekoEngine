@@ -394,6 +394,14 @@ struct Obb3d
 
 struct Aabb2d
 {
+	Aabb2d() = default;
+	Aabb2d(const Vec2f& center, const Vec2f& halfExtends)
+	{
+        const Vec2f newHalfExtends = Vec2f(abs(halfExtends.x), abs(halfExtends.y));
+        lowerLeftBound = center - newHalfExtends;
+        upperRightBound = center + newHalfExtends;
+    }
+	
     ///\brief Get the center of the AABB.
     Vec2f CalculateCenter() const
     {
@@ -504,6 +512,15 @@ struct Aabb2d
 
 struct Aabb3d
 {
+	Aabb3d() = default;
+	Aabb3d(const Vec3f& center, const Vec3f& halfExtends)
+	{
+        const Vec3f newHalfExtends = 
+            Vec3f(abs(halfExtends.x), abs(halfExtends.y), abs(halfExtends.z));
+        lowerLeftBound = center - newHalfExtends;
+        upperRightBound = center + newHalfExtends;
+    }
+	
     ///\brief Get the center of the AABB.
     Vec3f CalculateCenter() const
     {
@@ -573,12 +590,12 @@ struct Aabb3d
 
     bool ContainsPoint(const Vec3f& point) const
 	{
-        bool contains = point.x <= upperRightBound.x && point.x >= lowerLeftBound.x;
-        contains = point.y <= upperRightBound.y && 
-            point.y >= lowerLeftBound.y && contains;
-        contains = point.z <= upperRightBound.z && 
-            point.z >= lowerLeftBound.z && contains;
-        return contains;
+		return point.x <= upperRightBound.x &&
+			point.x >= lowerLeftBound.x &&
+			point.y <= upperRightBound.y &&
+			point.y >= lowerLeftBound.y &&
+			point.z <= upperRightBound.z &&
+			point.z >= lowerLeftBound.z;
     }
 
     bool ContainsAabb(const Aabb3d& aabb) const
@@ -589,11 +606,9 @@ struct Aabb3d
 
     bool IntersectAabb(const Aabb3d& aabb) const
 	{
-        const bool x = abs(aabb.CalculateCenter().x - CalculateCenter().x) <= (aabb.CalculateExtends().x + CalculateExtends().x);
-        const bool y = abs(aabb.CalculateCenter().y - CalculateCenter().y) <= (aabb.CalculateExtends().y + CalculateExtends().y);
-        const bool z = abs(aabb.CalculateCenter().z - CalculateCenter().z) <= (aabb.CalculateExtends().z + CalculateExtends().z);
-
-        return x && y && z;
+        return (lowerLeftBound.x <= aabb.upperRightBound.x && upperRightBound.x >= aabb.lowerLeftBound.x) &&
+         (lowerLeftBound.y <= aabb.upperRightBound.y && upperRightBound.y >= aabb.lowerLeftBound.y) &&
+         (lowerLeftBound.z <= aabb.upperRightBound.z && upperRightBound.z >= aabb.lowerLeftBound.z);
     }
 	
     bool IntersectRay(const Vec3f& dirRay, const Vec3f& origin) const

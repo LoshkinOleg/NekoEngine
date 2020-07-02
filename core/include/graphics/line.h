@@ -52,6 +52,7 @@ public:
 		auto& renderer = RendererLocator::get();
 		renderer.Render(this);
 	}
+	void FixedUpdate() override {}
 	void Destroy() override
 	{
 		

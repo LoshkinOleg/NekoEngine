@@ -81,7 +81,7 @@ void JobSystem::Work(JobQueue& jobQueue)
             }
             else
             {
-                if (status_ & Status::RUNNING) // Atomic check.
+                if (status_ & RUNNING) // Atomic check.
                 {
                     jobQueue.cv_.wait(lock); // !CRITICAL
                 }
@@ -150,6 +150,25 @@ Job::Job(std::function<void()> task) :
         status_(0)
 {
 
+}
+
+Job::Job(Job&& job) noexcept
+{
+	promise_ = std::move(job.promise_);
+	dependencies_ = std::move(job.dependencies_);
+	task_ = std::move(job.task_);
+	taskDoneFuture_ = std::move(job.taskDoneFuture_);
+	status_ = job.status_.load();
+}
+
+Job& Job::operator=(Job&& job) noexcept
+{
+	promise_ = std::move(job.promise_);
+	dependencies_ = std::move(job.dependencies_);
+	task_ = std::move(job.task_);
+	taskDoneFuture_ = std::move(job.taskDoneFuture_);
+	status_ = job.status_.load();
+	return *this;
 }
 
 void Job::Join() const

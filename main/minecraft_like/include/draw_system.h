@@ -16,6 +16,7 @@ namespace neko
         void DrawImGui() override;
 
         void Update(seconds dt) override;
+		void FixedUpdate() override {}
         void Destroy() override;
         void OnEvent(const SDL_Event& event) override;
     	

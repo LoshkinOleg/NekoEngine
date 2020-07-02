@@ -20,12 +20,9 @@ void MoveableCameraProgram::Init()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void MoveableCameraProgram::Update(seconds dt)
-{
-	std::lock_guard<std::mutex> lock(updateMutex_);
+void MoveableCameraProgram::Update(seconds dt) {}
 
-	camera_.Update(dt);
-}
+void MoveableCameraProgram::FixedUpdate() {}
 
 void MoveableCameraProgram::Render()
 {

@@ -13,6 +13,7 @@ struct Camera3D : neko::Camera3D, SdlEventSystemInterface, SystemInterface
 	void Init() override;
 
 	void Update(seconds dt) override;
+	void FixedUpdate() override {}
 
 	void Destroy() override;
 

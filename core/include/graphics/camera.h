@@ -1,4 +1,7 @@
 #pragma once
+#include <engine/engine.h>
+#include <sdl_engine/sdl_input.h>
+#include <sdl_engine/sdl_engine.h>
 
 #include <mathematics/vector.h>
 #include <mathematics/matrix.h>
@@ -33,6 +36,16 @@ struct Camera
 		return Vec3f::Cross(reverseDirection, right).Normalized();
 	}
 
+	EulerAngles GetRotation() const
+	{
+		const auto inverseView = GenerateViewMatrix().Inverse();
+		return EulerAngles(
+			Atan2(inverseView[1][2], inverseView[2][2]),
+			Atan2(-inverseView[0][2], sqrtf(inverseView[1][2] * inverseView[1][2] + 
+				inverseView[2][2] * inverseView[2][2])),
+			Atan2(inverseView[0][1], inverseView[0][0]));
+	}
+
 	Mat4f GetRotationMat() const
 	{
 		const Vec3f right = GetRight();
@@ -61,7 +74,14 @@ struct Camera
 	
 	void Rotate(const EulerAngles& angles)
 	{
-		const auto pitch = Quaternion::AngleAxis(angles.x, GetRight());
+		const auto camRot = GetRotation();
+		
+		Quaternion pitch;
+		if (Abs(camRot.x.value()) > 89.0f && Sign(reverseDirection.z) == 1 ||
+			Abs(camRot.x.value()) < 91.0f && Sign(reverseDirection.z) != 1) 
+			pitch = Quaternion::Identity;
+		else
+			pitch = Quaternion::AngleAxis(angles.x, GetRight());
 
 		const auto yaw = Quaternion::AngleAxis(angles.y, GetUp());
 
@@ -86,7 +106,7 @@ protected:
 struct Camera2D : Camera
 {
 	float right = 0.0f, left = 0.0f, top = 0.0f, bottom =0.0f;
-	[[nodiscard]] Mat4f GenerateProjectionMatrix() const
+	[[nodiscard]] Mat4f GenerateProjectionMatrix() const override
 	{
 		return Mat4f(std::array<Vec4f, 4>{
 			Vec4f(2.0f / (right - left), 0, 0, 0),
@@ -176,7 +196,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 			cameraMove.z -= dt.count();
 		
 		//Boost key test
-		if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 			cameraMove *= 3.0f;
 		
 		//Apply camera movement
@@ -187,7 +207,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 
 	void OnEvent(const SDL_Event& event) override
 	{
-		if (event.type == SDL_WINDOWEVENT_RESIZED)
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			const auto& config = BasicEngine::GetInstance()->config;
 			SetAspect(config.windowSize.x, config.windowSize.y);
@@ -238,7 +258,7 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 			cameraMove.z -= dt.count();
 		
 		//Boost key test
-		if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 			cameraMove *= 3.0f;
 		
 		//Apply camera movement
@@ -246,10 +266,12 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 			Vec3f::up * cameraMove.y - 
 			reverseDirection * cameraMove.z) * moveSpeed;
 	}
+	
+	void FixedUpdate() override {}
 
 	void OnEvent(const SDL_Event& event) override
 	{
-		if (event.type == SDL_WINDOWEVENT_RESIZED)
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			const auto& config = BasicEngine::GetInstance()->config;
 			SetAspect(config.windowSize.x, config.windowSize.y);
@@ -275,32 +297,29 @@ struct FpsCamera final : MoveableCamera3D
 
 	void Update(const seconds dt) override
 	{
+	}
+
+	void FixedUpdate() override
+	{
 		if (!freezeCam)
-		{
-			Rotate(EulerAngles(
-					degree_t(mouseMotion_.y),
-					degree_t(mouseMotion_.x),
-					degree_t(0.0f)
-			));
-			mouseMotion_ = Vec2f::zero;
-			
+		{	
 			//Checking if keys are down
 			Vec3f cameraMove = Vec3f();
 			if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
-				cameraMove.x += dt.count();
+				cameraMove.x += Time::fixedDeltaTime;
 			if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
-				cameraMove.x -= dt.count();
+				cameraMove.x -= Time::fixedDeltaTime;
 			if (inputManager_.IsActionHeld(sdl::InputAction::JUMP))
-				cameraMove.y += dt.count();
+				cameraMove.y += Time::fixedDeltaTime;
 			if (inputManager_.IsActionHeld(sdl::InputAction::CROUCH))
-				cameraMove.y -= dt.count();
+				cameraMove.y -= Time::fixedDeltaTime;
 			if (inputManager_.IsActionHeld(sdl::InputAction::UP))
-				cameraMove.z += dt.count();
+				cameraMove.z += Time::fixedDeltaTime;
 			if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
-				cameraMove.z -= dt.count();
+				cameraMove.z -= Time::fixedDeltaTime;
 
 			//Boost key test
-			if (inputManager_.IsActionHeld(sdl::InputAction::ZOOM))
+			if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
 				cameraMove *= 3.0f;
 			
 			//Apply camera movement
@@ -326,7 +345,64 @@ struct FpsCamera final : MoveableCamera3D
 		if (!freezeCam)
 		{
 			if (event.type == SDL_MOUSEMOTION)
-				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+			{
+				Rotate(EulerAngles(
+						degree_t(-event.motion.yrel) * mouseSpeed,
+						degree_t(-event.motion.xrel) * mouseSpeed,
+						degree_t(0.0f)
+				));
+			}
+			
+			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
+		}
+	}
+
+	void Destroy() override
+	{
+	}
+};
+
+struct PlayerCamera final : MoveableCamera3D
+{
+	bool freezeCam = false;
+
+	void Init() override
+	{
+		freezeCam = false;
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
+
+	void Update(const seconds dt) override
+	{
+	}
+
+	void FixedUpdate() override
+	{
+	}
+
+	void OnEvent(const SDL_Event& event) override
+	{
+		if (inputManager_.IsActionDown(sdl::InputAction::MENU))
+		{
+			freezeCam = !freezeCam;
+			SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
+		}
+		
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+		{
+			SetAspect(event.window.data1, event.window.data2);
+		}
+		
+		if (!freezeCam)
+		{
+			if (event.type == SDL_MOUSEMOTION)
+			{
+				Rotate(EulerAngles(
+						degree_t(-event.motion.yrel) * mouseSpeed,
+						degree_t(-event.motion.xrel) * mouseSpeed,
+						degree_t(0.0f)
+				));
+			}
 			
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}

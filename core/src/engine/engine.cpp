@@ -60,11 +60,6 @@ BasicEngine::BasicEngine(Configuration* config)
 
 BasicEngine::~BasicEngine()
 {
-    logManager_->WriteToFile();
-    LogDebug("Destroy Basic Engine");
-    logManager_->Wait();
-    logManager_->Destroy();
-
 #ifdef EASY_PROFILE_USE
     profiler::dumpBlocksToFile("Neko_Profile.prof");
 #endif
@@ -117,6 +112,9 @@ void BasicEngine::Init()
 void BasicEngine::Update(seconds dt)
 {
     dt_ = dt.count();
+	Time::time += dt_;
+	fixedUpdateAccumulator_ += dt_;
+	Time::deltaTime = dt_;
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Basic Engine Update");
 #endif
@@ -151,18 +149,31 @@ void BasicEngine::Update(seconds dt)
     jobSystem_.ScheduleJob(&eventJob, JobThreadType::MAIN_THREAD);
     jobSystem_.ScheduleJob(&updateJob, JobThreadType::MAIN_THREAD);
 
+    while (fixedUpdateAccumulator_ > Time::fixedDeltaTime)
+    {
+	    fixedUpdateAccumulator_ -= Time::fixedDeltaTime;
+	
+        Job fixedUpdateJob([this]{fixedUpdateAction_.Execute();});
+		jobSystem_.ScheduleJob(&fixedUpdateJob, JobThreadType::MAIN_THREAD);
+    }
+
     swapBufferJob->Join();
 }
 
 void BasicEngine::Destroy()
 {
-    Job leaveContext([this] {window_->LeaveCurrentContext(); });
+    Job leaveContext([this] { window_->LeaveCurrentContext(); });
     jobSystem_.ScheduleJob(&leaveContext, JobThreadType::RENDER_THREAD);
     leaveContext.Join();
     window_->MakeCurrentContext();
     renderer_->Destroy();
 	jobSystem_.Destroy();
 	instance_ = nullptr;
+	
+    logManager_->WriteToFile();
+    LogDebug("Destroy Basic Engine");
+    logManager_->Wait();
+    logManager_->Destroy();
 }
 
 static std::chrono::time_point<std::chrono::system_clock> clock;
@@ -227,7 +238,8 @@ void BasicEngine::GenerateUiFrame()
 void BasicEngine::RegisterSystem(SystemInterface& system)
 {
     initAction_.RegisterCallback([&system]{system.Init();});
-    updateAction_.RegisterCallback([&system](seconds dt){system.Update(dt);});
+    updateAction_.RegisterCallback([&system](const seconds dt){system.Update(dt);});
+    fixedUpdateAction_.RegisterCallback([&system]{system.FixedUpdate();});
     destroyAction_.RegisterCallback([&system]{system.Destroy();});
 }
 

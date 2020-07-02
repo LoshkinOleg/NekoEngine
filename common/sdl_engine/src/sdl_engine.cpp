@@ -94,8 +94,8 @@ void SdlEngine::ManageEvent()
             }
         }
         inputManager_.ProcessInputs(event);
+		onEventAction_.Execute(event);
     }
-    onEventAction_.Execute(event);
 }
 
 void SdlEngine::GenerateUiFrame()
