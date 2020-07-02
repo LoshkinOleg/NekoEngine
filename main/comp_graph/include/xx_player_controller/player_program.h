@@ -7,10 +7,10 @@
 #include <graphics/camera.h>
 #include <graphics/texture.h>
 #include <mathematics/aabb.h>
+
 #include <xx_player_controller/block_manager.h>
 #include <xx_player_controller/chunk.h>
-
-#include "ui_manager.h"
+#include <xx_player_controller/ui_manager.h>
 
 namespace neko
 {
@@ -52,7 +52,7 @@ public:
 
 	void MovePlayer();
 	
-	void CheckPlayerPos();
+	void ResolvePhysics();
 	
 	void HeadBobbing();
 	
@@ -125,7 +125,7 @@ private:
 	//Toolbar
 	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
 	const static short toolbarSize = 9;
-	std::array<short, toolbarSize> toolBarBlockIds_{-1};
+	std::array<uint8_t, toolbarSize> toolBarBlockIds_{0};
 	
 	//Block previews
 	std::array<UiElement, toolbarSize> blockPreviews_{};

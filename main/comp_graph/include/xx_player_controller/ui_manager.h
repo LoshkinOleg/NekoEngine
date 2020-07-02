@@ -23,12 +23,12 @@ struct UiElement
 	                   const Vec3f& pos = Vec3f::zero,
 	                   const Vec2u& newSize = Vec2u::one)
 		: position(pos), size(newSize), texturePath(std::move(texPath)) {}
+
+	void Init(const Vec2u& screenSize);
 	
-	void Destroy()
-	{
-		quad.Destroy();
-		gl::DestroyTexture(textureId);
-	}
+	void Draw(const Vec2u& screenSize);
+
+	void Destroy();
 };
 
 //-----------------------------------------------------------------------------

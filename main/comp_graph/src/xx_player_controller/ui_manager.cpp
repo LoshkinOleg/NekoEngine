@@ -2,6 +2,27 @@
 
 namespace neko
 {
+void UiElement::Init(const Vec2u& screenSize)
+{
+	const Vec2f normalSpaceSize = Vec2f(size) / Vec2f(screenSize);
+	quad = gl::RenderQuad(position, normalSpaceSize);
+	quad.Init();
+}
+
+void UiElement::Draw(const Vec2u& screenSize)
+{
+	glBindTexture(GL_TEXTURE_2D, textureId);
+	const Vec2f normalSpaceSize = Vec2f(size) / Vec2f(screenSize);
+	quad.SetValues(normalSpaceSize, position);
+	quad.Draw();
+}
+
+void UiElement::Destroy()
+{
+	quad.Destroy();
+	gl::DestroyTexture(textureId);
+}
+
 void UiManager::Init()
 {
 	glEnable(GL_BLEND);
@@ -22,9 +43,7 @@ void UiManager::AddUiElement(UiElement* uiElement)
 		uiElement->textureId = stbCreateTexture(uiElement->texturePath, gl::Texture::CLAMP_WRAP);
 	
 	const auto& config = BasicEngine::GetInstance()->config;
-	const Vec2f normalSpaceSize = Vec2f(uiElement->size) / Vec2f(config.windowSize);
-	uiElement->quad = gl::RenderQuad(uiElement->position, normalSpaceSize);
-	uiElement->quad.Init();
+	uiElement->Init(config.windowSize);
 }
 
 void UiManager::Render()
@@ -37,10 +56,7 @@ void UiManager::Render()
 	glCullFace(GL_FRONT);
 	for (auto& element : uiElements_)
 	{
-		glBindTexture(GL_TEXTURE_2D, element->textureId);
-		const Vec2f normalSpaceSize = Vec2f(element->size) / Vec2f(config.windowSize);
-		element->quad.SetValues(normalSpaceSize, element->position);
-		element->quad.Draw();
+		element->Draw(config.windowSize);
 	}
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);

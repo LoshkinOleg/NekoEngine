@@ -15,4 +15,4 @@ if(EMSCRIPTEN)
     set_target_properties(minecraft_like PROPERTIES LINK_FLAGS
             "${bin_link_flags} -s USE_SDL=2 -s USE_WEBGL2=1 ")
 endif()
-set_target_properties (minecraft_like PROPERTIES FOLDER Neko)
+set_target_properties (minecraft_like PROPERTIES FOLDER Neko\\Main)

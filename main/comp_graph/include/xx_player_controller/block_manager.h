@@ -4,7 +4,8 @@
 #include <graphics/camera.h>
 #include <graphics/graphics.h>
 #include <utilities/service_locator.h>
-#include <xx_player_controller/block.h>
+
+#include <block.h>
 
 namespace neko
 {
