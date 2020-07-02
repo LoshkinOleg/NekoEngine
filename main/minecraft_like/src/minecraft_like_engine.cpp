@@ -10,8 +10,7 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	  entityManager_(),
 	  entityHierarchy_(entityManager_),
 	  componentsManagerSystem_(*this),
-	  drawSystem_(*this),
-	  light_(*this)
+	  drawSystem_(*this)
 {
 	RegisterSystem(drawSystem_);
 	RegisterOnEvent(drawSystem_);

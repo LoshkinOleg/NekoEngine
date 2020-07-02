@@ -4,7 +4,6 @@
 #include "aabb_manager.h"
 #include "chunks_manager.h"
 #include "chunks_system.h"
-#include "light.h"
 
 namespace neko
 {
@@ -23,7 +22,6 @@ public:
 
 	Transform3dManager transform3dManager_;
 	ChunksManager chunkManager_;
-	Light light_;
 protected:
 	ChunksSystem chunksSystem_;
 	AabbManager aabbManager_;

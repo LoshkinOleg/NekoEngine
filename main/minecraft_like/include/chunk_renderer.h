@@ -6,7 +6,7 @@
 #include <sdl_engine/sdl_engine.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
-
+#include <light.h>
 
 namespace neko
 {
@@ -26,8 +26,14 @@ public:
 
 	void Render() override;
 
-private:
+	void DrawImGui();
 
+	void SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos);
+	
+	void SetLightParameters();
+
+private:
+	
 	MoveableCamera3D& camera_;
 
 	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
@@ -38,6 +44,8 @@ private:
 	std::mutex updateMutex_;
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
+
+	DirectionalLight directionalLight_;
 
 };
 }
