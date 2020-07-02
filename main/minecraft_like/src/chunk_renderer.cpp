@@ -48,14 +48,11 @@ void ChunkRenderer::Render()
 	if (shader_.GetProgram() == 0) return;
 
 	std::lock_guard<std::mutex> lock(updateMutex_);
-
-	/*shader_.Bind();
-	shader_.SetMat4("view", camera_.GenerateViewMatrix());
-	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());*/
 	
 	Mat4f view = camera_.GenerateViewMatrix();
 	Mat4f projection = camera_.GenerateProjectionMatrix();
-	engine_.componentsManagerSystem_.light_.InitLight();
+	engine_.componentsManagerSystem_.light_.InitLight(); //BindLight 
+	
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
 		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
@@ -81,15 +78,10 @@ void ChunkRenderer::Render()
 #ifdef EASY_PROFILE_USE
 						EASY_BLOCK("ChunkRenderer::Render::Cube");
 #endif
-						Mat4f model = Mat4f::Identity; //model transform matrix
-
-						
+						Mat4f model = Mat4f::Identity;	
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
 				
-						if(blockID == 1)
-						engine_.componentsManagerSystem_.light_.BindShader(model, view, projection, camera_.position);
-	
-							//shader_.SetMat4("model", model);
+						engine_.componentsManagerSystem_.light_.DisplayLight(model, view, projection, camera_.position);
 						
 						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

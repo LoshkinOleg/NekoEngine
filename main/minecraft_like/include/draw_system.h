@@ -18,6 +18,7 @@ namespace neko
         void Update(seconds dt) override;
         void Destroy() override;
         void OnEvent(const SDL_Event& event) override;
+    	
     protected:
         std::mutex updateMutex_;
         ChunkRenderer chunkRenderer_;

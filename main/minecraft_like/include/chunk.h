@@ -7,7 +7,7 @@
 
 namespace neko
 {
-const static int kChunkSize = 16;
+const static int kChunkSize = 4;
 
 enum class ChunkFlags : uint8_t
 {

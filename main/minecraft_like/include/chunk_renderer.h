@@ -39,19 +39,5 @@ private:
 	MinecraftLikeEngine& engine_;
 	EntityViewer& entityViewer_;
 
-	//Light
-	/*gl::Shader lightShader_;
-	gl::Shader phongShader_;
-
-	Vec3f lightPos_{10.0f,50.0f,10.0f};
-
-	float time_ = 0.0f;
-	const float lightDist_ = 3.5f;
-	Color3 lightColor_{ 1,1,1 };
-	Color3 objectColor_{ 1.0f,0.23f, 0.1f };
-	float ambientStrength_ = 0.1f;
-	float diffuseStrength_ = 1.0f;
-	float specularStrength_ = 0.5f;
-	int specularPow_ = 32;*/
 };
 }

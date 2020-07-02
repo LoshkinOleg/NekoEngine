@@ -36,6 +36,12 @@ void DrawSystem::DrawImGui()
 	transformViewer_.DrawImGui();
 	chunksViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
 	ImGui::End();
+
+	ImGui::Begin("Light");
+	
+	ImGui::InputFloat3("Position", &engine_.componentsManagerSystem_.light_.lightPos_[0]);
+	ImGui::InputFloat3("Direction", &engine_.componentsManagerSystem_.light_.lightDirection_[0]);
+	ImGui::End();
 }
 
 void DrawSystem::Update(seconds dt)
