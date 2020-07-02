@@ -26,11 +26,39 @@ void ChunkRenderer::Init()
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/light.vert",
 		config.dataRootPath + "shaders/minecraft_like/light.frag");
+	simpleDepthShader_.LoadFromFile(config.dataRootPath + "shaders/21_hello_shadow/simple_depth.vert",
+		config.dataRootPath + "shaders/21_hello_shadow/simple_depth.frag");
+	
 	texture_[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.jpg");
 	texture_[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/stone.jpg");
 	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
 	cube_.Init();
 
+
+	glGenFramebuffers(1, &depthMapFbo_);
+	glGenTextures(1, &depthMap_);
+	glBindTexture(GL_TEXTURE_2D, depthMap_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFbo_);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
+	glDrawBuffers(0, GL_NONE);
+	glReadBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	depthCamera_.SetSize(Vec2f::one * 4.0f);
+	depthCamera_.position = directionalLight_.position_;
+	depthCamera_.reverseDirection = -directionalLight_.direction_;
+
+	
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -69,6 +97,7 @@ void ChunkRenderer::Render()
 	Mat4f view = camera_.GenerateViewMatrix();
 	Mat4f projection = camera_.GenerateProjectionMatrix();
 	shader_.Bind();
+	simpleDepthShader_.Bind();
 	SetLightParameters();
 
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
@@ -100,7 +129,8 @@ void ChunkRenderer::Render()
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
 				
 						SetCameraParameters(model, view, projection, camera_.position);
-						
+						shader_.SetTexture("material.texture_diffuse1", texture_[blockID - 1], 0);
+
 						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -110,6 +140,16 @@ void ChunkRenderer::Render()
 				}
 			}
 		}
+		Mat4f model = Mat4f::Identity;
+		model = Transform3d::Translate(model, Vec3f(0, 2, 0));
+		SetCameraParameters(model, view, projection, camera_.position);
+		shader_.SetTexture("material.texture_diffuse1", texture_[1], 0);
+
+		glBindTexture(GL_TEXTURE_2D, texture_[1]); //bind texture id to texture slot
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		cube_.Draw();
 	}
 }
 
@@ -121,19 +161,39 @@ void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projec
 	
 	const auto inverseTransposeModel = model.Inverse().Transpose();
 	shader_.SetMat4("inverseTransposeModel", inverseTransposeModel);
+
+	shader_.SetMat4("transposeInverseModel", model.Inverse().Transpose());
 }
 
 	
 void ChunkRenderer::SetLightParameters() {
-	shader_.SetVec3("light.color", directionalLight_.color_);
-	shader_.SetVec3("light.direction", directionalLight_.direction_.Normalized());
-	shader_.SetInt("objectMaterial.diffuse", 0);
-	shader_.SetInt("objectMaterial.specular", 1);
-	shader_.SetInt("objectMaterial.shininess", directionalLight_.specularPow_);
+	const auto lightView = depthCamera_.GenerateViewMatrix();
+	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
+	const auto lightSpaceMatrix = lightProjection * lightView;
 
-	shader_.SetFloat("ambientStrength", directionalLight_.ambientStrength_);
-	shader_.SetFloat("diffuseStrength", directionalLight_.diffuseStrength_);
-	shader_.SetFloat("specularStrength", directionalLight_.specularStrength_);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFbo_);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	simpleDepthShader_.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+	glCullFace(GL_FRONT);
+	glCullFace(GL_BACK);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
+	shader_.Bind();
+	shader_.SetMat4("view", camera_.GenerateViewMatrix());
+	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
+	shader_.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+	shader_.SetTexture("shadowMap", depthMap_, 3);
+	shader_.SetBool("enableBias", 1);
+	shader_.SetBool("enableShadow", 1);
+	shader_.SetBool("enableOverSampling", 1);
+	shader_.SetBool("enablePcf", 1);
+	shader_.SetVec3("viewPos", camera_.position);
+	shader_.SetFloat("bias", shadowBias_);
+	shader_.SetVec3("light.lightDir", directionalLight_.direction_);
+
+	
 }
 	
 void ChunkRenderer::Destroy()
@@ -143,6 +203,8 @@ void ChunkRenderer::Destroy()
 	gl::DestroyTexture(texture_[0]);
 	gl::DestroyTexture(texture_[1]);
 	gl::DestroyTexture(texture_[2]);
+	glDeleteFramebuffers(1, &depthMapFbo_);
+	glDeleteTextures(1, &depthMap_);
 }
 
 }

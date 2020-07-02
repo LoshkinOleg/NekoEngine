@@ -39,6 +39,7 @@ private:
 
 	gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
 	gl::Shader shader_;
+	gl::Shader simpleDepthShader_;
 
 	TextureId texture_[3];
 
@@ -47,6 +48,10 @@ private:
 	EntityViewer& entityViewer_;
 
 	DirectionalLight directionalLight_;
-
+	Camera2D depthCamera_;
+	unsigned int depthMapFbo_ = 0;
+	unsigned int depthMap_ = 0;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	float shadowBias_ = 0.0005f;
 };
 }
