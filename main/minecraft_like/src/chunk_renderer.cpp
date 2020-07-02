@@ -33,33 +33,9 @@ void ChunkRenderer::Init()
 	texture_[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/stone.jpg");
 	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
 	cube_.Init();
-
-
-	glGenFramebuffers(1, &depthMapFbo_);
-	glGenTextures(1, &depthMap_);
-	glBindTexture(GL_TEXTURE_2D, depthMap_);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFbo_);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
-	glDrawBuffers(0, GL_NONE);
-	glReadBuffer(GL_NONE);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	depthCamera_.SetSize(Vec2f::one * 4.0f);
-	depthCamera_.position = directionalLight_.position_;
-	depthCamera_.reverseDirection = -directionalLight_.direction_;
-
 	
-	glEnable(GL_DEPTH_TEST);
+	//Depth Buffer
+	GenerateDepthBuffer();
 }
 
 void ChunkRenderer::DrawImGui(){
@@ -96,8 +72,7 @@ void ChunkRenderer::Render()
 	
 	Mat4f view = camera_.GenerateViewMatrix();
 	Mat4f projection = camera_.GenerateProjectionMatrix();
-	shader_.Bind();
-	simpleDepthShader_.Bind();
+
 	SetLightParameters();
 
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
@@ -127,9 +102,8 @@ void ChunkRenderer::Render()
 #endif
 						Mat4f model = Mat4f::Identity;	
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
-				
-						SetCameraParameters(model, view, projection, camera_.position);
-						shader_.SetTexture("material.texture_diffuse1", texture_[blockID - 1], 0);
+
+						SetCameraParameters(model, view, projection, camera_.position, texture_[blockID - 1]);
 
 						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -142,8 +116,8 @@ void ChunkRenderer::Render()
 		}
 		Mat4f model = Mat4f::Identity;
 		model = Transform3d::Translate(model, Vec3f(0, 2, 0));
-		SetCameraParameters(model, view, projection, camera_.position);
-		shader_.SetTexture("material.texture_diffuse1", texture_[1], 0);
+
+		SetCameraParameters(model, view, projection, camera_.position, texture_[1]);
 
 		glBindTexture(GL_TEXTURE_2D, texture_[1]); //bind texture id to texture slot
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -153,33 +127,50 @@ void ChunkRenderer::Render()
 	}
 }
 
-void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos) {
-	shader_.SetMat4("model", model);
-	shader_.SetMat4("view", view);
-	shader_.SetMat4("projection", projection);
-	shader_.SetVec3("viewPos", pos);
-	
-	const auto inverseTransposeModel = model.Inverse().Transpose();
-	shader_.SetMat4("inverseTransposeModel", inverseTransposeModel);
+void ChunkRenderer::GenerateDepthBuffer() {
+	glEnable(GL_DEPTH_TEST);
+	glGenFramebuffers(1, &depthMapFbo_);
+	glGenTextures(1, &depthMap_);
+	glBindTexture(GL_TEXTURE_2D, depthMap_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	shader_.SetMat4("transposeInverseModel", model.Inverse().Transpose());
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFbo_);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
+	glDrawBuffers(0, GL_NONE);
+	glReadBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	depthCamera_.SetSize(Vec2f::one * 4.0f);
+	depthCamera_.position = directionalLight_.position_;
+	depthCamera_.reverseDirection = -directionalLight_.direction_;
 }
-
 	
 void ChunkRenderer::SetLightParameters() {
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	const auto lightView = depthCamera_.GenerateViewMatrix();
 	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
 	const auto lightSpaceMatrix = lightProjection * lightView;
 
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFbo_);
 	glClear(GL_DEPTH_BUFFER_BIT);
-
+	simpleDepthShader_.Bind();
 	simpleDepthShader_.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 	glCullFace(GL_FRONT);
 	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
+
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
@@ -192,9 +183,30 @@ void ChunkRenderer::SetLightParameters() {
 	shader_.SetVec3("viewPos", camera_.position);
 	shader_.SetFloat("bias", shadowBias_);
 	shader_.SetVec3("light.lightDir", directionalLight_.direction_);
-
-	
 }
+
+
+void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos, TextureId texture) {
+
+	const auto inverseTransposeModel = model.Inverse().Transpose();
+	shader_.SetMat4("inverseTransposeModel", inverseTransposeModel);
+
+	shader_.SetMat4("transposeInverseModel", model.Inverse().Transpose());
+
+	//Depth
+	simpleDepthShader_.SetMat4("model", model);
+	simpleDepthShader_.SetMat4("transposeInverseModel", model.Inverse().Transpose());
+
+	//Normal
+	shader_.SetMat4("transposeInverseModel", model.Inverse().Transpose());
+	shader_.SetMat4("model", model);
+	shader_.SetMat4("view", view);
+	shader_.SetMat4("projection", projection);
+	shader_.SetVec3("viewPos", pos);
+	shader_.SetTexture("material.texture_diffuse1", texture, 0);
+
+}
+
 	
 void ChunkRenderer::Destroy()
 {

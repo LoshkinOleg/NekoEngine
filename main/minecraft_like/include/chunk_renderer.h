@@ -29,7 +29,9 @@ public:
 
 	void DrawImGui();
 
-	void SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos);
+	void GenerateDepthBuffer();
+	
+	void SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos, TextureId texture);
 	
 	void SetLightParameters();
 
