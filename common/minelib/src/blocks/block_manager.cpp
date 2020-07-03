@@ -1,4 +1,4 @@
-#include <xx_player_controller/block_manager.h>
+#include "minelib/blocks/block_manager.h"
 
 namespace neko
 {
@@ -9,6 +9,8 @@ BlockManager::BlockManager()
 	registeredBlocks_.reserve(kMaxBlocksNum);
 	
 	const auto& config = BasicEngine::GetInstance()->config;
+	RegisterBlock(new BaseBlock());
+	registeredBlocks_[0]->name = "Air";
 	RegisterBlock(new Block("Dirt", config.dataRootPath + "sprites/blocks/dirt.png"));
 
 	const std::array<std::string, 3> grassCubeTex

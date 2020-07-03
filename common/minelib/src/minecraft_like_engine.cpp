@@ -1,4 +1,4 @@
-#include "minecraft_like_engine.h"
+#include "minelib/minecraft_like_engine.h"
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif

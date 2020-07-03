@@ -8,7 +8,7 @@ in vec3 Normal;
 
 void main()
 {
-    vec3 ambient = texture(tex, TexCoords).rgb * 0.2;
+    vec3 ambient = texture(tex, TexCoords).rgb * 0.5;
 
     vec3 norm = normalize(Normal);
     float diff = max(dot(norm, vec3(-0.4, 0.5, 0.2)), 0.0);

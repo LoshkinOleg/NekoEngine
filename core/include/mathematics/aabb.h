@@ -647,35 +647,6 @@ struct Aabb3d
         return true;
     }
 
-    float CalculateRayDist(const Vec3f& dirRay, const Vec3f& origin, const float& minDist) const
-    {
-        neko_assert(Vec3f(0, 0, 0) != dirRay, "Null Ray Direction");
-        if (ContainsPoint(origin)) return true;
-
-        std::array<float, 6> touch
-        {
-            (lowerLeftBound.x - origin.x) / dirRay.x,
-            (upperRightBound.x - origin.x) / dirRay.x,
-            (lowerLeftBound.y - origin.y) / dirRay.y,
-            (upperRightBound.y - origin.y) / dirRay.y,
-            (lowerLeftBound.z - origin.z) / dirRay.z,
-            (upperRightBound.z - origin.z) / dirRay.z
-        };
-
-        const float touchMin = std::max(std::max(std::min(touch[0], touch[1]), std::min(touch[2], touch[3])), std::min(touch[4], touch[5]));
-        const float touchMax = std::min(std::min(std::max(touch[0], touch[1]), std::max(touch[2], touch[3])), std::max(touch[4], touch[5]));
-
-        // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
-        if (touchMax < 0)
-            return -1;
-
-        // if tmin > tmax, ray doesn't intersect AABB
-        if (touchMin > touchMax)
-            return -1;
-
-        return touchMin;
-    }
-
     bool IntersectPlane(const Vec3f& normal, const Vec3f& point) const
 	{
         if (ContainsPoint(point)) return true;

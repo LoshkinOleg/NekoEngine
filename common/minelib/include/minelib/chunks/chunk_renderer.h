@@ -6,7 +6,7 @@
 #include <sdl_engine/sdl_engine.h>
 #include <graphics/camera.h>
 #include <graphics/texture.h>
-#include <light.h>
+#include <minelib/light.h>
 
 namespace neko
 {

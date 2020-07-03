@@ -1,15 +1,16 @@
 #pragma once
+#include "comp_graph/sample_program.h"
 
-#include <comp_graph/sample_program.h>
+#include "gl/shader.h"
+#include "gl/shape.h"
+#include "graphics/camera.h"
+#include "graphics/texture.h"
+#include "mathematics/aabb.h"
 
-#include <gl/shader.h>
-#include <gl/shape.h>
-#include <graphics/camera.h>
-#include <graphics/texture.h>
-#include <mathematics/aabb.h>
-#include <xx_player_controller/block_manager.h>
-
-#include "ui_manager.h"
+#include "minelib/blocks/block_manager.h"
+#include "minelib/chunks/chunk.h"
+#include "minelib/ui/ui_element.h"
+#include "minelib/ui/ui_manager.h"
 
 namespace neko
 {
@@ -51,7 +52,7 @@ public:
 
 	void MovePlayer();
 	
-	void CheckPlayerPos();
+	void ResolvePhysics();
 	
 	void HeadBobbing();
 	
@@ -70,6 +71,8 @@ private:
 
 	BlockManager blockManager_;
 	UiManager uiManager_;
+
+	std::array<Chunk, 16> chunks_;
 	
 	float timer_ = 0.0f;
 	float test_ = 0.0f;
@@ -110,6 +113,7 @@ private:
     TextureId texture_ = 0;
 
 	std::vector<Vec3f> cubePositions_;
+	std::vector<uint8_t> cubeIds_;
 	std::vector<Aabb3d> cubeAabbs_;
 
 	//UI
@@ -121,9 +125,9 @@ private:
 	//Toolbar
 	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
 	const static short toolbarSize = 9;
-	std::array<short, toolbarSize> toolBarBlockIds_{-1};
+	std::array<uint8_t, toolbarSize> toolBarBlockIds_{0};
 	
-	//Block preview
+	//Block previews
 	std::array<UiElement, toolbarSize> blockPreviews_{};
 	
 	//Block Select

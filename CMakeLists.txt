@@ -19,6 +19,7 @@ set(Neko_Assert ON CACHE BOOL "Activate Neko Assertion")
 set(Neko_Benchmark ON CACHE BOOL "Activate Benchmark")
 set(Neko_Lua ON CACHE BOOL "Activate Lua Wrapper")
 set(Neko_Assimp ON CACHE BOOL "Activate Assimp Wrapper")
+set(MineLib ON CACHE BOOL "Activate MineLib")
 
 MESSAGE("CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 
@@ -164,6 +165,10 @@ if(Neko_Benchmark)
     add_subdirectory("benchmark/")
     set_target_properties (benchmark PROPERTIES FOLDER Externals/GTest)
     set_target_properties(benchmark_main PROPERTIES FOLDER Externals/GTest)
+endif()
+
+if(MineLib)
+    add_subdirectory("common/minelib")
 endif()
 
 set(main_project_dir "main/")

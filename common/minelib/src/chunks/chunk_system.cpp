@@ -1,16 +1,13 @@
-#include "chunks_system.h"
+#include "minelib/chunks/chunk_system.h"
 
-#include <iostream>
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
 #include "engine/transform.h"
 
-
-#include "aabb_manager.h"
-#include "minecraft_like_engine.h"
-#include "chunks_manager.h"
-#include "gizmos_renderer.h"
+#include "minelib/chunks/chunk_manager.h"
+#include "minelib/gizmos_renderer.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {

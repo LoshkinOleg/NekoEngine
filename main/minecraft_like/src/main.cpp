@@ -1,7 +1,7 @@
 #include <gl/gles3_window.h>
 #include <gl/graphics.h>
 
-#include "minecraft_like_engine.h"
+#include "minelib/minecraft_like_engine.h"
 
 int main(int argc, char** argv)
 {

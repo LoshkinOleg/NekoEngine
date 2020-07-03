@@ -1,4 +1,4 @@
-#include "chunk_renderer.h"
+#include "minelib/chunks/chunk_renderer.h"
 
 #include <graphics/camera.h>
 #ifdef EASY_PROFILE_USE
@@ -6,7 +6,7 @@
 #endif
 
 #include "gl/texture.h"
-#include "minecraft_like_engine.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {

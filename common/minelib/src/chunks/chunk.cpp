@@ -1,4 +1,4 @@
-#include <chunk.h>
+#include <minelib/chunks/chunk.h>
 
 namespace neko
 {

@@ -1,8 +1,8 @@
-#include "aabb_manager.h"
+#include "minelib/aabb_manager.h"
+
+#include "minelib/minecraft_like_engine.h"
 
 #include "engine/transform.h"
-
-#include "minecraft_like_engine.h"
 
 namespace neko
 {
@@ -27,12 +27,12 @@ Index AabbManager::RaycastChunk(Vec3f origin, Vec3f dir)
 	return INVALID_INDEX;
 }
 
-Block AabbManager::RaycastBlock(Vec3f origin, Vec3f dir)
+AabbBlock AabbManager::RaycastBlock(Vec3f origin, Vec3f dir)
 {
 	float minDist = std::numeric_limits<float>::max();
 	Vec3i blockPos = Vec3i(kInvalidPos_);
 	Vec3f blockChunkPos = Vec3f(static_cast<float>(kInvalidPos_));
-	Block block;
+	AabbBlock block;
 	for (size_t c = 0; c < INIT_ENTITY_NMB; c++)
 	{
 		if (!engine_.entityManager_.HasComponent(c, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
@@ -48,7 +48,7 @@ Block AabbManager::RaycastBlock(Vec3f origin, Vec3f dir)
 			if (blockID == 0) continue;
 			Aabb3d aabb;
 			aabb.SetFromCenter(Vec3f(x, y, z) + chunkPos, Vec3f::one / 2);
-			float rayDist = aabb.CalculateRayDist(dir, origin, minDist);
+			float rayDist = aabb.IntersectRay(dir, origin, minDist);
 			if (rayDist > 0 && rayDist < minDist)
 			{
 				minDist = rayDist;
@@ -65,13 +65,13 @@ Block AabbManager::RaycastBlock(Vec3f origin, Vec3f dir)
 	return block;
 }
 
-Block AabbManager::RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex)
+AabbBlock AabbManager::RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex)
 {
-	if (!engine_.entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK))) { return Block(); }
+	if (!engine_.entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK))) { return AabbBlock(); }
 	Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(chunkIndex);
 	Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(chunkIndex);
 
-	Block block;
+	AabbBlock block;
 	float minDist = std::numeric_limits<float>::max();
 	Vec3i blockPos = Vec3i(-1);
 	for (size_t i = 0; i < kChunkSize * kChunkSize * kChunkSize; i++)
@@ -83,7 +83,7 @@ Block AabbManager::RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex
 		if (blockID == 0) continue;
 		Aabb3d aabb;
 		aabb.SetFromCenter(Vec3f(x, y, z), Vec3f::one / 2);
-		float rayDist = aabb.CalculateRayDist(dir, origin, minDist);
+		float rayDist = aabb.IntersectRay(dir, origin, minDist);
 		if (rayDist > 0 && rayDist < minDist)
 		{
 			minDist = rayDist;

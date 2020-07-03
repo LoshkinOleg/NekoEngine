@@ -1,6 +1,5 @@
-#include "chunks_manager.h"
-
-#include "chunk_renderer.h"
+#include "minelib/chunks/chunk_manager.h"
+#include "minelib/chunks/chunk_renderer.h"
 
 namespace neko
 {
