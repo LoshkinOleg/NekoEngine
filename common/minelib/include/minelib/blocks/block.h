@@ -1,8 +1,7 @@
 #pragma once
 #include <array>
 
-#include <gl/shape.h>
-#include <gl/texture.h>
+#include "gl/shape.h"
 
 namespace neko
 {

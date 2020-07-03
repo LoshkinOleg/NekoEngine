@@ -1,6 +1,6 @@
-#include "components_manager_system.h"
+#include "minelib/components_manager_system.h"
 
-#include "minecraft_like_engine.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {

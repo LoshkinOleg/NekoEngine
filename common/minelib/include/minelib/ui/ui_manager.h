@@ -1,35 +1,9 @@
 #pragma once
-#include <utility>
+#include "minelib/ui/ui_element.h"
 
 namespace neko
 {
 const static size_t kMaxUiElements = 16;
-
-struct UiElement
-{
-	Vec3f position = Vec3f::zero; //In percent
-	Vec2u size = Vec2u(100u); //In pixel
-
-	std::string texturePath = "";
-	TextureId textureId = INVALID_TEXTURE_ID;
-
-	gl::RenderQuad quad{Vec3f::zero, Vec2f::one};
-
-	explicit UiElement(const Vec3f& pos = Vec3f::zero,
-	                   const Vec2u& newSize = Vec2u::one)
-		: position(pos), size(newSize) {}
-	
-	explicit UiElement(std::string texPath, 
-	                   const Vec3f& pos = Vec3f::zero,
-	                   const Vec2u& newSize = Vec2u::one)
-		: position(pos), size(newSize), texturePath(std::move(texPath)) {}
-
-	void Init(const Vec2u& screenSize);
-	
-	void Draw(const Vec2u& screenSize);
-
-	void Destroy();
-};
 
 //-----------------------------------------------------------------------------
 // UiManagerInterface

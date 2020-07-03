@@ -1,8 +1,12 @@
-#include <block.h>
+#include "minelib/blocks/block.h"
 
-#include <stb_image.h>
+#include "stb_image.h"
 
-void neko::Block::Init()
+#include "gl/texture.h"
+
+namespace neko
+{
+void Block::Init()
 {
 	stbi_set_flip_vertically_on_load(true);
 
@@ -13,20 +17,20 @@ void neko::Block::Init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-void neko::Block::Draw() const
+void Block::Draw() const
 {
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	cube.Draw();
 }
 
-void neko::Block::Destroy()
+void Block::Destroy()
 {
 	cube.Destroy();
 	gl::DestroyTexture(textureId);
 	gl::DestroyTexture(previewTexture);
 }
 
-void neko::UniqueBlock::Init()
+void UniqueBlock::Init()
 {
 	cube.Init();
 
@@ -46,13 +50,14 @@ void neko::UniqueBlock::Init()
 	cube.SetTextures(cubeTex);
 }
 
-void neko::UniqueBlock::Draw() const
+void UniqueBlock::Draw() const
 {
 	cube.Draw();
 }
 
-void neko::UniqueBlock::Destroy()
+void UniqueBlock::Destroy()
 {
 	cube.Destroy();
 	gl::DestroyTexture(previewTexture);
+}
 }

@@ -1,10 +1,9 @@
-#include "draw_system.h"
+#include "minelib/draw_system.h"
 
 #include <imgui.h>
 
-
-#include "aabb_manager.h"
-#include "minecraft_like_engine.h"
+#include "minelib/aabb_manager.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {
@@ -48,7 +47,7 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
 	{
-		Block block = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
+		AabbBlock block = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
 		std::cout << "BlockPos : " << block.blockPos << std::endl;

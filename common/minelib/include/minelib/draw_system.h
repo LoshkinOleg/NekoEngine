@@ -2,8 +2,8 @@
 #include <engine/transform.h>
 #include <sdl_engine/sdl_camera.h>
 
-#include "chunk_renderer.h"
-#include "chunks_manager.h"
+#include "minelib/chunks/chunk_renderer.h"
+#include "minelib/chunks/chunk_manager.h"
 #include "gizmos_renderer.h"
 
 namespace neko

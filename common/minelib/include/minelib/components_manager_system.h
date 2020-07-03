@@ -1,10 +1,9 @@
 #pragma once
 #include <engine/transform.h>
 
-
-#include "aabb_manager.h"
-#include "chunks_manager.h"
-#include "chunks_system.h"
+#include "minelib/aabb_manager.h"
+#include "minelib/chunks/chunk_manager.h"
+#include "minelib/chunks/chunk_system.h"
 
 namespace neko
 {

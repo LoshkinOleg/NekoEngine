@@ -1,4 +1,4 @@
-#include <xx_player_controller/chunk.h>
+#include <minelib/chunks/chunk.h>
 
 namespace neko
 {

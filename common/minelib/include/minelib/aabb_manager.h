@@ -11,9 +11,9 @@ class EntityManager;
 class ChunksManager;
 class MinecraftLikeEngine;
 
-struct Block
+struct AabbBlock
 {
-	Block() {}
+	AabbBlock() {}
 	Vec3f blockPos = Vec3f(0.0f);
 	uint8_t blockType = 0;
 };
@@ -28,8 +28,8 @@ class AabbManagerInterface
 public:
 	~AabbManagerInterface() = default;
 	virtual Index RaycastChunk(Vec3f origin, Vec3f dir) = 0;
-	virtual Block RaycastBlock(Vec3f origin, Vec3f dir) = 0;
-	virtual Block RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) = 0;
+	virtual AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) = 0;
+	virtual AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) = 0;
 
 protected:
 	const int kInvalidPos_ = -1.0f;
@@ -45,13 +45,13 @@ class NullAabbManager final : public AabbManagerInterface
 	{
 		return INVALID_INDEX;
 	}
-	Block RaycastBlock(Vec3f origin, Vec3f dir) override
+	AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) override
 	{
-		return Block();
+		return AabbBlock();
 	}
-	Block RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override
+	AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override
 	{
-		return Block();
+		return AabbBlock();
 	}
 };
 
@@ -66,8 +66,8 @@ public:
 	explicit AabbManager(MinecraftLikeEngine& engine);
 
 	Index RaycastChunk(Vec3f origin, Vec3f dir) override;
-	Block RaycastBlock(Vec3f origin, Vec3f dir) override;
-	Block RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override;
+	AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) override;
+	AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override;
 
 private:
 	MinecraftLikeEngine& engine_;

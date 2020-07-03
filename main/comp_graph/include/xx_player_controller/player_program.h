@@ -1,16 +1,16 @@
 #pragma once
+#include "comp_graph/sample_program.h"
 
-#include <comp_graph/sample_program.h>
+#include "gl/shader.h"
+#include "gl/shape.h"
+#include "graphics/camera.h"
+#include "graphics/texture.h"
+#include "mathematics/aabb.h"
 
-#include <gl/shader.h>
-#include <gl/shape.h>
-#include <graphics/camera.h>
-#include <graphics/texture.h>
-#include <mathematics/aabb.h>
-
-#include <xx_player_controller/block_manager.h>
-#include <xx_player_controller/chunk.h>
-#include <xx_player_controller/ui_manager.h>
+#include "minelib/blocks/block_manager.h"
+#include "minelib/chunks/chunk.h"
+#include "minelib/ui/ui_element.h"
+#include "minelib/ui/ui_manager.h"
 
 namespace neko
 {

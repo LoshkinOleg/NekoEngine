@@ -1,11 +1,9 @@
 #pragma once
-#include <engine/system.h>
+#include "engine/system.h"
 
-#include <graphics/camera.h>
-#include <graphics/graphics.h>
-#include <utilities/service_locator.h>
+#include "gl/shader.h"
 
-#include <block.h>
+#include "minelib/blocks/block.h"
 
 namespace neko
 {
