@@ -1,10 +1,12 @@
-#include <xx_player_controller/player_program.h>
+#include "xx_player_controller/player_program.h"
 
-#include <sdl_engine/sdl_input.h>
-#include <stb_image.h>
+#include "sdl_engine/sdl_input.h"
+#include "stb_image.h"
 
-#include <engine/engine.h>
-#include <gl/texture.h>
+#include "engine/engine.h"
+#include "gl/texture.h"
+
+#include "minelib/ui/ui_manager.h"
 
 namespace neko
 {
@@ -28,18 +30,17 @@ void PlayerProgram::Init()
 		config.dataRootPath + "shaders/base.frag");
 	
 	std::array<TextureId, 3> cubeTex{};
-	cubeTex[0] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png", gl::Texture::CLAMP_WRAP);
+	cubeTex[0] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png", gl::Texture::MIPMAPS_TEXTURE);
 	cubeTex[1] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_top.png", gl::Texture::CLAMP_WRAP);
 	cubeTex[2] = stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.png", gl::Texture::CLAMP_WRAP);
 	uniqueCube_.SetTextures(cubeTex);
 
 	blockManager_.Init();
 	
-	std::fill(toolBarBlockIds_.begin(), toolBarBlockIds_.end(), -1);
-	toolBarBlockIds_[0] = 0;
-	toolBarBlockIds_[1] = 1;
-	toolBarBlockIds_[2] = 2;
-	toolBarBlockIds_[3] = 3;
+	toolBarBlockIds_[0] = 1;
+	toolBarBlockIds_[1] = 2;
+	toolBarBlockIds_[2] = 3;
+	toolBarBlockIds_[3] = 4;
 	std::fill(blockPreviews_.begin(), blockPreviews_.end(), UiElement(Vec3f::zero, Vec2u(80, 80)));
 	
 	uiManager_.Init();
@@ -61,16 +62,32 @@ void PlayerProgram::Init()
 
 		for (int i = 0; i < toolbarSize; ++i)
 		{
-			if (toolBarBlockIds_[i] == -1) continue;
+			if (toolBarBlockIds_[i] == 0) continue;
 			
 			blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
 			blockPreviews_[i].position.y = toolBar_.position.y;
 			blockPreviews_[i].textureId = blockManager_.GetBlock(toolBarBlockIds_[i])->previewTexture;
 			uiManager_.AddUiElement(&blockPreviews_[i]);
 		}
-		
 	}
 
+	const auto start = std::chrono::high_resolution_clock::now();
+	for (auto& chunk : chunks_)
+	{
+		for (uint16_t x = 0; x < kChunkSize; ++x)
+		{
+			for (uint16_t y = 0; y < kChunkSize; ++y)
+			{
+				for (uint16_t z = 0; z < kChunkSize; ++z)
+				{
+					chunk.SetBlock(1, Vec3i(x, y, z));
+				}
+			}
+		}
+	}
+	const auto stop = std::chrono::high_resolution_clock::now();
+	std::cout << (stop - start).count() << '\n';
+	
 	camera_.Init();
 	camera_.position = playerPos_ + Vec3f::up;
 	camera_.farPlane = 10'000.0f;
@@ -96,7 +113,7 @@ void PlayerProgram::Update(const seconds dt)
 
 	camera_.Update(dt);
 	
-	const auto& inputManager = static_cast<sdl::InputManager&>(sdl::InputLocator::get());
+	const auto& inputManager = sdl::InputLocator::get();
 	const auto scrollAmount = inputManager.GetMouseScroll();
 	if (scrollAmount.y != 0)
 	{
@@ -232,6 +249,7 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 void PlayerProgram::CreateCube(const Vec3f& position)
 {
 	cubePositions_.emplace_back(position);
+	cubeIds_.emplace_back(0);
 	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	Aabb3d aabb;
@@ -247,6 +265,7 @@ void PlayerProgram::PlaceCube(const Vec3f& position)
 
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.emplace_back(position);
+	cubeIds_.emplace_back(toolBarBlockIds_[selectIndex_]);
 	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	cubeAabbs_.emplace_back(aabb);
@@ -278,7 +297,7 @@ void PlayerProgram::MovePlayer()
 	
 	playerVelocity_.y -= gravity_ * Time::fixedDeltaTime;
 	
-	CheckPlayerPos();
+	ResolvePhysics();
 
 	playerPos_ += camera_.GetRight() * playerVelocity_.x +
 		Vec3f::up * playerVelocity_.y * Time::fixedDeltaTime - 
@@ -288,7 +307,7 @@ void PlayerProgram::MovePlayer()
 	camera_.position = playerPos_ + cameraOffset_;
 }
 
-void PlayerProgram::CheckPlayerPos()
+void PlayerProgram::ResolvePhysics()
 {
 	Ray rayOut;
 	if (RayCast(rayOut, playerPos_ + Vec3f::up * 0.01f, Vec3f::down, maxReach_))

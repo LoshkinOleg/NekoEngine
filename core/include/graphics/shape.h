@@ -4,6 +4,7 @@
 
 #include <mathematics/vector.h>
 #include <mathematics/circle.h>
+#include <graphics/texture.h>
 
 namespace neko
 {
