@@ -30,6 +30,13 @@ public:
 
 	void Update(seconds dt) override;
 
+	/**
+	 *  \brief Generates a 2d noise map
+	 */
+	//TODO:: Remove 16 and replace by chunksize
+	//TODO:: Change name of the function
+	static std::array<std::array<int, 16>, 16> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
+
 	void FixedUpdate() override
 	{
 	}

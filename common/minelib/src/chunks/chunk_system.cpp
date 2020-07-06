@@ -8,6 +8,7 @@
 #include "minelib/chunks/chunk_manager.h"
 #include "minelib/gizmos_renderer.h"
 #include "minelib/minecraft_like_engine.h"
+#include <PerlinNoise.hpp>
 
 namespace neko
 {
@@ -136,6 +137,38 @@ void ChunksSystem::Update(seconds dt)
 		}
 	}
 }
+
+std::array<std::array<int, 16>, 16> ChunksSystem::MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves)
+{
+	if (octaves <= 0)
+	{
+		octaves = 1;
+	}
+		
+	//Map Generation
+	std::array<std::array<int, 16>, 16> map;
+
+	for (int y = 0; y < chunkSize; y++)
+	{
+		for (int x = 0; x < chunkSize; x++)
+		{
+			float result = 0;
+			for (int i = 0; i < octaves; i++)
+			{
+				float nx = (float)(x + offset.x) / (float)chunkSize - 0.5f, ny = (float)(y + offset.y) / (float)chunkSize - 0.5f;
+				nx *= frequency;
+				ny *= frequency;
+				siv::PerlinNoise noise = siv::PerlinNoise(seed);
+				result = ((float)1 / (float)(i + 1) * (noise.noise(nx,ny)));
+			}
+
+			map[x][y] = (int)(result * chunkHeight);
+		}
+	}
+
+	return map;
+}
+
 
 void ChunksSystem::Destroy()
 {
