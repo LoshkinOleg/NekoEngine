@@ -20,6 +20,7 @@ public:
 	 * \brief Generate a chunk depend on it position
 	 */
 	Chunk GenerateChunk(const Vec3i& pos) const;
+	//Chunk GenerateChunk(const Vec3i&)
 
 	void Init() override;
 
@@ -33,9 +34,8 @@ public:
 	/**
 	 *  \brief Generates a 2d noise map
 	 */
-	//TODO:: Remove 16 and replace by chunksize
 	//TODO:: Change name of the function
-	static std::array<std::array<int, 16>, 16> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
+	static std::array<std::array<int, kChunkSize>, kChunkSize> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
 
 	void FixedUpdate() override
 	{
@@ -48,5 +48,11 @@ private:
 	ChunksManager& chunksManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
+
+	Vec2<int> offset{0,0};
+	int seed = 0;
+	float frequency = 1;
+	int octaves = 2;
+	
 };
 }

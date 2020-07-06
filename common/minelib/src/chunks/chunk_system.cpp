@@ -27,6 +27,20 @@ Chunk ChunksSystem::GenerateChunk(const Vec3i& pos) const
 	Chunk chunk;
 	const uint8_t randBlockId = RandomRange(1, 4);
 	chunk.SetChunkPos(pos);
+	std::array<std::array<int, kChunkSize>, kChunkSize> blocks = MapGeneration(offset, kChunkSize, kChunkSize, seed, frequency, octaves);
+	for (unsigned x = 0; x < kChunkSize; x++)
+	{
+		for (unsigned y = 0; y < kChunkSize; y++)
+		{
+			chunk.SetBlock(randBlockId, Vec3i(x,blocks[x][y], y));			//TODO: Bug here, the perlin noise value is negative
+		}
+	}
+	chunk.SetVisible(true);
+	return chunk;
+
+		/*Chunk chunk;
+	const uint8_t randBlockId = RandomRange(1, 4);
+	chunk.SetChunkPos(pos);
 	for (unsigned x = 0; x < kChunkSize; x++)
 	{
 		for (unsigned y = 0; y < 1; y++)
@@ -52,7 +66,7 @@ Chunk ChunksSystem::GenerateChunk(const Vec3i& pos) const
 		}
 	}
 	chunk.SetVisible(true);
-	return chunk;
+	return chunk;*/
 }
 
 void ChunksSystem::Init()
@@ -147,7 +161,8 @@ std::array<std::array<int, 16>, 16> ChunksSystem::MapGeneration(Vec2<int> offset
 		
 	//Map Generation
 	std::array<std::array<int, 16>, 16> map;
-
+	siv::PerlinNoise noise = siv::PerlinNoise(seed);
+		
 	for (int y = 0; y < chunkSize; y++)
 	{
 		for (int x = 0; x < chunkSize; x++)
@@ -158,11 +173,10 @@ std::array<std::array<int, 16>, 16> ChunksSystem::MapGeneration(Vec2<int> offset
 				float nx = (float)(x + offset.x) / (float)chunkSize - 0.5f, ny = (float)(y + offset.y) / (float)chunkSize - 0.5f;
 				nx *= frequency;
 				ny *= frequency;
-				siv::PerlinNoise noise = siv::PerlinNoise(seed);
 				result = ((float)1 / (float)(i + 1) * (noise.noise(nx,ny)));
 			}
 
-			map[x][y] = (int)(result * chunkHeight);
+			map[x][y] = (unsigned int)(result * chunkHeight);
 		}
 	}
 
