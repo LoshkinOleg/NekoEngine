@@ -7,6 +7,7 @@
 
 namespace neko
 {
+class ChunkStatutManager;
 class ChunkContentManager;
 class ChunkPosManager;
 class Transform3dManager;
@@ -100,6 +101,7 @@ private:
 	EntityManager& entityManager_;
 	ChunkPosManager& chunkPosManager_;
 	ChunkContentManager& chunkContentManager_;
+	ChunkStatutManager& chunkStatutManager_;
 	Transform3dManager& transform3dManager_;
 };
 

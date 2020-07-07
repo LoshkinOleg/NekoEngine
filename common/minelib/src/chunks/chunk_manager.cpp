@@ -27,7 +27,46 @@ namespace neko
 		return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
 	}
 
-Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
+	std::vector<Index> ChunkStatutManager::GetAccessibleChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::ACCESSIBLE))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	std::vector<Index> ChunkStatutManager::GetVisibleChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::VISIBLE))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	std::vector<Index> ChunkStatutManager::GetLoadedChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::LOADED))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
 {
 	Aabb3d aabb;
 	Vec3i chunkPos = components_[chunkIndex];

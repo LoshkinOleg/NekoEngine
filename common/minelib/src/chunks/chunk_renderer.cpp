@@ -80,19 +80,17 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	SetLightParameters();
 
-	const auto chunksNmb = entityManager_.GetEntitiesSize();
-	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
+	const auto visibleChunks = chunkStatutManager_.GetVisibleChunks();
+	for (auto visibleChunk : visibleChunks)
 	{
-		if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) continue;
-		if (!chunkStatutManager_.HasStatut(chunkIndex, ChunkFlag::VISIBLE)) continue;
-		const Vec3f chunkPos = transform3dManager_.GetPosition(chunkIndex);
+		const Vec3f chunkPos = transform3dManager_.GetPosition(visibleChunk);
 		for (int x = 0; x < kChunkSize; x++)
 		{
 			for (int y = 0; y < kChunkSize; y++)
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-					const int blockId = chunkContentManager_.GetBlockId(chunkIndex, Vec3i(x, y, z));
+					const int blockId = chunkContentManager_.GetBlockId(visibleChunk, Vec3i(x, y, z));
 					if (blockId != 0)
 					{
 						if (texture_[blockId - 1] == INVALID_TEXTURE_ID) continue;

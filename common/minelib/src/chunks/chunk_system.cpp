@@ -68,13 +68,15 @@ void ChunksSystem::UpdateVisibleChunks() const
 	const auto chunksNmb = entityManager_.GetEntitiesSize();
 	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
 	{
-		if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) continue;
+		if (!entityManager_.HasComponent(chunkIndex,
+		                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+			continue;
 		chunkStatutManager_.RemoveStatut(chunkIndex, ChunkFlag::VISIBLE);
 	}
-	
-	const Vec3f viewerPos = transform3dManager_.GetPosition(0);
-	const Vec3i currentChunkPos = Vec3i(viewerPos.x / kChunkSize, 0, viewerPos.z / kChunkSize);
 
+	const Vec3f viewerPos = transform3dManager_.GetPosition(0);
+	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize), 0, std::floor(viewerPos.z / kChunkSize));
+	
 	for (int xOffset = -(kMaxViewDist_ / kChunkSize); xOffset <= (kMaxViewDist_ / kChunkSize);
 	     xOffset++)
 	{
@@ -86,7 +88,9 @@ void ChunksSystem::UpdateVisibleChunks() const
 			const auto chunksNmb = entityManager_.GetEntitiesSize();
 			for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
 			{
-				if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) continue;
+				if (!entityManager_.HasComponent(chunkIndex,
+				                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+					continue;
 				Vec3i chunkPos = chunkPosManager_.GetComponent(chunkIndex);
 				if (chunkPos == viewedChunkPos)
 				{
@@ -119,16 +123,17 @@ void ChunksSystem::Update(seconds dt)
 
 	//Display Chunks Gizmos
 	const Vec3f cubeOffset = Vec3f((kChunkSize - 1) / 2.0f);
-	const auto chunksNmb = entityManager_.GetEntitiesNmb(static_cast<EntityMask>(ComponentType::CHUNK_POS));
-	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
+	const auto loadedChunks = chunkStatutManager_.GetLoadedChunks();
+	for (auto loadedChunk : loadedChunks)
 	{
-		if (entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+		if (entityManager_.HasComponent(loadedChunk,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
 			GizmosLocator::get().DrawCube(
-				transform3dManager_.GetPosition(chunkIndex) + Vec3f::one * kChunkSize / 2 -
+				transform3dManager_.GetPosition(loadedChunk) + Vec3f::one * kChunkSize / 2 -
 				Vec3f::one / 2,
 				Vec3f::one * kChunkSize,
-				chunkStatutManager_.HasStatut(chunkIndex, ChunkFlag::VISIBLE)
+				chunkStatutManager_.HasStatut(loadedChunk, ChunkFlag::VISIBLE)
 					? Color4(1.0f, 0.0f, 0.0f, 1.0f)
 					: Color4(0.0f, 0.0f, 1.0f, 1.0f));
 		}

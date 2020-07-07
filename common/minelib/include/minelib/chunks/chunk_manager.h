@@ -42,6 +42,12 @@ public:
 	void RemoveStatut(Entity entity, ChunkFlag chunkFlag);
 
 	bool HasStatut(Entity entity, ChunkFlag chunkFlag) const;
+
+	std::vector<Index> GetAccessibleChunks() const;
+	
+	std::vector<Index> GetVisibleChunks() const;
+	
+	std::vector<Index> GetLoadedChunks() const;
 };
 
 class ChunkPosManager final : public neko::ComponentManager<Vec3i, ComponentType::CHUNK_POS>
