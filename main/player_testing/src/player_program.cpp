@@ -1,12 +1,8 @@
-#include "xx_player_controller/player_program.h"
-
 #include "sdl_engine/sdl_input.h"
 #include "stb_image.h"
 
 #include "engine/engine.h"
 #include "gl/texture.h"
-
-#include "minelib/ui/ui_manager.h"
 
 namespace neko
 {
@@ -24,10 +20,6 @@ void PlayerProgram::Init()
 		config.dataRootPath + "shaders/xx_player_controller/gizmoLine.vert",
 		config.dataRootPath + "shaders/xx_player_controller/gizmoLine.frag");
 	selectCube_.Init();
-	
-	uiShader_.LoadFromFile(
-		config.dataRootPath + "shaders/base_ui.vert",
-		config.dataRootPath + "shaders/base.frag");
 	
 	std::array<TextureId, 3> cubeTex{};
 	cubeTex[0] = stbCreateTexture(config.dataRootPath + "sprites/blocks/grass_side.png", gl::Texture::MIPMAPS_TEXTURE);
@@ -109,8 +101,6 @@ void PlayerProgram::Init()
 
 void PlayerProgram::Update(const seconds dt)
 {
-	std::lock_guard<std::mutex> lock(updateMutex_);
-
 	camera_.Update(dt);
 	
 	const auto& inputManager = sdl::InputLocator::get();
@@ -159,7 +149,6 @@ void PlayerProgram::Update(const seconds dt)
 
 void PlayerProgram::FixedUpdate()
 {
-	std::lock_guard<std::mutex> lock(updateMutex_);
 	test_ = Time::time - testStamp_;
 	testStamp_ = Time::time;
 
@@ -171,8 +160,6 @@ void PlayerProgram::Render()
 {
 	if (shader_.GetProgram() == 0) return;
 	if (texture_ == INVALID_TEXTURE_ID) return;
-
-	std::lock_guard<std::mutex> lock(updateMutex_);
 
 	shader_.Bind();
 	glBindTexture(GL_TEXTURE_2D, texture_); //bind texture id to texture slot
@@ -223,16 +210,16 @@ void PlayerProgram::DrawImGui()
 void PlayerProgram::OnEvent(const SDL_Event& event)
 {
 	camera_.OnEvent(event);
-	
+
 	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
 	{
-		const Vec2f newWindowSire = Vec2f(event.window.data1, event.window.data2);
+		const Vec2f newWindowSize = Vec2f(event.window.data1, event.window.data2);
 		{
-			const Vec2f normalSpaceSize = Vec2f(toolBar_.size) / newWindowSire;
+			const Vec2f normalSpaceSize = Vec2f(toolBar_.size) / newWindowSize;
 			toolBar_.position.y = normalSpaceSize.y / 2 - 1.0;
 		}
 		{
-			const Vec2f tileSize = Vec2f(tileSize_) / newWindowSire;
+			const Vec2f tileSize = Vec2f(tileSize_) / newWindowSize;
 			for (int i = 0; i < toolbarSize; ++i)
 			{
 				if (toolBarBlockIds_[i] == -1) continue;
@@ -244,6 +231,7 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 			blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
 		}
 	}
+	uiManager_.OnEvent(event);
 }
 
 void PlayerProgram::CreateCube(const Vec3f& position)

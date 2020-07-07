@@ -7,27 +7,13 @@ BlockManager::BlockManager()
 	BlockManagerLocator::provide(this);
 
 	registeredBlocks_.reserve(kMaxBlocksNum);
-	
-	const auto& config = BasicEngine::GetInstance()->config;
-	RegisterBlock(new BaseBlock());
-	registeredBlocks_[0]->name = "Air";
-	RegisterBlock(new Block("Dirt", config.dataRootPath + "sprites/blocks/dirt.png"));
-
-	const std::array<std::string, 3> grassCubeTex
-	{
-		config.dataRootPath + "sprites/blocks/grass_side.png",
-		config.dataRootPath + "sprites/blocks/grass_top.png",
-		config.dataRootPath + "sprites/blocks/dirt.png"
-	};
-	RegisterBlock(new UniqueBlock("Grass", grassCubeTex));
-
-	RegisterBlock(new Block("Stone", config.dataRootPath + "sprites/blocks/stone.jpg"));
-	RegisterBlock(new Block("Diamond Ore", config.dataRootPath + "sprites/blocks/diamond_ore.jpg"));
 }
 
 void BlockManager::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
+
+	InitRegister();
 	previewShader_.LoadFromFile(
 		config.dataRootPath + "shaders/xx_player_controller/base_model.vert",
 		config.dataRootPath + "shaders/xx_player_controller/base_model.frag");
@@ -81,6 +67,25 @@ void BlockManager::Init()
 	}
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void BlockManager::InitRegister()
+{
+	const auto& config = BasicEngine::GetInstance()->config;
+	RegisterBlock(new BaseBlock());
+	registeredBlocks_[0]->name = "Air";
+	RegisterBlock(new Block("Dirt", config.dataRootPath + "sprites/blocks/dirt.png"));
+
+	const std::array<std::string, 3> grassCubeTex
+	{
+		config.dataRootPath + "sprites/blocks/grass_side.png",
+		config.dataRootPath + "sprites/blocks/grass_top.png",
+		config.dataRootPath + "sprites/blocks/dirt.png"
+	};
+	RegisterBlock(new UniqueBlock("Grass", grassCubeTex));
+
+	RegisterBlock(new Block("Stone", config.dataRootPath + "sprites/blocks/stone.jpg"));
+	RegisterBlock(new Block("Diamond Ore", config.dataRootPath + "sprites/blocks/diamond_ore.jpg"));
 }
 
 void BlockManager::Render()

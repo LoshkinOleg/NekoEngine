@@ -42,10 +42,10 @@ struct Gizmos
 // LogManagerInterface
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class GizmosManagerInterface
+class IGizmosRenderer
 {
 protected:
-	~GizmosManagerInterface() = default;
+	~IGizmosRenderer() = default;
 
 public:
 	/**
@@ -69,7 +69,7 @@ public:
 // NullLogManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class NullGizmoManager final : public GizmosManagerInterface
+class NullGizmosRenderer final : public IGizmosRenderer
 {
 	void DrawCube(
 		[[maybe_unused]] const Vec3f& pos,
@@ -88,7 +88,7 @@ class NullGizmoManager final : public GizmosManagerInterface
 /// \brief Draw gizmos
 class GizmosRenderer final : public RenderCommandInterface,
                              public SystemInterface,
-                             public GizmosManagerInterface
+                             public IGizmosRenderer
 {
 public:
 	GizmosRenderer(Camera3D& camera);
@@ -126,5 +126,5 @@ private:
 	std::vector<Gizmos> gizmosQueue_;
 };
 
-using GizmosLocator = Locator<GizmosManagerInterface, NullGizmoManager>;
+using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;
 }

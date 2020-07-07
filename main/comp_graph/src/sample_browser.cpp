@@ -30,7 +30,6 @@
 
 #include <xx_hello_logger/logger_program.h>
 #include <xx_hello_moveable_camera/moveable_camera_program.h>
-#include <xx_player_controller/player_program.h>
 
 #include <98_hello_line/line_program.h>
 #include <99_hello_scene/scene_program.h>
@@ -68,7 +67,6 @@ void SampleBrowser::Init()
 	
     RegisterRenderProgram("XX Hello Logger", std::make_unique<HelloLoggerProgram>());
     RegisterRenderProgram("XX Moveable Camera", std::make_unique<MoveableCameraProgram>());
-    RegisterRenderProgram("XX Block Placement", std::make_unique<PlayerProgram>());
 	
 	programs_[currentProgramIndex_]->Init();
 }

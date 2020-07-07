@@ -17,15 +17,12 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 {
 	engine.RegisterSystem(camera_);
 	engine.RegisterOnEvent(camera_);
+	engine.RegisterSystem(chunkRenderer_);
+	engine.RegisterSystem(gizmosRenderer_);
 }
 
 void DrawSystem::Init()
 {
-	camera_.Init();
-	chunkRenderer_.Init();
-	gizmosRenderer_.Init();
-	
-	camera_.position = Vec3f::up * 9.0f;
 }
 
 void DrawSystem::DrawImGui()
@@ -43,8 +40,6 @@ void DrawSystem::DrawImGui()
 
 void DrawSystem::Update(seconds dt)
 {
-	chunkRenderer_.Update(dt);
-	gizmosRenderer_.Update(dt);
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))

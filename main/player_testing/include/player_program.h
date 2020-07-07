@@ -1,6 +1,4 @@
 #pragma once
-#include "comp_graph/sample_program.h"
-
 #include "gl/shader.h"
 #include "gl/shape.h"
 #include "graphics/camera.h"
@@ -29,7 +27,7 @@ enum PlayerState : uint8_t
 	FLYING = 1u << 1u,
 };
 
-class PlayerProgram final : public SampleProgram
+class PlayerProgram final : public RenderProgram, public sdl::SdlEventSystemInterface, public DrawImGuiInterface
 {
 public:
     void Init() override;

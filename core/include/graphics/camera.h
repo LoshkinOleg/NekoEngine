@@ -153,9 +153,6 @@ struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
 	{
 	}
-	
-	void Update(seconds dt) override = 0;
-	void OnEvent(const SDL_Event& event) override = 0;
 protected:
 	Vec2f mouseMotion_;
 	sdl::InputManager& inputManager_;
@@ -223,7 +220,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 	}
 };
 
-struct MoveableCamera3D : Camera3D, MovableCamera
+struct MoveableCamera3D : Camera3D, public MovableCamera
 {
 	void Init() override
 	{
@@ -286,7 +283,7 @@ struct MoveableCamera3D : Camera3D, MovableCamera
 	{}
 };
 
-struct FpsCamera final : MoveableCamera3D
+struct FpsCamera final : public MoveableCamera3D
 {
 	bool freezeCam = false;
 
@@ -362,7 +359,7 @@ struct FpsCamera final : MoveableCamera3D
 	}
 };
 
-struct PlayerCamera final : MoveableCamera3D
+struct PlayerCamera final : public MoveableCamera3D
 {
 	bool freezeCam = false;
 

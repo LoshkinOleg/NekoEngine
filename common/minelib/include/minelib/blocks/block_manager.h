@@ -39,6 +39,7 @@ public:
 	BlockManager();
 
 	void Init() override;
+	void InitRegister();
 
 	void Update(seconds dt) override {}
 	void FixedUpdate() override {}
