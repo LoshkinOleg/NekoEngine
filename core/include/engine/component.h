@@ -52,8 +52,10 @@ enum class ComponentType : EntityMask
     POLYGON_COLLIDER2D = 1u << 11u,
     CONVEX_SHAPE2D = 1u << 12u,
     PREFAB = 1u << 13u,
-    CHUNK = 1u << 14u,
-    OTHER_TYPE = 1u << 15u
+    CHUNK_CONTENT = 1u << 14u,
+    CHUNK_STATUT = 1u << 15u,
+    CHUNK_POS = 1u << 16u,
+    OTHER_TYPE = 1u << 17u
 };
 
 struct Component

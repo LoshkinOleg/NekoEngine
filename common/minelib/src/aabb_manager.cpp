@@ -4,13 +4,16 @@
 
 #include "engine/transform.h"
 
+#include <minelib/chunks/chunk_manager.h>
+
 namespace neko
 {
 AabbManager::AabbManager(MinecraftLikeEngine& engine)
 	: engine_(engine),
-	  entityManager_(engine.entityManager_),
-	  chunksManager_(engine.componentsManagerSystem_.chunksManager_),
-	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_)
+	  entityManager_(engine.entityManager),
+	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
+	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
+	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
 {
 	AabbLocator::provide(this);
 }
@@ -18,12 +21,12 @@ AabbManager::AabbManager(MinecraftLikeEngine& engine)
 std::vector<Index> AabbManager::RaycastChunk(const Vec3f& origin, const Vec3f& dir)
 {
 	std::vector<Index> raycastedChunks;
-	const auto visibleChunks = chunksManager_.GetVisibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto chunksNmb = entityManager_.GetEntitiesNmb(static_cast<EntityMask>(ComponentType::CHUNK_POS));
+	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
 	{
-		if (chunksManager_.GetComponent(visibleChunk).GetAabb().IntersectRay(origin, dir))
+		if (chunkPosManager_.GetAabb(chunksNmb).IntersectRay(origin, dir))
 		{
-			raycastedChunks.push_back(visibleChunk);
+			raycastedChunks.push_back(chunkIndex);
 		}
 	}
 	return raycastedChunks;
@@ -35,12 +38,10 @@ AabbBlock AabbManager::RaycastBlock(const Vec3f& origin, const Vec3f& dir)
 	Vec3i blockPos = Vec3i(kInvalidPos_);
 	Vec3f blockChunkPos = Vec3f(static_cast<float>(kInvalidPos_));
 	AabbBlock block;
-	const auto visibleChunks = chunksManager_.GetVisibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto chunksNmb = entityManager_.GetEntitiesNmb(static_cast<EntityMask>(ComponentType::CHUNK_POS));
+	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
 	{
-		if (!entityManager_.HasComponent(visibleChunk, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
-		const Chunk chunk = chunksManager_.GetComponent(visibleChunk);
-		const Vec3f chunkPos = transform3dManager_.GetPosition(visibleChunk);
+		const Vec3f chunkPos = transform3dManager_.GetPosition(chunkIndex);
 		bool intersect = false;
 		for (unsigned x = 0; x < kChunkSize; x++)
 		{
@@ -48,7 +49,7 @@ AabbBlock AabbManager::RaycastBlock(const Vec3f& origin, const Vec3f& dir)
 			{
 				for (unsigned z = 0; z < kChunkSize; z++)
 				{
-					const int blockId = chunk.GetBlockId(Vec3i(x, y, z));
+					const int blockId = chunkContentManager_.GetBlockId(chunkIndex, Vec3i(x, y, z));
 					if (blockId == 0) continue;
 					Aabb3d aabb;
 					aabb.SetFromCenter(Vec3f(x, y, z) + chunkPos, Vec3f::one / 2);
@@ -66,7 +67,7 @@ AabbBlock AabbManager::RaycastBlock(const Vec3f& origin, const Vec3f& dir)
 		if (intersect)
 		{
 			block.blockPos = Vec3f(blockPos.x, blockPos.y, blockPos.z) + blockChunkPos;
-			block.blockType = chunk.GetBlockId(blockPos);
+			block.blockType = chunkContentManager_.GetBlockId(chunkIndex, blockPos);
 		}
 	}
 	return block;
@@ -74,8 +75,7 @@ AabbBlock AabbManager::RaycastBlock(const Vec3f& origin, const Vec3f& dir)
 
 AabbBlock AabbManager::RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir, const Index chunkIndex)
 {
-	if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK))) { return AabbBlock(); }
-	const Chunk chunk = chunksManager_.GetComponent(chunkIndex);
+	if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) { return AabbBlock(); }
 	const Vec3f chunkPos = transform3dManager_.GetPosition(chunkIndex);
 
 	AabbBlock block;
@@ -87,7 +87,7 @@ AabbBlock AabbManager::RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir
 		{
 			for (size_t z = 0; z < kChunkSize; z++)
 			{
-				int blockID = chunk.GetBlockId(Vec3i(x, y, z));
+				int blockID = chunkContentManager_.GetBlockId(chunkIndex, Vec3i(x, y, z));
 				if (blockID == 0) continue;
 				Aabb3d aabb;
 				aabb.SetFromCenter(Vec3f(x, y, z), Vec3f::one / 2);
@@ -103,7 +103,7 @@ AabbBlock AabbManager::RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir
 	if (blockPos != Vec3i(-1))
 	{
 		block.blockPos = Vec3f(blockPos.x, blockPos.y, blockPos.z) + chunkPos;
-		block.blockType = chunk.GetBlockId(blockPos);
+		block.blockType = chunkContentManager_.GetBlockId(chunkIndex, blockPos);
 	}
 	return block;
 }

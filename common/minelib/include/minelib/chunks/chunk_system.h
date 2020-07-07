@@ -2,13 +2,10 @@
 #include <engine/system.h>
 #include <engine/entity.h>
 
-#include "chunk.h"
-
 namespace neko
 {
 class EntityManager;
 class Transform3dManager;
-class ChunksManager;
 class MinecraftLikeEngine;
 
 class ChunksSystem final : public SystemInterface
@@ -19,7 +16,7 @@ public:
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	Chunk GenerateChunk(const Vec3i& pos) const;
+	void GenerateChunkArray(const Entity index, const Vec3i& pos) const;
 
 	void Init() override;
 
@@ -38,7 +35,9 @@ public:
 
 private:
 	const float kMaxViewDist_ = 25;
-	ChunksManager& chunksManager_;
+	ChunkContentManager& chunkContentManager_;
+	ChunkStatutManager& chunkStatutManager_;
+	ChunkPosManager& chunkPosManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 };

@@ -4,11 +4,13 @@
 #include <mathematics/vector.h>
 #include <utilities/service_locator.h>
 
+
 namespace neko
 {
+class ChunkContentManager;
+class ChunkPosManager;
 class Transform3dManager;
 class EntityManager;
-class ChunksManager;
 class MinecraftLikeEngine;
 
 struct AabbBlock
@@ -96,7 +98,8 @@ public:
 private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
-	ChunksManager& chunksManager_;
+	ChunkPosManager& chunkPosManager_;
+	ChunkContentManager& chunkContentManager_;
 	Transform3dManager& transform3dManager_;
 };
 

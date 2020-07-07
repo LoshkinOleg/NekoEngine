@@ -7,15 +7,15 @@ namespace neko
 {
 MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	: SdlEngine(config),
-	  entityManager_(),
-	  entityHierarchy_(entityManager_),
-	  componentsManagerSystem_(*this),
+	  entityManager(),
+	  entityHierarchy(entityManager),
+	  componentsManagerSystem(*this),
 	  drawSystem_(*this)
 {
 	RegisterSystem(drawSystem_);
 	RegisterOnEvent(drawSystem_);
 	RegisterOnDrawUi(drawSystem_);
-	RegisterSystem(componentsManagerSystem_);
+	RegisterSystem(componentsManagerSystem);
 #ifdef EASY_PROFILE_USE
 	EASY_PROFILER_ENABLE;
 #endif
@@ -26,8 +26,8 @@ void MinecraftLikeEngine::Init()
 {
 	SdlEngine::Init();
 	//Temporary scene init
-    const auto entity = entityManager_.CreateEntity();
-	componentsManagerSystem_.transform3dManager_.AddComponent(entity);
+    const auto entity = entityManager.CreateEntity();
+	componentsManagerSystem.transform3dManager.AddComponent(entity);
 	for (int i = 0; i < kInitEntityNmb_; i++)
 	{
 	}

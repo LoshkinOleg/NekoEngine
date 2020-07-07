@@ -1,46 +1,60 @@
 #include "minelib/chunks/chunk_manager.h"
+
 #include "minelib/chunks/chunk_renderer.h"
 
 namespace neko
 {
-void ChunksManager::AddVisibleChunk(const Entity chunkIndex)
+
+	void ChunkStatutManager::AddStatut(Entity entity, ChunkFlag chunkFlag)
+	{
+		components_[entity] |= ChunkMask(chunkFlag);
+	}
+
+	void ChunkStatutManager::RemoveStatut(Entity entity, ChunkFlag chunkFlag)
+	{
+		components_[entity] &= ~ChunkMask(chunkFlag);
+	}
+
+	bool ChunkStatutManager::HasStatut(Entity entity, ChunkFlag chunkFlag) const
+	{
+		if (entity >= components_.size())
+		{
+			std::ostringstream oss;
+			oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " << components_.size();
+			LogDebug(oss.str());
+			return false;
+		}
+		return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
+	}
+
+Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
 {
-	visibleChunks_.push_back(chunkIndex);
+	Aabb3d aabb;
+	Vec3i chunkPos = components_[chunkIndex];
+	aabb.SetFromCenter(Vec3f(chunkPos * kChunkSize),
+	                   Vec3f(kChunkSize / 2, kChunkSize / 2, kChunkSize / 2));
+	return aabb;
 }
 
-void ChunksManager::RemoveVisibleChunk(const Entity chunkIndex)
+void ChunkContentManager::SetBlock(const Entity chunkIndex, const uint8_t blockId, const Vec3i& pos)
 {
-	visibleChunks_.erase(std::remove(visibleChunks_.begin(), visibleChunks_.end(), chunkIndex));
+	components_[chunkIndex][pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize] = blockId;
 }
 
-void ChunksManager::ClearVisibleChunks()
+uint8_t ChunkContentManager::GetBlockId(const Entity chunkIndex, const Vec3i& pos) const
 {
-	visibleChunks_.clear();
+	return components_[chunkIndex][pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize];
 }
 
-void ChunksManager::ReserveVisibleChunks(const float size)
-{
-	visibleChunks_.reserve(size);
-}
-
-void ChunksManager::AddLoadedChunk(const Entity chunkIndex)
-{
-	loadedChunks_.push_back(chunkIndex);
-}
-
-std::vector<Entity> ChunksManager::GetVisibleChunks() const
-{
-	return visibleChunks_;
-}
-
-std::vector<Entity> ChunksManager::GetLoadedChunks() const
-{
-	return loadedChunks_;
-}
-
-ChunksViewer::ChunksViewer(EntityManager& entityManager, ChunksManager& chunksManager)
+ChunksViewer::ChunksViewer(
+	EntityManager& entityManager,
+	ChunkContentManager& chunkContentManager,
+	ChunkStatutManager& chunkStatutManager,
+	ChunkPosManager& chunkPosManager)
 	: entityManager_(entityManager),
-	  chunksManager_(chunksManager)
+	  chunkContentManager_(chunkContentManager),
+	  chunkStatutManager_(chunkStatutManager),
+	  chunkPosManager_(chunkPosManager)
 {
 }
 
@@ -48,16 +62,14 @@ void ChunksViewer::DrawImGui(const Entity selectedEntity)
 {
 	if (selectedEntity == INVALID_ENTITY)
 		return;
-	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK)))
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 	{
 		if (ImGui::CollapsingHeader("Chunk"))
 		{
-			Chunk chunk = chunksManager_.GetComponent(selectedEntity);
-			bool visible = chunk.IsVisible();
-			ImGui::Checkbox("Visible", &visible);
-			auto chunkPos = chunk.GetChunkPos();
+			Vec3i chunkPos = chunkPosManager_.GetComponent(selectedEntity);
 			ImGui::DragInt3("ChunkPos", &chunkPos[0]);
 		}
 	}
 }
 }
+

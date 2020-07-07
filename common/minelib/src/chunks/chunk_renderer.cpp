@@ -8,6 +8,8 @@
 #include "gl/texture.h"
 #include "minelib/minecraft_like_engine.h"
 
+#include <minelib/chunks/chunk_manager.h>
+
 namespace neko
 {
 ChunkRenderer::ChunkRenderer(
@@ -17,9 +19,11 @@ ChunkRenderer::ChunkRenderer(
 	: camera_(camera),
 	  engine_(engine),
 	  entityViewer_(entityViewer),
-	  entityManager_(engine.entityManager_),
-	  chunksManager_(engine.componentsManagerSystem_.chunksManager_),
-	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_)
+	  entityManager_(engine.entityManager),
+	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
+	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
+	  chunkStatutManager_(engine.componentsManagerSystem.chunkStatutManager),
+	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
 {
 }
 
@@ -76,29 +80,28 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	SetLightParameters();
 
-	const auto loadedChunks = chunksManager_.GetLoadedChunks();
-	for (auto loadedChunk : loadedChunks)
+	const auto chunksNmb = entityManager_.GetEntitiesSize();
+	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
 	{
-		Chunk chunk = chunksManager_.GetComponent(loadedChunk);
-		if (!chunk.IsVisible()) continue;
-		const Vec3f chunkPos = transform3dManager_.GetPosition(
-			loadedChunk);
+		if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) continue;
+		if (!chunkStatutManager_.HasStatut(chunkIndex, ChunkFlag::VISIBLE)) continue;
+		const Vec3f chunkPos = transform3dManager_.GetPosition(chunkIndex);
 		for (int x = 0; x < kChunkSize; x++)
 		{
 			for (int y = 0; y < kChunkSize; y++)
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-					if (blockID != 0)
+					const int blockId = chunkContentManager_.GetBlockId(chunkIndex, Vec3i(x, y, z));
+					if (blockId != 0)
 					{
-						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
+						if (texture_[blockId - 1] == INVALID_TEXTURE_ID) continue;
 						Mat4f model = Mat4f::Identity;
 						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
 
 						SetCameraParameters(model, view, projection, camera_.position);
 
-						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]);
+						glBindTexture(GL_TEXTURE_2D, texture_[blockId - 1]);
 						//bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

@@ -10,7 +10,6 @@
 
 namespace neko
 {
-	class ChunksManager;
 	class Transform3dManager;
 	struct MoveableCamera3D;
 	class MinecraftLikeEngine;
@@ -54,7 +53,9 @@ namespace neko
 		MinecraftLikeEngine& engine_;
 		EntityViewer& entityViewer_;
 		EntityManager& entityManager_;
-		ChunksManager& chunksManager_;
+		ChunkPosManager& chunkPosManager_;
+		ChunkStatutManager& chunkStatutManager_;
+		ChunkContentManager& chunkContentManager_;
 		Transform3dManager& transform3dManager_;
 
 		DirectionalLight directionalLight_;

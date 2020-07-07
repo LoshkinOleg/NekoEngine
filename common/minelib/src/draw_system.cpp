@@ -10,9 +10,12 @@ namespace neko
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	: chunkRenderer_(engine, camera_, entityViewer_),
 	  gizmosRenderer_(camera_),
-	  entityViewer_(engine.entityManager_, engine.entityHierarchy_),
-	  transformViewer_(engine.entityManager_, engine.componentsManagerSystem_.transform3dManager_),
-	  chunksViewer_(engine.entityManager_, engine.componentsManagerSystem_.chunksManager_),
+	  entityViewer_(engine.entityManager, engine.entityHierarchy),
+	  transformViewer_(engine.entityManager, engine.componentsManagerSystem.transform3dManager),
+	  chunksViewer_(engine.entityManager,
+	                engine.componentsManagerSystem.chunkContentManager,
+	                engine.componentsManagerSystem.chunkStatutManager,
+	                engine.componentsManagerSystem.chunkPosManager),
 	  engine_(engine)
 {
 	engine.RegisterSystem(camera_);
@@ -24,7 +27,7 @@ void DrawSystem::Init()
 	camera_.Init();
 	chunkRenderer_.Init();
 	gizmosRenderer_.Init();
-	
+
 	camera_.position = Vec3f::up;
 }
 
@@ -58,9 +61,9 @@ void DrawSystem::Update(seconds dt)
 		viewBlock_ = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		GizmosLocator::get().DrawCube(viewBlock_.blockPos, Vec3f::one, Color4(1,1,1,1));
+		GizmosLocator::get().DrawCube(viewBlock_.blockPos, Vec3f::one, Color4(1, 1, 1, 1));
 	}
-	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_*10);
+	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);
 }
 
 void DrawSystem::Destroy()
