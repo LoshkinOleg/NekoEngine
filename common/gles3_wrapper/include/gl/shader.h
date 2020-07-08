@@ -25,6 +25,8 @@ public:
     void SetBool(const std::string& attributeName, bool value) const;
 
     void SetInt(const std::string& attributeName, int value) const;
+	
+    void SetUInt(const std::string& attributeName, uint32_t value) const;
 
     void SetFloat(const std::string& attributeName, float value) const;
 

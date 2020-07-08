@@ -1,4 +1,5 @@
 #pragma once
+#include "minelib/ui/ui_manager.h"
 
 namespace neko
 {
@@ -68,5 +69,23 @@ private:
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
 	ChunksManager& chunksManager_;
+	
+	//UI
+	//Crosshair
+	UiElement crossHair_{Vec3f::zero, Vec2u(64, 64)};
+	
+	//Toolbar
+	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
+	const static short toolbarSize = 9;
+	std::array<uint8_t, toolbarSize> toolBarBlocks_{0};
+	
+	//Block previews
+	std::array<UiElement, toolbarSize> blockPreviews_{};
+	
+	//Block Select
+	UiElement blockSelect_{Vec3f::zero, Vec2u(96, 96)};
+	short selectIndex_ = 0;
+	
+	Vec2u tileSize_ = Vec2u(80u);
 };
 }

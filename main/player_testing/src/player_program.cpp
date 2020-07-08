@@ -29,10 +29,10 @@ void PlayerProgram::Init()
 
 	blockManager_.Init();
 	
-	toolBarBlockIds_[0] = 1;
-	toolBarBlockIds_[1] = 2;
-	toolBarBlockIds_[2] = 3;
-	toolBarBlockIds_[3] = 4;
+	toolBarBlocks_[0] = blockManager_.GetBlock(1);
+	toolBarBlocks_[1] = blockManager_.GetBlock(2);
+	toolBarBlocks_[2] = blockManager_.GetBlock(3);
+	toolBarBlocks_[3] = blockManager_.GetBlock(4);
 	std::fill(blockPreviews_.begin(), blockPreviews_.end(), UiElement(Vec3f::zero, Vec2u(80, 80)));
 	
 	uiManager_.Init();
@@ -54,11 +54,11 @@ void PlayerProgram::Init()
 
 		for (int i = 0; i < toolbarSize; ++i)
 		{
-			if (toolBarBlockIds_[i] == 0) continue;
+			if (toolBarBlocks_[i] == nullptr) continue;
 			
 			blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
 			blockPreviews_[i].position.y = toolBar_.position.y;
-			blockPreviews_[i].textureId = blockManager_.GetBlock(toolBarBlockIds_[i])->previewTexture;
+			blockPreviews_[i].textureId = toolBarBlocks_[i]->previewTexture;
 			uiManager_.AddUiElement(&blockPreviews_[i]);
 		}
 	}
@@ -115,6 +115,7 @@ void PlayerProgram::Update(const seconds dt)
 		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(config.windowSize);
 		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
 		blockSelect_.position.y = toolBar_.position.y;
+		blockSelect_.Update(config.windowSize);
 	}
 	
 	if (inputManager.IsActionDown(sdl::InputAction::SPRINT) && inputManager.IsActionHeld(sdl::InputAction::UP))
@@ -182,12 +183,15 @@ void PlayerProgram::Destroy()
 	crossHair_.Destroy();
 	shader_.Destroy();
 	shaderLine_.Destroy();
-	uiShader_.Destroy();
 
 	cubePositions_.clear();
 	cubeAabbs_.clear();
 	gl::DestroyTexture(texture_);
 
+	for (auto toolBarBlock : toolBarBlocks_)
+	{
+		delete toolBarBlock;
+	}
 	blockManager_.Destroy();
 }
 
@@ -222,7 +226,7 @@ void PlayerProgram::OnEvent(const SDL_Event& event)
 			const Vec2f tileSize = Vec2f(tileSize_) / newWindowSize;
 			for (int i = 0; i < toolbarSize; ++i)
 			{
-				if (toolBarBlockIds_[i] == -1) continue;
+				if (toolBarBlocks_[i] == nullptr) continue;
 				blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
 				blockPreviews_[i].position.y = toolBar_.position.y;
 			}
@@ -253,7 +257,7 @@ void PlayerProgram::PlaceCube(const Vec3f& position)
 
 	placeTimeStamp_ = Time::time + placeCoolDown_;
 	cubePositions_.emplace_back(position);
-	cubeIds_.emplace_back(toolBarBlockIds_[selectIndex_]);
+	cubeIds_.emplace_back(toolBarBlocks_[selectIndex_]->id);
 	uniqueCube_.UpdateInstance(cubePositions_[0], cubePositions_.size());
 	
 	cubeAabbs_.emplace_back(aabb);
@@ -379,7 +383,7 @@ void PlayerProgram::CheckBlock()
 		{
 			DeleteCube(rayOut.hitIndex);
 		}
-		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlockIds_[selectIndex_] != -1)
+		if (inputManager.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlocks_[selectIndex_] != nullptr)
 		{
 			const Vec3f toPoint = camera_.reverseDirection * -1 * rayOut.hitDist;
 			const Vec3f cubePoint = camera_.position + toPoint;

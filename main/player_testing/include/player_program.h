@@ -115,15 +115,13 @@ private:
 	std::vector<Aabb3d> cubeAabbs_;
 
 	//UI
-    gl::Shader uiShader_;
-	
 	//Crosshair
 	UiElement crossHair_{Vec3f::zero, Vec2u(64, 64)};
 	
 	//Toolbar
 	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
 	const static short toolbarSize = 9;
-	std::array<uint8_t, toolbarSize> toolBarBlockIds_{0};
+	std::array<Block*, toolbarSize> toolBarBlocks_{};
 	
 	//Block previews
 	std::array<UiElement, toolbarSize> blockPreviews_{};

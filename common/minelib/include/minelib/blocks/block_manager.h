@@ -46,9 +46,9 @@ public:
 
 	void Render() override;
 
-	void RegisterBlock(BaseBlock* block);
+	void RegisterBlock(Block* block);
 	
-	BaseBlock* GetBlock(const size_t blockIndex)
+	Block* GetBlock(const size_t blockIndex)
 	{ return registeredBlocks_[blockIndex]; }
 
 	void Destroy() override;
@@ -60,12 +60,12 @@ private:
 	unsigned previewFbo_ = 0;
 	unsigned previewRbo_ = 0;
 	size_t previewTexSize_ = 32;
+	TextureId atlas_ = 0;
+
+	std::vector<Block*> registeredBlocks_{};
+
 	gl::Shader previewShader_;
-
-	std::vector<BaseBlock*> registeredBlocks_{};
-
-	gl::Shader testShader_;
-	gl::RenderQuad testQuad_{Vec3f::zero, Vec2f::one};
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
 };
 
 using BlockManagerLocator = Locator<IBlockManager, NullBlockManager>;

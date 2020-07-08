@@ -5,52 +5,23 @@
 
 namespace neko
 {
-struct BaseBlock : RenderableObject
+struct Block final
 {
+	explicit Block(const char* blockName,
+	               const uint8_t sideId = 0,
+	               const uint8_t topId = 0,
+	               const uint8_t bottomId = 0)
+		: name(blockName), sideTexId(sideId), topTexId(topId), bottomTexId(bottomId)
+	{
+	}
+	
 	const char* name = "";
 	size_t id = -1;
 
-	TextureId previewTexture;
+	TextureId previewTexture = 0;
 
-	void Init() override {}
-	void Draw() const override {}
-	void Destroy() override {}
-};
-
-struct Block final : BaseBlock
-{
-	Block(const char* blockName,
-	      const std::string_view& blockTexturePath)
-		: texturePath(blockTexturePath)
-	{
-		name = blockName;
-	}
-
-	void Init() override;
-	void Draw() const override;
-	void Destroy() override;
-
-	std::string texturePath = "";
-	TextureId textureId = 0;
-
-	gl::RenderCuboid cube{Vec3f::zero, Vec3f::one};
-};
-
-struct UniqueBlock final : BaseBlock
-{
-	UniqueBlock(const char* blockName,
-	            std::array<std::string, 3> blockTexturePaths)
-		: texturePaths(std::move(blockTexturePaths))
-	{
-		name = blockName;
-	}
-
-	void Init() override;
-	void Draw() const override;
-	void Destroy() override;
-
-	std::array<std::string, 3> texturePaths{""};
-	
-	gl::RenderCuboidUnique cube{Vec3f::zero, Vec3f::one};
+	uint8_t sideTexId = 0;
+	uint8_t topTexId = 0;
+	uint8_t bottomTexId = 0;
 };
 }
