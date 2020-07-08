@@ -52,7 +52,7 @@ namespace neko
 		shader_.SetMat4("view", camera_.GenerateViewMatrix());
 		shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
 
-		frustum_.Frustum(camera_); //TODO do this on camera movement instead of here
+		frustum_ = Frustum(camera_); //TODO do this on camera movement instead of here
 
 		for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 		{
