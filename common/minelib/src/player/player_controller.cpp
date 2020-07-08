@@ -1,25 +1,55 @@
 #include "minelib/player/player_controller.h"
 
+#include "minelib/blocks/block.h"
+
 namespace neko
 {
 PlayerController::PlayerController(MinecraftLikeEngine& engine)
-	: inputManager_(sdl::InputLocator::get()),
+	: engine_(engine),
+	  inputManager_(sdl::InputLocator::get()),
 	  gizmosRenderer_(GizmosLocator::get()),
-	  chunksManager_(engine.componentsManagerSystem_.chunkManager_)
+	  chunksManager_(engine.componentsManagerSystem_.chunkManager_),
+	  aabbManager_(AabbLocator::get()),
+	  uiManager_(UiManagerLocator::get())
 {
 }
 
 void PlayerController::Init()
 {
 	player_.aabb.SetFromCenter(player_.pos + Vec3f::up, player_.aabbSize);
+
+	//Init Ui
+	{
+		const Vec2f toolBarSize = Vec2f(toolBar_.size) / Vec2f(engine_.config.windowSize);
+		toolBar_.position.y = toolBarSize.y / 2 - 1.0;
+	
+		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(engine_.config.windowSize);
+	
+		blockSelect_.position.y = toolBar_.position.y;
+		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
+
+		crossHair_.texturePath = engine_.config.dataRootPath + "sprites/ui/crosshair.png";
+		toolBar_.texturePath = engine_.config.dataRootPath + "sprites/ui/toolbar.png";
+		blockSelect_.texturePath = engine_.config.dataRootPath + "sprites/ui/selection_sprite.png";
+		uiManager_.AddUiElement(&crossHair_);
+		uiManager_.AddUiElement(&toolBar_);
+		uiManager_.AddUiElement(&blockSelect_);
+
+		for (int i = 0; i < toolbarSize; ++i)
+		{
+			blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
+			blockPreviews_[i].position.y = toolBar_.position.y;
+			blockPreviews_[i].textureId = toolBarBlocks_[i]->previewTexture;
+			uiManager_.AddUiElement(&blockPreviews_[i]);
+		}
+	}
 }
 
 void PlayerController::Update(seconds dt)
 {
 	camera_.Update(dt);
 
-	//TODO implement hotbar
-	/*const auto scrollAmount = inputManager_.GetMouseScroll();
+	const auto scrollAmount = inputManager_.GetMouseScroll();
 	if (scrollAmount.y != 0)
 	{
 		selectIndex_ += -Sign(scrollAmount.y);
@@ -30,24 +60,25 @@ void PlayerController::Update(seconds dt)
 		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(config.windowSize);
 		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
 		blockSelect_.position.y = toolBar_.position.y;
-	}*/
+		blockSelect_.Update(config.windowSize);
+	}
 	
 	if (inputManager_.IsActionDown(sdl::InputAction::SPRINT) && inputManager_.IsActionHeld(sdl::InputAction::UP))
 	{
 		player_.speedMultiplier = player_.sprintMultiplier;
-		player_.state &= Player::SPRINTING;
+		player_.state |= Player::SPRINTING;
 	}
 
 	if (inputManager_.IsActionUp(sdl::InputAction::UP))
 	{
-		player_.state |= ~Player::SPRINTING;
+		player_.state &= ~Player::SPRINTING;
 		player_.speedMultiplier = 1.0f;
 	}
 	
 	if (player_.state & Player::CAN_JUMP && inputManager_.IsActionDown(sdl::InputAction::JUMP))
 	{
 		player_.velocity.y = player_.jumpPower;
-		player_.state |= ~Player::CAN_JUMP;
+		player_.state &= ~Player::CAN_JUMP;
 	}
 
 	if (Equal(Abs(player_.velocity.y), 0.0f)) HeadBobbing();
@@ -63,14 +94,18 @@ void PlayerController::Destroy()
 {
 }
 
-void PlayerController::PlaceCube(size_t chunkId, size_t blockId)
+void PlayerController::PlaceCube(const size_t chunkId, const size_t blockId) const
 {
-	//TODO 
+	//TODO change when new chunk structure in place
+	Chunk chunk = chunksManager_.GetComponent(chunkId);
+	chunk.SetBlock(blockId, Vec3i::zero);
 }
 
-void PlayerController::DeleteCube(size_t chunkId, size_t blockId)
+void PlayerController::DeleteCube(const size_t chunkId, const size_t blockId) const
 {
-	//TODO 
+	//TODO change when new chunk structure in place
+	Chunk chunk = chunksManager_.GetComponent(chunkId);
+	chunk.SetBlock(0, Vec3i::zero);
 }
 
 void PlayerController::MovePlayer()
@@ -102,42 +137,48 @@ void PlayerController::MovePlayer()
 
 void PlayerController::ResolvePhysics()
 {
-	/*Ray rayOut;
-	if (RayCast(rayOut, player_.pos + Vec3f::up * 0.01f, Vec3f::down, player_.maxReach))
+	Ray rayOut;
+	if (aabbManager_.RaycastBlockInChunk(rayOut, player_.pos + Vec3f::up * 0.01f, Vec3f::down, 0))
 	{
 		if (Equal(rayOut.hitDist, 0.01f, 0.001f)) 
-			player_.canJump = true;
+			player_.state |= Player::CAN_JUMP;
 		else
-			player_.canJump = false;
+			player_.state &= ~Player::CAN_JUMP;
 	}
 	
-	for (size_t i = 0; i < cubeAabbs_.size(); ++i)
+	for (uint16_t i = 0; i < uint16_t(kChunkSize * kChunkSize * kChunkSize); i++)
 	{
-		const Vec3f fromCenter = cubePositions_[i] - Vec3f(player_.pos.x, cubePositions_[i].y - cubeHalfSize, player_.pos.z);
-		if (cubeAabbs_[i].IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, cubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
+		const uint16_t z = std::floor(i / (kChunkSize * kChunkSize));
+		const uint16_t y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
+		const uint16_t x = i % kChunkSize;
+		const Vec3f cubePos = Vec3f(x, y, z);
+		const Aabb3d aabb = Aabb3d(cubePos, Vec3f(kCubeHalfSize));
+		
+		const Vec3f fromCenter = cubePos - Vec3f(player_.pos.x, cubePos.y - kCubeHalfSize, player_.pos.z);
+		if (aabb.IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, kCubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
 			Abs(fromCenter.x) > Abs(fromCenter.y) && 
 			Abs(fromCenter.x) > Abs(fromCenter.z))
 		{
-			const float sideSign = Sign(cubePositions_[i].x - player_.pos.x);
-			player_.pos.x = cubePositions_[i].x - (cubeHalfSize + player_.aabbSize.x + 0.01f) * sideSign;
+			const float sideSign = Sign(cubePos.x - player_.pos.x);
+			player_.pos.x = cubePos.x - (kCubeHalfSize + player_.aabbSize.x + 0.01f) * sideSign;
 		}
-		else if (cubeAabbs_[i].ContainsPoint(player_.pos + Vec3f(0, player_.velocity.y * Time::fixedDeltaTime, 0)) &&
+		else if (aabb.ContainsPoint(player_.pos + Vec3f(0, player_.velocity.y * Time::fixedDeltaTime, 0)) &&
 			Abs(fromCenter.y) > Abs(fromCenter.x) && 
 			Abs(fromCenter.y) > Abs(fromCenter.z))
 		{
-			const float sideSign = Sign(cubePositions_[i].y - player_.pos.y);
-			player_.pos.y = cubePositions_[i].y - cubeHalfSize * sideSign;
+			const float sideSign = Sign(cubePos.y - player_.pos.y);
+			player_.pos.y = cubePos.y - kCubeHalfSize * sideSign;
 
 			if (player_.velocity.y <= 0.0f) player_.velocity.y = 0.0f;
 		}
-		else if (cubeAabbs_[i].IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, cubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
+		else if (aabb.IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, kCubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
 			Abs(fromCenter.z) > Abs(fromCenter.y) && 
 			Abs(fromCenter.z) > Abs(fromCenter.x))
 		{
-			const float sideSign = Sign(cubePositions_[i].z - player_.pos.z);
-			player_.pos.z = cubePositions_[i].z - (cubeHalfSize + player_.aabbSize.z + 0.01f) * sideSign;
+			const float sideSign = Sign(cubePos.z - player_.pos.z);
+			player_.pos.z = cubePos.z - (kCubeHalfSize + player_.aabbSize.z + 0.01f) * sideSign;
 		}
-	}*/
+	}
 }
 
 void PlayerController::HeadBobbing()
@@ -160,40 +201,36 @@ void PlayerController::HeadBobbing()
     }
 }
 
-void PlayerController::CheckBlock()
+void PlayerController::CheckBlock(const uint16_t blockId, const Vec3f& blockPos) const
 {
-	/*Ray rayOut;
-	const Vec3f direction = camera_.reverseDirection.Normalized() * -1;
-	if (RayCast(rayOut, camera_.position, direction, player_.maxReach))
+	glLineWidth(3.0f);
+	gizmosRenderer_.DrawCube(blockPos, Vec3f::one, Color::black);
+	
+	if (Time::time < player_.placeTimeStamp) return;
+	if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::LEFT))
 	{
-		glLineWidth(3.0f);
-		gizmosRenderer_.DrawCube(cubePositions_[rayOut.hitIndex], Vec3f::one, Color::black);
+		DeleteCube(0, blockId);
+	}
+	if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlocks_[selectIndex_] != nullptr)
+	{
+		const Vec3f toPoint = camera_.reverseDirection * -1 * blockId;
+		const Vec3f cubePoint = camera_.position + toPoint;
+		const Vec3f fromCenter = cubePoint - blockPos;
 		
-		if (Time::time < player_.placeTimeStamp) return;
-		if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::LEFT))
-		{
-			DeleteCube(rayOut.hitIndex);
-		}
-		if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlockIds_[selectIndex_] != -1)
-		{
-			const Vec3f toPoint = camera_.reverseDirection * -1 * rayOut.hitDist;
-			const Vec3f cubePoint = camera_.position + toPoint;
-			const Vec3f fromCenter = cubePoint - cubePositions_[rayOut.hitIndex];
-			
-			Vec3f offset;
-			if (Abs(fromCenter.x) > Abs(fromCenter.y) && 
-				Abs(fromCenter.x) > Abs(fromCenter.z)) 
-				offset.x = -Sign(fromCenter.x);
-			else if (Abs(fromCenter.y) > Abs(fromCenter.x) && 
-				Abs(fromCenter.y) > Abs(fromCenter.z)) 
-				offset.y = -Sign(fromCenter.y);
-			else if (Abs(fromCenter.z) > Abs(fromCenter.y) && 
-				Abs(fromCenter.z) > Abs(fromCenter.x)) 
-				offset.z = -Sign(fromCenter.z);
+		Vec3i offset;
+		if (Abs(fromCenter.x) > Abs(fromCenter.y) && 
+			Abs(fromCenter.x) > Abs(fromCenter.z)) 
+			offset.x = -Sign(fromCenter.x);
+		else if (Abs(fromCenter.y) > Abs(fromCenter.x) && 
+			Abs(fromCenter.y) > Abs(fromCenter.z)) 
+			offset.y = -Sign(fromCenter.y);
+		else if (Abs(fromCenter.z) > Abs(fromCenter.y) && 
+			Abs(fromCenter.z) > Abs(fromCenter.x)) 
+			offset.z = -Sign(fromCenter.z);
 
-			PlaceCube(rayOut.hitPos - offset);
-		}
-	}*/
+		const uint16_t offSetId = blockId - PosToBlockId(offset);
+		PlaceCube(0, offSetId);
+	}
 }
 
 bool PlayerController::IsMoving() const

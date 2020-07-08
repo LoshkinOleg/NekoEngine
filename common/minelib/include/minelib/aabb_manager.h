@@ -1,6 +1,8 @@
 #pragma once
 #include <engine/globals.h>
 
+
+#include "mathematics/aabb.h"
 #include "mathematics/vector.h"
 #include "utilities/service_locator.h"
 
@@ -18,18 +20,25 @@ struct AabbBlock
 	uint8_t blockType = 0;
 };
 
+struct Ray
+{
+	Index hitId = INVALID_INDEX;
+	Vec3f hitPos;
+	Aabb3d hitAabb;
+	float hitDist = std::numeric_limits<float>::max();
+};
 
 //-----------------------------------------------------------------------------
-// AabbManagerInterface
+// IAabbManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class AabbManagerInterface
+class IAabbManager
 {
 public:
-	~AabbManagerInterface() = default;
-	virtual Index RaycastChunk(Vec3f origin, Vec3f dir) = 0;
-	virtual AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) = 0;
-	virtual AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) = 0;
+	virtual ~IAabbManager() = default;
+	virtual bool RaycastChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual bool RaycastBlock(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual bool RaycastBlockInChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir, Index chunkIndex) const = 0;
 
 protected:
 	const int kInvalidPos_ = -1.0f;
@@ -39,19 +48,28 @@ protected:
 // NullAabbManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class NullAabbManager final : public AabbManagerInterface
+class NullAabbManager final : public IAabbManager
 {
-	Index RaycastChunk(Vec3f origin, Vec3f dir) override
+	bool RaycastChunk([[maybe_unused]] Ray& ray,
+	                  [[maybe_unused]] const Vec3f& origin,
+	                  [[maybe_unused]] const Vec3f& dir) const override
 	{
-		return INVALID_INDEX;
+		return false;
 	}
-	AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) override
+
+	bool RaycastBlock([[maybe_unused]] Ray& ray,
+	                  [[maybe_unused]] const Vec3f& origin,
+	                  [[maybe_unused]] const Vec3f& dir) const override
 	{
-		return AabbBlock();
+		return false;
 	}
-	AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override
+
+	bool RaycastBlockInChunk([[maybe_unused]] Ray& ray,
+	                         [[maybe_unused]] const Vec3f& origin,
+	                         [[maybe_unused]] const Vec3f& dir,
+	                         [[maybe_unused]] Index chunkIndex) const override
 	{
-		return AabbBlock();
+		return false;
 	}
 };
 
@@ -60,14 +78,21 @@ class NullAabbManager final : public AabbManagerInterface
 //-----------------------------------------------------------------------------
 /// \brief Draw gizmos
 
-class AabbManager final : AabbManagerInterface
+class AabbManager final : IAabbManager
 {
 public:
 	explicit AabbManager(MinecraftLikeEngine& engine);
 
-	Index RaycastChunk(Vec3f origin, Vec3f dir) override;
-	AabbBlock RaycastBlock(Vec3f origin, Vec3f dir) override;
-	AabbBlock RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex) override;
+	bool RaycastChunk(Ray& ray,
+	                  const Vec3f& origin,
+	                  const Vec3f& dir) const override;
+	bool RaycastBlock(Ray& ray,
+	                  const Vec3f& origin,
+	                  const Vec3f& dir) const override;
+	bool RaycastBlockInChunk(Ray& ray,
+	                         const Vec3f& origin,
+	                         const Vec3f& dir,
+	                         Index chunkIndex) const override;
 
 private:
 	MinecraftLikeEngine& engine_;
@@ -76,5 +101,5 @@ private:
 	Transform3dManager& transform3dManager_;
 };
 
-using AabbLocator = Locator<AabbManagerInterface, NullAabbManager>;
+using AabbLocator = Locator<IAabbManager, NullAabbManager>;
 }

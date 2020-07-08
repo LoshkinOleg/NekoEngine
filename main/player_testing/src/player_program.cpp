@@ -421,9 +421,9 @@ bool PlayerProgram::RayCast(
 	const float distance)
 {
 	float closestDist = distance * distance;
+	float minDist;
 	for (size_t i = 0; i < cubeAabbs_.size(); ++i)
 	{
-		float minDist;
 		if (cubeAabbs_[i].IntersectRay(direction, origin, minDist))
 		{
 			const float dist = (cubePositions_[i] - origin).SquareMagnitude();

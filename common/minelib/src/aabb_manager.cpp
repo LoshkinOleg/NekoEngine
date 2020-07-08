@@ -3,98 +3,100 @@
 #include "minelib/minecraft_like_engine.h"
 
 #include "engine/transform.h"
+#include "minelib/blocks/block.h"
 
 namespace neko
 {
 AabbManager::AabbManager(MinecraftLikeEngine& engine)
 	: engine_(engine),
+	  entityManager_(engine.entityManager_),
 	  chunksManager_(engine.componentsManagerSystem_.chunkManager_),
-	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_),
-	  entityManager_(engine.entityManager_)
+	  transform3dManager_(engine.componentsManagerSystem_.transform3dManager_)
 {
 	AabbLocator::provide(this);
 }
 
-Index AabbManager::RaycastChunk(Vec3f origin, Vec3f dir)
+bool AabbManager::RaycastChunk(Ray& ray,
+                               const Vec3f& origin,
+                               const Vec3f& dir) const
 {
+	float rayDist;
 	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 	{
-		if (chunksManager_.GetComponent(i).GetAabb().IntersectRay(origin, dir))
+		if (chunksManager_.GetComponent(i).GetAabb().IntersectRay(origin, dir, rayDist))
 		{
-			return i;
+			ray.hitId = i;
+			ray.hitDist = rayDist;
+			return true;
 		}
 	}
-	return INVALID_INDEX;
+	return false;
 }
 
-AabbBlock AabbManager::RaycastBlock(Vec3f origin, Vec3f dir)
+bool AabbManager::RaycastBlock(Ray& ray,
+                               const Vec3f& origin,
+                               const Vec3f& dir) const
 {
-	float minDist = std::numeric_limits<float>::max();
-	Vec3i blockPos = Vec3i(kInvalidPos_);
-	Vec3f blockChunkPos = Vec3f(static_cast<float>(kInvalidPos_));
-	AabbBlock block;
-	for (size_t c = 0; c < INIT_ENTITY_NMB; c++)
+	float rayDist;
+	for (size_t entity = 0; entity < INIT_ENTITY_NMB; entity++)
 	{
-		if (!engine_.entityManager_.HasComponent(c, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
-		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(c);
-		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(c);
+		if (!engine_.entityManager_.HasComponent(entity, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
+		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(entity);
+		Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(entity);
 
-		for (size_t i = 0; i < kChunkSize * kChunkSize * kChunkSize; i++)
+		for (uint16_t i = 0; i < uint16_t(kChunkSize * kChunkSize * kChunkSize); i++)
 		{
-			int z = std::floor(i / (kChunkSize * kChunkSize));
-			int y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
-			int x = i % kChunkSize;
-			int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-			if (blockID == 0) continue;
+			//TODO update with new chunk structure
+			const uint16_t z = std::floor(i / (kChunkSize * kChunkSize));
+			const uint16_t y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
+			const uint16_t x = i % kChunkSize;
+			const int blockId = chunk.GetBlockId(Vec3i(x, y, z));
+			
+			if (blockId == 0) continue;
+			
 			Aabb3d aabb;
-			aabb.SetFromCenter(Vec3f(x, y, z) + chunkPos, Vec3f::one / 2);
-			float rayDist = aabb.IntersectRay(dir, origin, minDist);
-			if (rayDist > 0 && rayDist < minDist)
+			aabb.SetFromCenter(Vec3f(x, y, z) + chunkPos, Vec3f(kCubeHalfSize));
+			if (aabb.IntersectRay(dir, origin, rayDist) && rayDist > 0 && rayDist < ray.hitDist)
 			{
-				minDist = rayDist;
-				blockPos = Vec3i(x, y, z);
-				blockChunkPos = chunkPos;
+				ray.hitId = blockId;
+				ray.hitDist = rayDist;
+				ray.hitPos = Vec3f(x, y, z) + chunkPos * kChunkSize;
+				ray.hitAabb = aabb;
 			}
 		}
-		if (blockPos != Vec3i(-1))
-		{
-			block.blockPos = Vec3f(blockPos.x, blockPos.y, blockPos.z) + blockChunkPos;
-			block.blockType = chunk.GetBlockId(blockPos);
-		}
 	}
-	return block;
+	return ray.hitId != INVALID_INDEX;
 }
 
-AabbBlock AabbManager::RaycastBlockInChunk(Vec3f origin, Vec3f dir, Index chunkIndex)
+bool AabbManager::RaycastBlockInChunk(Ray& ray,
+                                      const Vec3f& origin,
+                                      const Vec3f& dir,
+                                      const Index chunkIndex) const
 {
-	if (!engine_.entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK))) { return AabbBlock(); }
-	Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(chunkIndex);
-	Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(chunkIndex);
+	if (!engine_.entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK))) { return false; }
+	const Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(chunkIndex);
+	const Vec3f chunkPos = engine_.componentsManagerSystem_.transform3dManager_.GetPosition(chunkIndex);
 
-	AabbBlock block;
-	float minDist = std::numeric_limits<float>::max();
-	Vec3i blockPos = Vec3i(-1);
-	for (size_t i = 0; i < kChunkSize * kChunkSize * kChunkSize; i++)
+	float rayDist;
+	for (uint16_t i = 0; i < uint16_t(kChunkSize * kChunkSize * kChunkSize); i++)
 	{
-		int z = std::floor(i / (kChunkSize * kChunkSize));
-		int y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
-		int x = i % kChunkSize;
-		int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-		if (blockID == 0) continue;
+		const uint16_t z = std::floor(i / (kChunkSize * kChunkSize));
+		const uint16_t y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
+		const uint16_t x = i % kChunkSize;
+		const int blockId = chunk.GetBlockId(Vec3i(x, y, z));
+		
+		if (blockId == 0) continue;
+		
 		Aabb3d aabb;
 		aabb.SetFromCenter(Vec3f(x, y, z), Vec3f::one / 2);
-		float rayDist = aabb.IntersectRay(dir, origin, minDist);
-		if (rayDist > 0 && rayDist < minDist)
+		if (aabb.IntersectRay(dir, origin, rayDist) && rayDist > 0 && rayDist < ray.hitDist)
 		{
-			minDist = rayDist;
-			blockPos = Vec3i(x, y, z);
+			ray.hitId = blockId;
+			ray.hitDist = rayDist;
+			ray.hitPos = Vec3f(x, y, z) + chunkPos * kChunkSize;
+			ray.hitAabb = aabb;
 		}
 	}
-	if (blockPos != Vec3i(-1))
-	{
-		block.blockPos = Vec3f(blockPos.x, blockPos.y, blockPos.z) + chunkPos;
-		block.blockType = chunk.GetBlockId(blockPos);
-	}
-	return block;
+	return ray.hitId != INVALID_INDEX;
 }
 }

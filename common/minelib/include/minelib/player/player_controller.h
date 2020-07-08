@@ -1,4 +1,5 @@
 #pragma once
+#include "minelib/blocks/block.h"
 #include "minelib/ui/ui_manager.h"
 
 namespace neko
@@ -41,15 +42,15 @@ struct Player
 class PlayerController final : SystemInterface
 {
 public:
-	PlayerController(MinecraftLikeEngine& engine);
+	explicit PlayerController(MinecraftLikeEngine& engine);
 	
     void Init() override;
     void Update(seconds dt) override;
 	void FixedUpdate() override;
     void Destroy() override;
 
-	void PlaceCube(size_t chunkId, size_t blockId);
-	void DeleteCube(size_t chunkId, size_t blockId);
+	void PlaceCube(size_t chunkId, size_t blockId) const;
+	void DeleteCube(size_t chunkId, size_t blockId) const;
 
 	void MovePlayer();
 	
@@ -57,7 +58,7 @@ public:
 	
 	void HeadBobbing();
 	
-	void CheckBlock();
+	void CheckBlock(const uint16_t blockId, const Vec3f& blockPos) const;
 
     bool IsMoving() const;
 private:
@@ -66,9 +67,12 @@ private:
 
 	Player player_;
 
+	MinecraftLikeEngine& engine_;
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
 	ChunksManager& chunksManager_;
+	IAabbManager& aabbManager_;
+	IUiManager& uiManager_;
 	
 	//UI
 	//Crosshair
@@ -77,7 +81,7 @@ private:
 	//Toolbar
 	UiElement toolBar_{Vec3f::zero, Vec2u(728, 88)};
 	const static short toolbarSize = 9;
-	std::array<uint8_t, toolbarSize> toolBarBlocks_{0};
+	std::array<Block*, toolbarSize> toolBarBlocks_{nullptr};
 	
 	//Block previews
 	std::array<UiElement, toolbarSize> blockPreviews_{};

@@ -5,6 +5,8 @@
 
 namespace neko
 {
+	const static float kCubeHalfSize = 0.5f;
+
 struct Block final
 {
 	explicit Block(const char* blockName,
