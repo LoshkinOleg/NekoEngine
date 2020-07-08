@@ -2,8 +2,10 @@
 #include <engine/transform.h>
 #include <sdl_engine/sdl_camera.h>
 
+#include "minelib/aabb_manager.h"
 #include "minelib/chunks/chunk_renderer.h"
 #include "minelib/chunks/chunk_manager.h"
+
 #include "gizmos_renderer.h"
 
 namespace neko
@@ -35,5 +37,6 @@ namespace neko
     	//test
         Vec3f savedCameraPos_;
         Vec3f savedCameraDir_;
+        AabbBlock viewBlock_;
     };
 }

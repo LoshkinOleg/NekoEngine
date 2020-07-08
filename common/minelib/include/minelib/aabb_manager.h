@@ -1,6 +1,8 @@
 #pragma once
+#include <vector>
 #include <engine/globals.h>
-
+#include <mathematics/vector.h>
+#include <utilities/service_locator.h>
 
 #include "mathematics/aabb.h"
 #include "mathematics/vector.h"
@@ -8,9 +10,11 @@
 
 namespace neko
 {
+class ChunkStatutManager;
+class ChunkContentManager;
+class ChunkPosManager;
 class Transform3dManager;
 class EntityManager;
-class ChunksManager;
 class MinecraftLikeEngine;
 
 struct AabbBlock
@@ -41,7 +45,7 @@ public:
 	virtual bool RaycastBlockInChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir, Index chunkIndex) const = 0;
 
 protected:
-	const int kInvalidPos_ = -1.0f;
+	const int kInvalidPos_ = -1;
 };
 
 //-----------------------------------------------------------------------------
@@ -78,7 +82,7 @@ class NullAabbManager final : public IAabbManager
 //-----------------------------------------------------------------------------
 /// \brief Draw gizmos
 
-class AabbManager final : IAabbManager
+class AabbManager final : public IAabbManager
 {
 public:
 	explicit AabbManager(MinecraftLikeEngine& engine);
@@ -97,7 +101,9 @@ public:
 private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
-	ChunksManager& chunksManager_;
+	ChunkPosManager& chunkPosManager_;
+	ChunkContentManager& chunkContentManager_;
+	ChunkStatutManager& chunkStatutManager_;
 	Transform3dManager& transform3dManager_;
 };
 

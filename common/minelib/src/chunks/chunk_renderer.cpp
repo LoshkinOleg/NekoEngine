@@ -8,6 +8,8 @@
 #include "gl/texture.h"
 #include "minelib/minecraft_like_engine.h"
 
+#include <minelib/chunks/chunk_manager.h>
+
 namespace neko
 {
 ChunkRenderer::ChunkRenderer(
@@ -15,8 +17,13 @@ ChunkRenderer::ChunkRenderer(
 	MoveableCamera3D& camera,
 	EntityViewer& entityViewer)
 	: camera_(camera),
-	engine_(engine),
-	entityViewer_(entityViewer)
+	  engine_(engine),
+	  entityViewer_(entityViewer),
+	  entityManager_(engine.entityManager),
+	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
+	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
+	  chunkStatutManager_(engine.componentsManagerSystem.chunkStatutManager),
+	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
 {
 }
 
@@ -34,26 +41,28 @@ void ChunkRenderer::Init()
 	glEnable(GL_DEPTH_TEST);
 }
 
-void ChunkRenderer::DrawImGui(){
-
+void ChunkRenderer::DrawImGui()
+{
 	ImGui::Begin("Light");
-		Vec3f lightDirection = directionalLight_.direction_;
-		if(ImGui::InputFloat3("Direction", &lightDirection[0])) {
-			directionalLight_.direction_ = lightDirection;
-		}
+	Vec3f lightDirection = directionalLight_.direction_;
+	if (ImGui::InputFloat3("Direction", &lightDirection[0]))
+	{
+		directionalLight_.direction_ = lightDirection;
+	}
 
-		Vec3f lightPosition = directionalLight_.position_;
-		if (ImGui::InputFloat3("Position", &lightPosition[0])) {
-			directionalLight_.position_ = lightPosition;
-		}
-	
+	Vec3f lightPosition = directionalLight_.position_;
+	if (ImGui::InputFloat3("Position", &lightPosition[0]))
+	{
+		directionalLight_.position_ = lightPosition;
+	}
+
 	ImGui::End();
 }
-
 
 void ChunkRenderer::Update(seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
+	transform3dManager_.SetPosition(0, camera_.position);
 	GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
@@ -65,46 +74,36 @@ void ChunkRenderer::Render()
 	if (shader_.GetProgram() == 0) return;
 
 	std::lock_guard<std::mutex> lock(updateMutex_);
-	
+
 	Mat4f view = camera_.GenerateViewMatrix();
 	Mat4f projection = camera_.GenerateProjectionMatrix();
 	shader_.Bind();
 	SetLightParameters();
 
-	for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
+	const auto visibleChunks = chunkStatutManager_.GetVisibleChunks();
+	for (auto visibleChunk : visibleChunks)
 	{
-		if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
-		Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-
-#ifdef EASY_PROFILE_USE
-		EASY_BLOCK("ChunkRenderer::Render::Chunk");
-#endif
-
+		const Vec3f chunkPos = transform3dManager_.GetPosition(visibleChunk);
 		for (int x = 0; x < kChunkSize; x++)
 		{
 			for (int y = 0; y < kChunkSize; y++)
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-#ifdef EASY_PROFILE_USE
-					EASY_BLOCK("ChunkRenderer::Render::Air");
-#endif
-					int blockID = chunk.GetBlockId(Vec3i(x, y, z));
-					if (blockID != 0)
+					const int blockId = chunkContentManager_.GetBlockId(visibleChunk, Vec3i(x, y, z));
+					if (blockId != 0)
 					{
-						if (texture_[blockID - 1] == INVALID_TEXTURE_ID) continue;
-#ifdef EASY_PROFILE_USE
-						EASY_BLOCK("ChunkRenderer::Render::Cube");
-#endif
-						Mat4f model = Mat4f::Identity;	
-						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunk.GetChunkPos());
-				
+						if (texture_[blockId - 1] == INVALID_TEXTURE_ID) continue;
+						Mat4f model = Mat4f::Identity;
+						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
+
 						SetCameraParameters(model, view, projection, camera_.position);
-						
-						glBindTexture(GL_TEXTURE_2D, texture_[blockID - 1]); //bind texture id to texture slot
+
+						glBindTexture(GL_TEXTURE_2D, texture_[blockId - 1]);
+						//bind texture id to texture slot
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-						
+
 						cube_.Draw();
 					}
 				}
@@ -113,18 +112,19 @@ void ChunkRenderer::Render()
 	}
 }
 
-void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos) {
+void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos)
+{
 	shader_.SetMat4("model", model);
 	shader_.SetMat4("view", view);
 	shader_.SetMat4("projection", projection);
 	shader_.SetVec3("viewPos", pos);
-	
+
 	const auto inverseTransposeModel = model.Inverse().Transpose();
 	shader_.SetMat4("inverseTransposeModel", inverseTransposeModel);
 }
 
-	
-void ChunkRenderer::SetLightParameters() {
+void ChunkRenderer::SetLightParameters()
+{
 	shader_.SetVec3("light.color", directionalLight_.color_);
 	shader_.SetVec3("light.direction", directionalLight_.direction_.Normalized());
 	shader_.SetInt("objectMaterial.diffuse", 0);
@@ -135,7 +135,7 @@ void ChunkRenderer::SetLightParameters() {
 	shader_.SetFloat("diffuseStrength", directionalLight_.diffuseStrength_);
 	shader_.SetFloat("specularStrength", directionalLight_.specularStrength_);
 }
-	
+
 void ChunkRenderer::Destroy()
 {
 	cube_.Destroy();
@@ -144,5 +144,4 @@ void ChunkRenderer::Destroy()
 	gl::DestroyTexture(texture_[1]);
 	gl::DestroyTexture(texture_[2]);
 }
-
 }

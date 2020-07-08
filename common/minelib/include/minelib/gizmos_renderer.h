@@ -39,7 +39,7 @@ struct Gizmos
 };
 
 //-----------------------------------------------------------------------------
-// LogManagerInterface
+// GizmosManagerInterface
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
 class IGizmosRenderer
@@ -57,7 +57,7 @@ public:
 		const Color4& color = Color::red) = 0;
 
 	/**
-	 * \brief Generate a wire cube.
+	 * \brief Generate a line.
 	 */
 	virtual void DrawLine(
 		const Vec3f& startPos,
@@ -66,7 +66,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// NullLogManager
+// NullGizmoManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
 class NullGizmosRenderer final : public IGizmosRenderer
@@ -74,16 +74,20 @@ class NullGizmosRenderer final : public IGizmosRenderer
 	void DrawCube(
 		[[maybe_unused]] const Vec3f& pos,
 		[[maybe_unused]] const Vec3f& size = Vec3f::one,
-		[[maybe_unused]] const Color4& color = Color::red) override {}
+		[[maybe_unused]] const Color4& color = Color::red) override
+	{
+	}
 
 	void DrawLine(
 		[[maybe_unused]] const Vec3f& startPos,
 		[[maybe_unused]] const Vec3f& endPos,
-		[[maybe_unused]] const Color4& color = Color::red) override {}
+		[[maybe_unused]] const Color4& color = Color::red) override
+	{
+	}
 };
 
 //-----------------------------------------------------------------------------
-// LogManager
+// GizmosRenderer
 //-----------------------------------------------------------------------------
 /// \brief Draw gizmos
 class GizmosRenderer final : public RenderCommandInterface,
@@ -91,15 +95,18 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	GizmosRenderer(Camera3D& camera);
+	explicit GizmosRenderer(Camera3D& camera);
 
 	void Init() override;
 
 	void Update(seconds dt) override;
-	void FixedUpdate() override {}
+
+	void FixedUpdate() override
+	{
+	}
 
 	void Render() override;
-	
+
 	void Destroy() override;
 
 	void DrawCube(

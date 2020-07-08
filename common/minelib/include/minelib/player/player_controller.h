@@ -70,7 +70,7 @@ private:
 	MinecraftLikeEngine& engine_;
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
-	ChunksManager& chunksManager_;
+	ChunkContentManager& chunkContentManager_;
 	IAabbManager& aabbManager_;
 	IUiManager& uiManager_;
 	

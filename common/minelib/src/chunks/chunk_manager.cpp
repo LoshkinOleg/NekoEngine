@@ -1,45 +1,114 @@
 #include "minelib/chunks/chunk_manager.h"
+
 #include "minelib/chunks/chunk_renderer.h"
 
 namespace neko
 {
-ChunksManager::ChunksManager(EntityManager& entityManager)
-	: ComponentManager<Chunk, ComponentType::CHUNK>(entityManager)
+
+	void ChunkStatutManager::AddStatut(Entity entity, ChunkFlag chunkFlag)
+	{
+		components_[entity] |= ChunkMask(chunkFlag);
+	}
+
+	void ChunkStatutManager::RemoveStatut(Entity entity, ChunkFlag chunkFlag)
+	{
+		components_[entity] &= ~ChunkMask(chunkFlag);
+	}
+
+	bool ChunkStatutManager::HasStatut(Entity entity, ChunkFlag chunkFlag) const
+	{
+		if (entity >= components_.size())
+		{
+			std::ostringstream oss;
+			oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " << components_.size();
+			LogDebug(oss.str());
+			return false;
+		}
+		return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
+	}
+
+	std::vector<Index> ChunkStatutManager::GetAccessibleChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::ACCESSIBLE))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	std::vector<Index> ChunkStatutManager::GetVisibleChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::VISIBLE))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	std::vector<Index> ChunkStatutManager::GetLoadedChunks() const
+	{
+		std::vector<Index> accessibleChunks;
+		for (size_t index = 0; index < components_.size(); index++)
+		{
+			if (HasStatut(index, ChunkFlag::LOADED))
+			{
+				accessibleChunks.push_back(index);
+			}
+		}
+		return accessibleChunks;
+	}
+
+	Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
+{
+	Aabb3d aabb;
+	Vec3i chunkPos = components_[chunkIndex];
+	aabb.SetFromCenter(Vec3f(chunkPos * kChunkSize),
+	                   Vec3f(kChunkSize / 2, kChunkSize / 2, kChunkSize / 2));
+	return aabb;
+}
+
+void ChunkContentManager::SetBlock(const Entity chunkIndex, const uint8_t blockId, const Vec3i& pos)
+{
+	components_[chunkIndex][pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize] = blockId;
+}
+
+uint8_t ChunkContentManager::GetBlockId(const Entity chunkIndex, const Vec3i& pos) const
+{
+	return components_[chunkIndex][pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize];
+}
+
+ChunksViewer::ChunksViewer(
+	EntityManager& entityManager,
+	ChunkContentManager& chunkContentManager,
+	ChunkStatutManager& chunkStatutManager,
+	ChunkPosManager& chunkPosManager)
+	: entityManager_(entityManager),
+	  chunkContentManager_(chunkContentManager),
+	  chunkStatutManager_(chunkStatutManager),
+	  chunkPosManager_(chunkPosManager)
 {
 }
 
-ChunksViewer::ChunksViewer(EntityManager& entityManager, ChunksManager& chunksManager) :
-	entityManager_(entityManager),
-	chunksManager_(chunksManager)
-{
-}
-
-void ChunksViewer::DrawImGui(Entity selectedEntity)
+void ChunksViewer::DrawImGui(const Entity selectedEntity)
 {
 	if (selectedEntity == INVALID_ENTITY)
 		return;
-	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK)))
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 	{
 		if (ImGui::CollapsingHeader("Chunk"))
 		{
-			Chunk chunk = chunksManager_.GetComponent(selectedEntity);
-
-			for (int x = 0; x < kChunkSize; x++)
-			{
-				for (int y = 0; y < kChunkSize / 2; y++)
-				{
-					for (int z = 0; z < kChunkSize; z++)
-					{
-						int id = chunk.GetBlockId(Vec3i(x, y, z));
-						std::string text = "Pos " + std::to_string(x) + ", " + std::to_string(y) +	", " + std::to_string(z) + " Id : " + std::to_string(id);
-						if (ImGui::Selectable(text.c_str(), false))
-						{
-						}
-					}
-				}
-			}
+			Vec3i chunkPos = chunkPosManager_.GetComponent(selectedEntity);
+			ImGui::DragInt3("ChunkPos", &chunkPos[0]);
 		}
 	}
 }
-
 }
+

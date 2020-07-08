@@ -17,12 +17,15 @@ public:
 	void Init() override;
 
 	void Update(seconds dt) override;
+	
 	void FixedUpdate() override {}
 
 	void Destroy() override;
 
-	Transform3dManager transform3dManager_;
-	ChunksManager chunkManager_;
+	Transform3dManager transform3dManager;
+	ChunkContentManager chunkContentManager;
+	ChunkPosManager chunkPosManager;
+	ChunkStatutManager chunkStatutManager;
 protected:
 	ChunksSystem chunksSystem_;
 	AabbManager aabbManager_;

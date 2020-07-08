@@ -5,76 +5,137 @@
 #endif
 #include "engine/transform.h"
 
-#include "minelib/chunks/chunk_manager.h"
+#include <minelib/chunks/chunk_manager.h>
 #include "minelib/gizmos_renderer.h"
 #include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {
-	ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
-		: chunksManager_(engine.componentsManagerSystem_.chunkManager_),
-		transform3dManager_(engine.componentsManagerSystem_.transform3dManager_),
-		entityManager_(engine.entityManager_)
+ChunksSystem::ChunksSystem(MinecraftLikeEngine& engine)
+	: chunkStatutManager_(engine.componentsManagerSystem.chunkStatutManager),
+	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
+	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
+	  transform3dManager_(engine.componentsManagerSystem.transform3dManager),
+	  entityManager_(engine.entityManager)
 {
-	Chunk chunk;
-	chunksManager_.SetComponent(0, chunk);
 }
 
-void ChunksSystem::GenerateChunks()
+void ChunksSystem::GenerateChunkArray(const Entity index, const Vec3i& pos) const
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("GenerateChunks");
+	EASY_BLOCK("ChunksSystem::GenerateChunk");
 #endif
-	int worldSize = 3;
-	for (size_t i = 0; i < worldSize*worldSize; i++)
+	BlocksArray blocksArray;
+	const uint8_t randBlockId = RandomRange(1, 4);
+	for (unsigned x = 0; x < kChunkSize; x++)
 	{
-		int posZ= std::floor((i) / worldSize) - worldSize / 2;
-		int posX = i % worldSize - worldSize / 2;
-		transform3dManager_.SetPosition(i, Vec3f(posX*kChunkSize, 0, posZ*kChunkSize));
-		Chunk chunk = chunksManager_.GetComponent(i);
-		chunk.SetChunkPos(Vec3f(posX * kChunkSize, 0, posZ * kChunkSize));
-		for (int x = 0; x < kChunkSize; x++)
+		for (unsigned y = 0; y < 1; y++)
 		{
-			for (int y = 0; y < kChunkSize / 2; y++)
+			for (unsigned z = 0; z < kChunkSize; z++)
 			{
-				for (int z = 0; z < kChunkSize; z++)
+				//if (y < kChunkSize / 2 - 2)
+				//{
+				//	if (RandomRange(0.0f, 1.0f) < 0.75f)
+				//	{
+				//		chunk.SetBlock(2, Vec3i(x, y, z));
+				//	}
+				//	else
+				//	{
+				//		chunk.SetBlock(3, Vec3i(x, y, z));
+				//	}
+				//}
+				//else
 				{
-					if (y < kChunkSize / 2 - 1)
-					{
-						if (RandomRange(0.0f, 1.0f) < 0.75f)
-						{
-							chunk.SetBlock(2, Vec3i(x, y, z));
-						}
-						else
-						{
-							chunk.SetBlock(3, Vec3i(x, y, z));
-						}
-					}
-					else
-					{
-						chunk.SetBlock(1, Vec3i(x, y, z));
-					}
+					chunkContentManager_.SetBlock(index, randBlockId, Vec3i(x, y, z));
 				}
 			}
 		}
-		chunksManager_.SetComponent(i, chunk);
-		transform3dManager_.AddComponent(i);
-		chunksManager_.AddComponent(i);
 	}
 }
 
 void ChunksSystem::Init()
 {
-	GenerateChunks();
+}
+
+void ChunksSystem::UpdateVisibleChunks() const
+{
+	const unsigned int maxViewChunks = (kMaxViewDist_ / kChunkSize);
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::UpdateVisibleChunks");
+#endif
+	//Remove last visible chunks
+
+	const auto chunksNmb = entityManager_.GetEntitiesSize();
+	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
+	{
+		if (!entityManager_.HasComponent(chunkIndex,
+		                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+			continue;
+		chunkStatutManager_.RemoveStatut(chunkIndex, ChunkFlag::VISIBLE);
+	}
+
+	const Vec3f viewerPos = transform3dManager_.GetPosition(0);
+	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize), 0, std::floor(viewerPos.z / kChunkSize));
+	
+	for (int xOffset = -(kMaxViewDist_ / kChunkSize); xOffset <= (kMaxViewDist_ / kChunkSize);
+	     xOffset++)
+	{
+		for (int zOffset = -(kMaxViewDist_ / kChunkSize); zOffset <= (kMaxViewDist_ / kChunkSize);
+		     zOffset++)
+		{
+			Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, 0, zOffset);
+			bool found = false;
+			const auto chunksNmb = entityManager_.GetEntitiesSize();
+			for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
+			{
+				if (!entityManager_.HasComponent(chunkIndex,
+				                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+					continue;
+				Vec3i chunkPos = chunkPosManager_.GetComponent(chunkIndex);
+				if (chunkPos == viewedChunkPos)
+				{
+					chunkStatutManager_.AddStatut(chunkIndex, ChunkFlag::VISIBLE);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				const Entity newChunkIndex = entityManager_.CreateEntity();
+				chunkPosManager_.AddComponent(newChunkIndex);
+				chunkStatutManager_.AddComponent(newChunkIndex);
+				chunkContentManager_.AddComponent(newChunkIndex);
+				transform3dManager_.AddComponent(newChunkIndex);
+				GenerateChunkArray(newChunkIndex, viewedChunkPos);
+				chunkPosManager_.SetComponent(newChunkIndex, viewedChunkPos);
+				chunkStatutManager_.AddStatut(newChunkIndex, ChunkFlag::VISIBLE);
+				chunkStatutManager_.AddStatut(newChunkIndex, ChunkFlag::LOADED);
+				transform3dManager_.SetPosition(newChunkIndex, Vec3f(viewedChunkPos * kChunkSize));
+			}
+		}
+	}
 }
 
 void ChunksSystem::Update(seconds dt)
 {
-	for (Index i = 0; i < INIT_ENTITY_NMB; i++)
+	//Update Visible Chunks
+	UpdateVisibleChunks();
+
+	//Display Chunks Gizmos
+	const Vec3f cubeOffset = Vec3f((kChunkSize - 1) / 2.0f);
+	const auto loadedChunks = chunkStatutManager_.GetLoadedChunks();
+	for (auto loadedChunk : loadedChunks)
 	{
-		if (entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK)))
+		if (entityManager_.HasComponent(loadedChunk,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
-			GizmosLocator::get().DrawCube(transform3dManager_.GetPosition(i) + Vec3f((kChunkSize-1)/2.0f), Vec3f::one * kChunkSize, Color4(1, 0, 0, 0.5f));
+			GizmosLocator::get().DrawCube(
+				transform3dManager_.GetPosition(loadedChunk) + Vec3f::one * kChunkSize / 2 -
+				Vec3f::one / 2,
+				Vec3f::one * kChunkSize,
+				chunkStatutManager_.HasStatut(loadedChunk, ChunkFlag::VISIBLE)
+					? Color4(1.0f, 0.0f, 0.0f, 1.0f)
+					: Color4(0.0f, 0.0f, 1.0f, 1.0f));
 		}
 	}
 }
@@ -82,6 +143,4 @@ void ChunksSystem::Update(seconds dt)
 void ChunksSystem::Destroy()
 {
 }
-
-
 }

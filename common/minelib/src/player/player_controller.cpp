@@ -1,6 +1,7 @@
 #include "minelib/player/player_controller.h"
 
 #include "minelib/blocks/block.h"
+#include "minelib/chunks/chunk.h"
 
 namespace neko
 {
@@ -8,7 +9,7 @@ PlayerController::PlayerController(MinecraftLikeEngine& engine)
 	: engine_(engine),
 	  inputManager_(sdl::InputLocator::get()),
 	  gizmosRenderer_(GizmosLocator::get()),
-	  chunksManager_(engine.componentsManagerSystem_.chunkManager_),
+	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
 	  aabbManager_(AabbLocator::get()),
 	  uiManager_(UiManagerLocator::get())
 {
@@ -96,16 +97,12 @@ void PlayerController::Destroy()
 
 void PlayerController::PlaceCube(const size_t chunkId, const size_t blockId) const
 {
-	//TODO change when new chunk structure in place
-	Chunk chunk = chunksManager_.GetComponent(chunkId);
-	chunk.SetBlock(blockId, Vec3i::zero);
+	chunkContentManager_.SetBlock(chunkId, blockId, Vec3i::zero);
 }
 
 void PlayerController::DeleteCube(const size_t chunkId, const size_t blockId) const
 {
-	//TODO change when new chunk structure in place
-	Chunk chunk = chunksManager_.GetComponent(chunkId);
-	chunk.SetBlock(0, Vec3i::zero);
+	chunkContentManager_.SetBlock(chunkId, 0, Vec3i::zero);
 }
 
 void PlayerController::MovePlayer()

@@ -20,9 +20,9 @@ public:
 	void GenerateUiFrame() override;
 
 	//Scene system
-	EntityManager entityManager_;
-	EntityHierarchy entityHierarchy_;
-	ComponentsManagerSystem componentsManagerSystem_;
+	EntityManager entityManager;
+	EntityHierarchy entityHierarchy;
+	ComponentsManagerSystem componentsManagerSystem;
 private :
 	DrawSystem drawSystem_;
 
