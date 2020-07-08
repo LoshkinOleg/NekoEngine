@@ -1,6 +1,7 @@
 #pragma once
 #include "mathematics/vector.h"
 #include "mathematics/aabb.h"
+#include <graphics/camera.h>
 
 struct Plane //TODO change syntax to project standards
 {
@@ -26,7 +27,7 @@ class Frustum
 public:
 	Frustum();
 	//TODO add explicit constructor with camera
-	explicit Frustum(const neko::Vec3f & position, const neko::Vec3f & direction, float nearPlaneDistance, float farPlaneDistance, neko::degree_t fovx, neko::degree_t fovy,const neko::Vec3f & up, const neko::Vec3f & right);
+	explicit Frustum(const neko::MoveableCamera3D & camera);
 
 	bool Contains(const neko::Vec3f & point);
 	bool Contains(const neko::Aabb3d & aabb);

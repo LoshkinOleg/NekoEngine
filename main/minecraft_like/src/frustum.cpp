@@ -16,15 +16,24 @@ neko::Vec3f Plane::CalculateNormalFrom(neko::Vec3f pointA, neko::Vec3f pointB, n
 
 Frustum::Frustum(){}
 
-void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, float nearPlaneDistance, float farPlaneDistance, neko::degree_t fovx, neko::degree_t fovy, neko::Vec3f up, neko::Vec3f right) //TODO clean and optimize
+Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimize
 {
+	neko::Vec3f position = camera.position;
+	neko::Vec3f direction = -camera.reverseDirection;
+	neko::Vec3f right = camera.GetRight();
+	neko::Vec3f up = camera.GetUp();
+	float nearPlaneDistance = camera.nearPlane;
+	float farPlaneDistance = camera.farPlane;
+	neko::degree_t fovY = camera.fovY;
+	neko::degree_t fovX = camera.GetFovX();
+
 	Plane nearP = Plane(position + direction.Normalized() * nearPlaneDistance, direction.Normalized());
 	Plane farP = Plane(position + direction.Normalized() * farPlaneDistance, direction.Normalized());
 
-	float heightNear = neko::Cos(fovx / 2) * nearPlaneDistance;
-	float widthNear = neko::Cos(fovy / 2) * nearPlaneDistance;
-	float heightFar = neko::Cos(fovx / 2) * farPlaneDistance;
-	float widthFar = neko::Cos(fovy / 2) * farPlaneDistance;
+	float heightNear = neko::Cos(fovX / 2) * nearPlaneDistance;
+	float widthNear = neko::Cos(fovY / 2) * nearPlaneDistance;
+	float heightFar = neko::Cos(fovX / 2) * farPlaneDistance;
+	float widthFar = neko::Cos(fovY / 2) * farPlaneDistance;
 
 	neko::Vec3f ntr = nearP._point + up * heightNear/2 + right * widthNear/2; //Near Top Right
 	neko::Vec3f nbr = nearP._point - up * heightNear/2 + right * widthNear/2;
@@ -38,19 +47,19 @@ void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, floa
 	Plane topP = Plane(ntr, ftr, ftl);
 	Plane bottomP = Plane(nbr, nbl, fbl);
 
-	m_Planes[0] = nearP;
-	m_Planes[1] = farP;
-	m_Planes[2] = rightP;
-	m_Planes[3] = leftP;
-	m_Planes[4] = topP;
-	m_Planes[5] = rightP;
+	planes_[0] = nearP;
+	planes_[1] = farP;
+	planes_[2] = rightP;
+	planes_[3] = leftP;
+	planes_[4] = topP;
+	planes_[5] = rightP;
 }
 
-bool Frustum::Contains(neko::Vec3f point)
+bool Frustum::Contains(const neko::Vec3f & point)
 {
 	for (int i = 0; i < 6;i++)
 	{
-		if (m_Planes[i].Distance(point) < 0)
+		if (planes_[i].Distance(point) < 0)
 		{
 			return false;
 		}
@@ -58,7 +67,7 @@ bool Frustum::Contains(neko::Vec3f point)
 	return true;
 }
 
-bool Frustum::Contains(neko::Aabb3d aabb)
+bool Frustum::Contains(const neko::Aabb3d & aabb)
 {
 	/*
 	//TODO replace by SAT
@@ -83,11 +92,11 @@ bool Frustum::Contains(neko::Aabb3d aabb)
 	return true;
 }
 
-bool Frustum::Contains(neko::Vec3f center, float radius)
+bool Frustum::Contains(const neko::Vec3f & center, float radius)
 {
 	for(int i =0; i<6;i++)
 	{
-		if (m_Planes[i].Distance(center) < radius)
+		if (planes_[i].Distance(center) < radius)
 		{
 			return true;
 		}
