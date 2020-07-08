@@ -2,13 +2,12 @@
 
 Plane::Plane(){}
 
-float Plane::Distance(neko::Vec3f point)
+float Plane::Distance(neko::Vec3f point) const
 {
-	float distance = _normal.Dot(point - _point, _normal);
-	return distance;
+	return neko::Vec3f::Dot(point - _point, _normal);
 }
 
-neko::Vec3f Plane::GetNormal(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC)
+neko::Vec3f Plane::CalculateNormalFrom(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) const
 {
 	neko::Vec3f vecA = pointA - pointB;
 	neko::Vec3f vecB = pointC - pointB;
@@ -27,12 +26,12 @@ void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, floa
 	float heightFar = neko::Cos(fovx / 2) * farPlaneDistance;
 	float widthFar = neko::Cos(fovy / 2) * farPlaneDistance;
 
-	neko::Vec3f ntr = nearP._point + up * heightNear + right * widthNear; //Near Top Right
-	neko::Vec3f nbr = nearP._point - up * heightNear + right * widthNear;
-	neko::Vec3f nbl = nearP._point - up * heightNear - right * widthNear;
-	neko::Vec3f ftr = farP._point + up * heightFar + right * widthFar;
-	neko::Vec3f ftl = farP._point + up * heightFar - right * widthFar;
-	neko::Vec3f fbl = farP._point - up * heightFar - right * widthFar; //Far Bottom Left
+	neko::Vec3f ntr = nearP._point + up * heightNear/2 + right * widthNear/2; //Near Top Right
+	neko::Vec3f nbr = nearP._point - up * heightNear/2 + right * widthNear/2;
+	neko::Vec3f nbl = nearP._point - up * heightNear/2 - right * widthNear/2;
+	neko::Vec3f ftr = farP._point + up * heightFar/2 + right * widthFar/2;
+	neko::Vec3f ftl = farP._point + up * heightFar/2 - right * widthFar/2;
+	neko::Vec3f fbl = farP._point - up * heightFar/2- right * widthFar/2; //Far Bottom Left
 
 	Plane rightP = Plane(ntr, nbr, ftr);
 	Plane leftP = Plane(nbl, ftl, fbl);
@@ -47,7 +46,7 @@ void Frustum::ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, floa
 	m_Planes[5] = rightP;
 }
 
-bool Frustum::ContainsPoint(neko::Vec3f point)
+bool Frustum::Contains(neko::Vec3f point)
 {
 	for (int i = 0; i < 6;i++)
 	{
@@ -59,19 +58,39 @@ bool Frustum::ContainsPoint(neko::Vec3f point)
 	return true;
 }
 
-bool Frustum::ContainsCube(neko::Aabb3d aabb)
+bool Frustum::Contains(neko::Aabb3d aabb)
 {
+	/*
+	//TODO replace by SAT
+	if (ContainsPoint(aabb.lowerLeftBound))
+		return true;
+	if (ContainsPoint(aabb.upperRightBound))
+		return true;
+
+	if (ContainsPoint(aabb.lowerLeftBound + neko::Vec3f(1, 0, 0)))
+		return true;
+	if (ContainsPoint(aabb.lowerLeftBound + neko::Vec3f(0, 1, 0)))
+		return true;
+	if (ContainsPoint(aabb.lowerLeftBound + neko::Vec3f(0, 0, 1)))
+		return true;
+	if (ContainsPoint(aabb.upperRightBound - neko::Vec3f(1, 0, 0)))
+		return true;
+	if (ContainsPoint(aabb.upperRightBound - neko::Vec3f(0, 1, 0)))
+		return true;
+	if (ContainsPoint(aabb.upperRightBound - neko::Vec3f(0, 0, 1)))
+		return true;
+	*/
 	return true;
 }
 
-bool Frustum::ContainsSphere(neko::Vec3f center, float radius)
+bool Frustum::Contains(neko::Vec3f center, float radius)
 {
 	for(int i =0; i<6;i++)
 	{
-		if (abs(m_Planes[i].Distance(center))-radius < 0)
+		if (m_Planes[i].Distance(center) < radius)
 		{
-			return false;
+			return true;
 		}
 	}
-	return true;
+	return false;
 }

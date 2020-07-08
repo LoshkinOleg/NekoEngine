@@ -52,13 +52,13 @@ namespace neko
 		shader_.SetMat4("view", camera_.GenerateViewMatrix());
 		shader_.SetMat4("projection", camera_.GenerateProjectionMatrix());
 
-		frustum_.ConstructFrustum(camera_.position, -camera_.reverseDirection, camera_.nearPlane, camera_.farPlane, camera_.GetFovX(), camera_.fovY, camera_.GetUp(), camera_.GetRight()); //TODO do this on camera movement instead of here
+		frustum_.Frustum(camera_.position, -camera_.reverseDirection, camera_.nearPlane, camera_.farPlane, camera_.GetFovX(), camera_.fovY, camera_.GetUp(), camera_.GetRight()); //TODO do this on camera movement instead of here
 
 		for (size_t i = 0; i < INIT_ENTITY_NMB; i++)
 		{
 			if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 			Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-			if (frustum_.ContainsCube(chunk.GetAabb()))
+			if (frustum_.Contains(chunk.GetAabb()))
 			{
 #ifdef EASY_PROFILE_USE
 				EASY_BLOCK("ChunkRenderer::Render::Chunk");
@@ -69,7 +69,8 @@ namespace neko
 					{
 						for (int z = 0; z < kChunkSize; z++)
 						{
-							if (frustum_.ContainsCube(Aabb3d(Vec3f(x, y, z)+chunk.GetChunkPos(),Vec3f(0.5,0.5,0.5))))
+							if //(frustum_.ContainsCube(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(),Vec3f(0.1,0.1,0.1))))
+								(frustum_.Contains(Vec3f(x,y,z)+chunk.GetChunkPos(), 0.5))
 							{
 #ifdef EASY_PROFILE_USE
 								EASY_BLOCK("ChunkRenderer::Render::Air");

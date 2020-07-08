@@ -5,18 +5,18 @@
 struct Plane //TODO change syntax to project standards
 {
 	Plane();
-	Plane(neko::Vec3f point, neko::Vec3f normal)
+	explicit Plane(neko::Vec3f point, neko::Vec3f normal)
 	{
 		_point = point;
 		_normal = normal;
 	}
-	Plane(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) //TODO clean + optimize
+	explicit Plane(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) //TODO clean + optimize
 	{
 		_point = pointA;
-		_normal = GetNormal(pointA, pointB, pointC);
+		_normal = CalculateNormalFrom(pointA, pointB, pointC);
 	}
-	neko::Vec3f GetNormal(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC);
-	float Distance(neko::Vec3f point);
+	[[nodiscard]] neko::Vec3f CalculateNormalFrom(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) const;
+	[[nodiscard]] float Distance(neko::Vec3f point) const;
 	neko::Vec3f _normal; //Towards inside
 	neko::Vec3f _point;
 };
@@ -25,12 +25,13 @@ class Frustum
 {
 public:
 	Frustum();
-	void ConstructFrustum(neko::Vec3f position, neko::Vec3f direction, float nearPlaneDistance, float farPlaneDistance, neko::degree_t fovx, neko::degree_t fovy, neko::Vec3f up, neko::Vec3f right);
+	//TODO add explicit constructor with camera
+	explicit Frustum(const neko::Vec3f & position, const neko::Vec3f & direction, float nearPlaneDistance, float farPlaneDistance, neko::degree_t fovx, neko::degree_t fovy,const neko::Vec3f & up, const neko::Vec3f & right);
 
-	bool ContainsPoint(neko::Vec3f point);
-	bool ContainsCube(neko::Aabb3d aabb);
-	bool ContainsSphere(neko::Vec3f center, float radius);
+	bool Contains(const neko::Vec3f & point);
+	bool Contains(const neko::Aabb3d & aabb);
+	bool Contains(const neko::Vec3f & center, float radius);
 
 private:
-	Plane m_Planes[6];
+	std::array<Plane,6> planes_;
 };
