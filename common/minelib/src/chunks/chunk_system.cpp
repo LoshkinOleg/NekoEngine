@@ -174,10 +174,12 @@ std::array<std::array<int, 16>, 16> ChunksSystem::MapGeneration(Vec2<int> offset
 				nx *= frequency;
 				ny *= frequency;
 				result = ((float)1 / (float)(i + 1) * (noise.noise(nx,ny)));
+				std::cout << result << " ";
 			}
 
-			map[x][y] = (unsigned int)(result * chunkHeight);
+			map[x][y] = (unsigned int)(((result + 1)/2) * chunkHeight);
 		}
+		std::cout << std::endl;
 	}
 
 	return map;
