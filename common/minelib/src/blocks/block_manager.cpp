@@ -77,6 +77,7 @@ void BlockManager::InitRegister()
 	RegisterBlock(new Block("Grass", 3, 4, 2));
 	RegisterBlock(new Block("Iron Ore", 5));
 	RegisterBlock(new Block("Diamond Ore", 6));
+	RegisterBlock(new Block("Glass", 7));
 }
 
 void BlockManager::Render()

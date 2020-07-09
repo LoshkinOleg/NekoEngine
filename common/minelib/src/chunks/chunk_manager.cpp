@@ -4,69 +4,68 @@
 
 namespace neko
 {
+void ChunkStatutManager::AddStatut(Entity entity, ChunkFlag chunkFlag)
+{
+	components_[entity] |= ChunkMask(chunkFlag);
+}
 
-	void ChunkStatutManager::AddStatut(Entity entity, ChunkFlag chunkFlag)
+void ChunkStatutManager::RemoveStatut(Entity entity, ChunkFlag chunkFlag)
+{
+	components_[entity] &= ~ChunkMask(chunkFlag);
+}
+
+bool ChunkStatutManager::HasStatut(Entity entity, ChunkFlag chunkFlag) const
+{
+	if (entity >= components_.size())
 	{
-		components_[entity] |= ChunkMask(chunkFlag);
+		std::ostringstream oss;
+		oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " << components_.size();
+		LogDebug(oss.str());
+		return false;
 	}
+	return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
+}
 
-	void ChunkStatutManager::RemoveStatut(Entity entity, ChunkFlag chunkFlag)
+std::vector<Index> ChunkStatutManager::GetAccessibleChunks() const
+{
+	std::vector<Index> accessibleChunks;
+	for (size_t index = 0; index < components_.size(); index++)
 	{
-		components_[entity] &= ~ChunkMask(chunkFlag);
-	}
-
-	bool ChunkStatutManager::HasStatut(Entity entity, ChunkFlag chunkFlag) const
-	{
-		if (entity >= components_.size())
+		if (HasStatut(index, ChunkFlag::ACCESSIBLE))
 		{
-			std::ostringstream oss;
-			oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " << components_.size();
-			LogDebug(oss.str());
-			return false;
+			accessibleChunks.push_back(index);
 		}
-		return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
 	}
+	return accessibleChunks;
+}
 
-	std::vector<Index> ChunkStatutManager::GetAccessibleChunks() const
+std::vector<Index> ChunkStatutManager::GetVisibleChunks() const
+{
+	std::vector<Index> accessibleChunks;
+	for (size_t index = 0; index < components_.size(); index++)
 	{
-		std::vector<Index> accessibleChunks;
-		for (size_t index = 0; index < components_.size(); index++)
+		if (HasStatut(index, ChunkFlag::VISIBLE))
 		{
-			if (HasStatut(index, ChunkFlag::ACCESSIBLE))
-			{
-				accessibleChunks.push_back(index);
-			}
+			accessibleChunks.push_back(index);
 		}
-		return accessibleChunks;
 	}
+	return accessibleChunks;
+}
 
-	std::vector<Index> ChunkStatutManager::GetVisibleChunks() const
+std::vector<Index> ChunkStatutManager::GetLoadedChunks() const
+{
+	std::vector<Index> accessibleChunks;
+	for (size_t index = 0; index < components_.size(); index++)
 	{
-		std::vector<Index> accessibleChunks;
-		for (size_t index = 0; index < components_.size(); index++)
+		if (HasStatut(index, ChunkFlag::LOADED))
 		{
-			if (HasStatut(index, ChunkFlag::VISIBLE))
-			{
-				accessibleChunks.push_back(index);
-			}
+			accessibleChunks.push_back(index);
 		}
-		return accessibleChunks;
 	}
+	return accessibleChunks;
+}
 
-	std::vector<Index> ChunkStatutManager::GetLoadedChunks() const
-	{
-		std::vector<Index> accessibleChunks;
-		for (size_t index = 0; index < components_.size(); index++)
-		{
-			if (HasStatut(index, ChunkFlag::LOADED))
-			{
-				accessibleChunks.push_back(index);
-			}
-		}
-		return accessibleChunks;
-	}
-
-	Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
+Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
 {
 	Aabb3d aabb;
 	Vec3i chunkPos = components_[chunkIndex];

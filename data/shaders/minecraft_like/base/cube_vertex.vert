@@ -6,7 +6,6 @@ layout(location = 5) in uint blockId;
 layout(location = 6) in uint sideTexId;
 layout(location = 7) in uint topTexId;
 layout(location = 8) in uint bottomTexId;
-layout(location = 9) in uint aOccludedFace;
 
 layout (std140) uniform Matrices
 {
@@ -18,7 +17,6 @@ out vec3 Normal;
 out vec2 SideTexCoord;
 out vec2 TopTexCoord;
 out vec2 BottomTexCoord;
-flat out uint OccludedFace;
 
 uniform vec3 chunkPos;
 
@@ -48,7 +46,6 @@ vec3 idToPos(uint id)
 void main()
 {
 	Normal = aNormal;
-	OccludedFace = aOccludedFace;
 	
 	if (sideTexId != 0u)
 		SideTexCoord = (aTexCoords + vec2(sideTexId % tileNbr, sideTexId / tileNbr)) / tileNbr;

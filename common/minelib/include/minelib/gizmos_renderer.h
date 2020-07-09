@@ -16,24 +16,21 @@ const static size_t kGizmoReserveSize = 128;
 
 enum class GizmoShape : std::uint8_t
 {
-	NONE = 0u,
-	CUBE = 1u,
-	LINE = 1u << 1u,
+	CUBE = 0u,
+	LINE,
 };
 
 struct Gizmos
 {
-	Gizmos()
-	{
-	}
-
-	GizmoShape shape = GizmoShape::NONE;
+	Gizmos() {}
+	
+	Vec3f pos = Vec3f::zero;
 	Color4 color = Color::red;
-	Vec3f pos = Vec3f(0.0f, 0.0f, 0.0f);
+	GizmoShape shape = GizmoShape::CUBE;
 
 	union
 	{
-		Vec3f cubeSize = Vec3f(0.0f, 0.0f, 0.0f);
+		Vec3f cubeSize = Vec3f::zero;
 		Vec3f lineEndPos;
 	};
 };
@@ -44,9 +41,6 @@ struct Gizmos
 /// \brief Used for the service locator
 class IGizmosRenderer
 {
-protected:
-	~IGizmosRenderer() = default;
-
 public:
 	/**
 	 * \brief Generate a wire cube.
@@ -99,11 +93,8 @@ public:
 
 	void Init() override;
 
-	void Update(seconds dt) override;
-
-	void FixedUpdate() override
-	{
-	}
+	void Update(seconds dt) override {}
+	void FixedUpdate() override {}
 
 	void Render() override;
 

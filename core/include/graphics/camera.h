@@ -15,7 +15,7 @@ struct Camera
     Vec3f reverseDirection = Vec3f::back;
 	
 	float nearPlane = 0.1f;
-	float farPlane = 100.0f;
+	float farPlane = 10'000.0f;
 
 	void LookAt(const Vec3f& target)
 	{
