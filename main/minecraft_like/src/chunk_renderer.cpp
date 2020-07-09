@@ -31,6 +31,7 @@ namespace neko
 		texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
 		cube_.Init();
 
+		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 	}
 
@@ -58,7 +59,7 @@ namespace neko
 		{
 			if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 			Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-			if (frustum_.Contains(chunk.GetAabb()))
+			if(true) //(frustum_.Contains(chunk.GetAabb()))
 			{
 #ifdef EASY_PROFILE_USE
 				EASY_BLOCK("ChunkRenderer::Render::Chunk");
@@ -69,8 +70,8 @@ namespace neko
 					{
 						for (int z = 0; z < kChunkSize; z++)
 						{
-							if //(frustum_.ContainsCube(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(),Vec3f(0.1,0.1,0.1))))
-								(frustum_.Contains(Vec3f(x,y,z)+chunk.GetChunkPos(), 0.5))
+							if (frustum_.Contains(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(),Vec3f(0.1,0.1,0.1))))
+								//(frustum_.Contains(Vec3f(x,y,z)+chunk.GetChunkPos(), 0.5))
 							{
 #ifdef EASY_PROFILE_USE
 								EASY_BLOCK("ChunkRenderer::Render::Air");

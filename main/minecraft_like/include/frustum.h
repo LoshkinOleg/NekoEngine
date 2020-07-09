@@ -6,27 +6,26 @@
 struct Plane //TODO change syntax to project standards
 {
 	Plane();
-	explicit Plane(neko::Vec3f point, neko::Vec3f normal)
+	explicit Plane(const neko::Vec3f & point, const neko::Vec3f & normal)
 	{
-		_point = point;
-		_normal = normal;
+		point_ = point;
+		normal_ = normal;
 	}
-	explicit Plane(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) //TODO clean + optimize
+	explicit Plane(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC) //TODO clean + optimize
 	{
-		_point = pointA;
-		_normal = CalculateNormalFrom(pointA, pointB, pointC);
+		point_ = pointA;
+		normal_ = CalculateNormalFrom(pointA, pointB, pointC);
 	}
-	[[nodiscard]] neko::Vec3f CalculateNormalFrom(neko::Vec3f pointA, neko::Vec3f pointB, neko::Vec3f pointC) const;
-	[[nodiscard]] float Distance(neko::Vec3f point) const;
-	neko::Vec3f _normal; //Towards inside
-	neko::Vec3f _point;
+	[[nodiscard]] neko::Vec3f CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC) const;
+	[[nodiscard]] float Distance(const neko::Vec3f & point) const;
+	neko::Vec3f normal_; //Towards inside
+	neko::Vec3f point_;
 };
 
 class Frustum
 {
 public:
 	Frustum();
-	//TODO add explicit constructor with camera
 	explicit Frustum(const neko::MoveableCamera3D & camera);
 
 	bool Contains(const neko::Vec3f & point);
