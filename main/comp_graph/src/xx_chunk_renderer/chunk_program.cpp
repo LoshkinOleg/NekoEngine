@@ -15,8 +15,8 @@ void HelloChunkRenderer::Init()
 {
 	stbi_set_flip_vertically_on_load(true);
 	//camera_.position = Vec3f(kChunkSize * kRenderDist + kChunkSize / 2.0f, 1.0f, kChunkSize * kRenderDist + kChunkSize / 2.0f);
-	camera_.position = Vec3f::zero;
-	camera_.LookAt(Vec3f::up * 16);
+	camera_.position = Vec3f::up;
+	camera_.LookAt(Vec3f::one);
 		
 	blockManager_.Init();
 	gizmosRenderer_.Init();
@@ -25,7 +25,7 @@ void HelloChunkRenderer::Init()
 		chunk.Init();
 		for (uint16_t id = 0; id < kChunkBlockCount; ++id)
 		{
-			chunk.SetBlock(blockManager_.GetBlock(rand() % 7), id);
+			chunk.SetBlock(blockManager_.GetBlock(rand() % 6 + 1), id);
 		}
 	
 		for (uint8_t x = 0; x < kChunkNumDiam; ++x)
@@ -38,7 +38,7 @@ void HelloChunkRenderer::Init()
 		chunk.SetVbo();
 	}
 	
-	const auto& config = BasicEngine::GetInstance()->config;
+	auto& config = BasicEngine::GetInstance()->config;
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/base/cube_vertex.vert",
 		config.dataRootPath + "shaders/minecraft_like/base/cube.frag");
@@ -88,7 +88,7 @@ void HelloChunkRenderer::Render()
 	if (RaycastBlockInChunk(rayOut, camera_.position, direction))
 	{
 		glLineWidth(3.0f);
-		gizmosRenderer_.DrawCube(rayOut.hitPos, Vec3f(kCubeHalfSize) * 2, Color::white);
+		gizmosRenderer_.DrawCube(rayOut.hitPos, Vec3f(kCubeHalfSize + 0.01f) * 2, Color::black);
 		gizmosRenderer_.Render();
 	}
 }
@@ -114,24 +114,21 @@ void HelloChunkRenderer::OnEvent(const SDL_Event& event)
 
 bool HelloChunkRenderer::RaycastBlockInChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir) const
 {
-	for (auto& chunk : chunks_)
+	const Vec3f chunkPos = chunks_[0].GetChunkPos();
+	
+	float rayDist;
+	for (auto& blockId : chunks_[0].GetBlockIds())
 	{
-		const Vec3f chunkPos = chunk.GetChunkPos();
+		const Vec3f blockPos = Vec3f(BlockIdToPos(blockId)) + chunkPos * kChunkSize;
 		
-		float rayDist;
-		for (auto& blockId : chunk.GetBlockIds())
+		Aabb3d aabb;
+		aabb.SetFromCenter(blockPos, Vec3f(kCubeHalfSize));
+		if (aabb.IntersectRay(dir, origin, rayDist) && rayDist > 0 && rayDist < ray.hitDist)
 		{
-			const Vec3f blockPos = Vec3f(BlockIdToPos(blockId)) + chunkPos * kChunkSize;
-			
-			Aabb3d aabb;
-			aabb.SetFromCenter(blockPos, Vec3f(kCubeHalfSize));
-			if (aabb.IntersectRay(dir, origin, rayDist) && rayDist > 0 && rayDist < ray.hitDist)
-			{
-				ray.hitId = blockId;
-				ray.hitDist = rayDist;
-				ray.hitPos = blockPos;
-				ray.hitAabb = aabb;
-			}
+			ray.hitId = blockId;
+			ray.hitDist = rayDist;
+			ray.hitPos = blockPos;
+			ray.hitAabb = aabb;
 		}
 	}
 	return ray.hitId != INVALID_INDEX;
