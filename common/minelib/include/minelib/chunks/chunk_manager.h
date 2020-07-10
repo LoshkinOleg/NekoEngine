@@ -3,26 +3,29 @@
 #include <mathematics/aabb.h>
 
 #include "chunk.h"
+#include "chunk_renderer.h"
 
 namespace neko
 {
-using BlocksArray = std::array<uint8_t, kChunkSize * kChunkSize * kChunkSize>;
+using ChunkContentVector = std::vector<ChunkContent>;
 
-enum class BlockType : uint8_t
-{
-	DIRT = 1u << 0u,
-	DIAMOND = 1u << 1u,
-	STONE = 1u << 2u
-};
-
-class ChunkContentManager final : public neko::ComponentManager<BlocksArray, ComponentType::CHUNK_CONTENT>
+class ChunkContentManager final : public ComponentManager<ChunkContentVector, ComponentType::CHUNK_CONTENT>
 {
 	using ComponentManager::ComponentManager;
 public:
+	Index AddComponent(Entity chunkIndex) override;
+	
+	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, const Vec3i& pos);
+	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, BlockId blockId);
+	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
+	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
-	void SetBlock(const Entity chunkIndex, const uint8_t blockId, const Vec3i& pos);
+	size_t GetChunkSize(Entity chunkIndex) const;
+	ChunkContentVector GetBlocks(Entity chunkIndex) const;
+	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos) const;
+	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId) const;
 
-	uint8_t GetBlockId(const Entity chunkIndex, const Vec3i& pos) const;
+	void DestroyComponent(Entity chunkIndex) override;
 };
 
 using ChunkMask = std::uint8_t;
@@ -34,20 +37,16 @@ enum class ChunkFlag : std::uint8_t
 	LOADED = 1u << 3u
 };
 
-class ChunkStatutManager final : public neko::ComponentManager<ChunkMask, ComponentType::CHUNK_STATUT>
+class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentType::CHUNK_STATUS>
 {
 	using ComponentManager::ComponentManager;
 public:
-	void AddStatut(Entity entity, ChunkFlag chunkFlag);
-
-	void RemoveStatut(Entity entity, ChunkFlag chunkFlag);
-
-	bool HasStatut(Entity entity, ChunkFlag chunkFlag) const;
+	void AddStatus(Entity entity, ChunkFlag chunkFlag);
+	void RemoveStatus(Entity entity, ChunkFlag chunkFlag);
+	bool HasStatus(Entity entity, ChunkFlag chunkFlag) const;
 
 	std::vector<Index> GetAccessibleChunks() const;
-	
 	std::vector<Index> GetVisibleChunks() const;
-	
 	std::vector<Index> GetLoadedChunks() const;
 };
 
@@ -55,7 +54,24 @@ class ChunkPosManager final : public neko::ComponentManager<Vec3i, ComponentType
 {
 	using ComponentManager::ComponentManager;
 public:
-	Aabb3d GetAabb(const Entity chunkIndex) const;
+	Aabb3d GetAabb(Entity chunkIndex) const;
+};
+
+class ChunkRenderManager final : public ComponentManager<ChunkRender, ComponentType::CHUNK_RENDER>
+{
+	using ComponentManager::ComponentManager;
+public:
+	ChunkRenderManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager);
+
+	Index AddComponent(Entity chunkIndex) override;
+	
+	void Draw(Entity chunkIndex) const;
+	void SetChunkValues(Entity chunkIndex);
+
+	void DestroyComponent(Entity chunkIndex) override;
+	
+private:
+	ChunkContentManager& chunkContentManager_;
 };
 
 class ChunksViewer
@@ -64,15 +80,15 @@ public:
 	explicit ChunksViewer(
 		EntityManager& entityManager,
 		ChunkContentManager& chunkContentManager,
-		ChunkStatutManager& chunkStatutManager,
+		ChunkStatusManager& chunkStatusManager,
 		ChunkPosManager& chunkPosManager);
 
-	void DrawImGui(const Entity selectedEntity);
+	void DrawImGui(Entity selectedEntity) const;
 
 protected:
 	EntityManager& entityManager_;
 	ChunkContentManager& chunkContentManager_;
-	ChunkStatutManager& chunkStatutManager_;
+	ChunkStatusManager& chunkStatusManager_;
 	ChunkPosManager& chunkPosManager_;
 };
 }

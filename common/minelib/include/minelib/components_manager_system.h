@@ -23,12 +23,13 @@ public:
 	void Destroy() override;
 
 	Transform3dManager transform3dManager;
+	AabbManager aabbManager;
 	ChunkContentManager chunkContentManager;
 	ChunkPosManager chunkPosManager;
-	ChunkStatutManager chunkStatutManager;
+	ChunkRenderManager chunkRenderManager;
+	ChunkStatusManager chunkStatusManager;
 protected:
-	ChunksSystem chunksSystem_;
-	AabbManager aabbManager_;
+	ChunkSystem chunksSystem_;
 
 };
 }

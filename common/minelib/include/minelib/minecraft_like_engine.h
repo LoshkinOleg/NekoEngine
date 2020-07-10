@@ -1,15 +1,17 @@
 #pragma once
 #include <sdl_engine/sdl_engine.h>
 
+
+#include "blocks/block_manager.h"
 #include "components_manager_system.h"
 #include "draw_system.h"
 
 namespace neko
 {
-class MinecraftLikeEngine : public sdl::SdlEngine
+class MinecraftLikeEngine final : public sdl::SdlEngine
 {
 public:
-	MinecraftLikeEngine(Configuration* config = nullptr);
+	explicit MinecraftLikeEngine(Configuration* config = nullptr);
 
 	void Init() override;
 
@@ -23,6 +25,7 @@ public:
 	EntityManager entityManager;
 	EntityHierarchy entityHierarchy;
 	ComponentsManagerSystem componentsManagerSystem;
+	BlockManager blockManager;
 private :
 	DrawSystem drawSystem_;
 

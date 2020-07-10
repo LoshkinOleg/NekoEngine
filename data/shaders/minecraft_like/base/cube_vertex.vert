@@ -3,21 +3,15 @@ layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoords;
 layout(location = 2) in vec3 aNormal;
 layout(location = 5) in uint blockId;
-layout(location = 6) in uint sideTexId;
-layout(location = 7) in uint topTexId;
-layout(location = 8) in uint bottomTexId;
-
-layout (std140) uniform Matrices
-{
-    mat4 projection;
-    mat4 view;
-};
+layout(location = 6) in uint blockHash;
 
 out vec3 Normal;
 out vec2 SideTexCoord;
 out vec2 TopTexCoord;
 out vec2 BottomTexCoord;
 
+uniform mat4 projection;
+uniform mat4 view;
 uniform vec3 chunkPos;
 
 const uint chunkSize = 16u;
@@ -47,6 +41,9 @@ void main()
 {
 	Normal = aNormal;
 	
+	uint sideTexId = blockHash >> 16 & 0xFFu;
+	uint topTexId = blockHash >> 8 & 0xFFu;
+	uint bottomTexId = blockHash & 0xFFu;
 	if (sideTexId != 0u)
 		SideTexCoord = (aTexCoords + vec2(sideTexId % tileNbr, sideTexId / tileNbr)) / tileNbr;
 	else

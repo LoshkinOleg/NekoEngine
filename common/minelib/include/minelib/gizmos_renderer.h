@@ -89,7 +89,7 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera3D& camera);
+	explicit GizmosRenderer(Camera& camera);
 
 	void Init() override;
 
@@ -113,7 +113,7 @@ public:
 private:
 	std::mutex updateMutex_;
 
-	Camera3D& camera_;
+	Camera& camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};

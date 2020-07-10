@@ -41,14 +41,14 @@ void BlockManager::Init()
 	previewShader_.SetMat4("model", model);
 	for (auto& block : registeredBlocks_)
 	{
-		glGenTextures(1, &block->previewTexture);
-		glBindTexture(GL_TEXTURE_2D, block->previewTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, previewTexSize_, previewTexSize_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glGenTextures(1, &block.previewTexture);
+		glBindTexture(GL_TEXTURE_2D, block.previewTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, previewTexSize_, previewTexSize_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, block->previewTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, block.previewTexture, 0);
 		
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, previewRbo_);
 		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -60,9 +60,9 @@ void BlockManager::Init()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, atlas_);
-		previewShader_.SetUInt("sideTexId", block->sideTexId);
-		previewShader_.SetUInt("topTexId", block->topTexId);
-		previewShader_.SetUInt("bottomTexId", block->bottomTexId);
+		previewShader_.SetUInt("sideTexId", block.blockTex.sideTexId);
+		previewShader_.SetUInt("topTexId", block.blockTex.topTexId);
+		previewShader_.SetUInt("bottomTexId", block.blockTex.bottomTexId);
 		cube_.Draw();
 	}
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
@@ -71,31 +71,27 @@ void BlockManager::Init()
 
 void BlockManager::InitRegister()
 {
-	RegisterBlock(new Block("Air"));
-	RegisterBlock(new Block("Stone", 1));
-	RegisterBlock(new Block("Dirt", 2));
-	RegisterBlock(new Block("Grass", 3, 4, 2));
-	RegisterBlock(new Block("Iron Ore", 5));
-	RegisterBlock(new Block("Diamond Ore", 6));
-	RegisterBlock(new Block("Glass", 7));
+	RegisterBlock(Block("Air"));
+	RegisterBlock(Block("Stone", 1));
+	RegisterBlock(Block("Dirt", 2));
+	RegisterBlock(Block("Grass", 3, 4, 2));
+	RegisterBlock(Block("Iron Ore", 5));
+	RegisterBlock(Block("Diamond Ore", 6));
+	RegisterBlock(Block("Glass", 7));
 }
 
 void BlockManager::Render()
 {
 }
 
-void BlockManager::RegisterBlock(Block* block)
+void BlockManager::RegisterBlock(Block& block)
 {
 	registeredBlocks_.push_back(block);
-	block->id = registeredBlocks_.size() - 1;
+	block.id = registeredBlocks_.size() - 1;
 }
 
 void BlockManager::Destroy()
 {
-	for (auto& block : registeredBlocks_)
-	{
-		delete block;
-	}
 	cube_.Destroy();
 	previewShader_.Destroy();
 	registeredBlocks_.clear();

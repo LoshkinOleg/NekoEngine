@@ -8,13 +8,13 @@
 namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
-	: chunkRenderer_(engine, camera_, entityViewer_),
+	: chunkRenderer_(engine, camera_),
 	  gizmosRenderer_(camera_),
 	  entityViewer_(engine.entityManager, engine.entityHierarchy),
 	  transformViewer_(engine.entityManager, engine.componentsManagerSystem.transform3dManager),
 	  chunksViewer_(engine.entityManager,
 	                engine.componentsManagerSystem.chunkContentManager,
-	                engine.componentsManagerSystem.chunkStatutManager,
+	                engine.componentsManagerSystem.chunkStatusManager,
 	                engine.componentsManagerSystem.chunkPosManager),
 	  engine_(engine)
 {
@@ -41,12 +41,6 @@ void DrawSystem::DrawImGui()
 	ImGui::Begin("Inspector");
 	transformViewer_.DrawImGui();
 	chunksViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
-	ImGui::End();
-	ImGui::Begin("Player");
-	Vec3f blockPos = viewBlock_.blockPos;
-	int blockId = viewBlock_.blockType;
-	ImGui::InputFloat3("BlockPos", &blockPos[0]);
-	ImGui::DragInt("BlockId", &blockId);
 	ImGui::End();
 
 	chunkRenderer_.DrawImGui();

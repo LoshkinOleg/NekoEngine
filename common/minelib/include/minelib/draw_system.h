@@ -37,6 +37,5 @@ namespace neko
     	//test
         Vec3f savedCameraPos_;
         Vec3f savedCameraDir_;
-        AabbBlock viewBlock_;
     };
 }

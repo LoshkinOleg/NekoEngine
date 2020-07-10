@@ -1,11 +1,13 @@
 #pragma once
-#include "chunk.h"
 #include "comp_graph/sample_program.h"
 
 #include "graphics/camera.h"
 #include "minelib/aabb_manager.h"
 #include "minelib/blocks/block_manager.h"
+#include "minelib/chunks/chunk.h"
+#include "minelib/chunks/chunk_manager.h"
 #include "minelib/gizmos_renderer.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {
@@ -30,20 +32,23 @@ public:
     void DrawImGui() override;
 
     void OnEvent(const SDL_Event& event) override;
-	
-	bool RaycastBlockInChunk(Ray& ray,
-	                         const Vec3f& origin,
-	                         const Vec3f& dir) const;
 
 private:
 	MoveableCamera3D camera_;
-	BlockManager blockManager_;
-	GizmosRenderer gizmosRenderer_;
 	
-	unsigned uboMatrices_ = 0;
-	unsigned vao_ = 0;
-	TextureId atlasTex_ = 0;
-    gl::Shader shader_;
-	std::array<TestChunk, kChunkNum> chunks_;
+	MinecraftLikeEngine engine_;
+	GizmosRenderer gizmosRenderer_;
+	EntityManager& entityManager_;
+	BlockManager& blockManager_;
+	AabbManager& aabbManager_;
+
+	ChunkContentManager& chunkContentManager_;
+	ChunkRenderManager& chunkRenderManager_;
+	ChunkPosManager& chunkPosManager_;
+	ChunkStatusManager& chunkStatusManager_;
+
+	ChunkRenderer chunkRenderer_;
+	
+	std::array<Entity, kChunkNum> chunks_{};
 };
 }

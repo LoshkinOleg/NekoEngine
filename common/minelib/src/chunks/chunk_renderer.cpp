@@ -8,37 +8,28 @@
 #include "gl/texture.h"
 #include "minelib/minecraft_like_engine.h"
 
-#include <minelib/chunks/chunk_manager.h>
-
 namespace neko
 {
-ChunkRenderer::ChunkRenderer(
-	MinecraftLikeEngine& engine,
-	MoveableCamera3D& camera,
-	EntityViewer& entityViewer)
+ChunkRenderer::ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera)
 	: camera_(camera),
 	  engine_(engine),
-	  entityViewer_(entityViewer),
-	  entityManager_(engine.entityManager),
+	  chunkStatusManager_(engine.componentsManagerSystem.chunkStatusManager),
 	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
-	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
-	  chunkStatutManager_(engine.componentsManagerSystem.chunkStatutManager),
-	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
+	  chunkRenderManager_(engine.componentsManagerSystem.chunkRenderManager),
+	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager)
 {
 }
 
 void ChunkRenderer::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
-	shader_.LoadFromFile(
+	/*shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/light.vert",
-		config.dataRootPath + "shaders/minecraft_like/light.frag");
-	texture_[0] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/dirt.jpg");
-	texture_[1] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/stone.jpg");
-	texture_[2] = gl::stbCreateTexture(config.dataRootPath + "sprites/blocks/diamond_ore.jpg");
-	cube_.Init();
-
-	glEnable(GL_DEPTH_TEST);
+		config.dataRootPath + "shaders/minecraft_like/light.frag");*/
+	shader_.LoadFromFile(
+		config.dataRootPath + "shaders/minecraft_like/base/cube_vertex.vert",
+		config.dataRootPath + "shaders/minecraft_like/base/cube.frag");
+	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
 }
 
 void ChunkRenderer::DrawImGui()
@@ -61,8 +52,6 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::Update(seconds dt)
 {
-	std::lock_guard<std::mutex> lock(updateMutex_);
-	transform3dManager_.SetPosition(0, camera_.position);
 	GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
@@ -71,16 +60,14 @@ void ChunkRenderer::Render()
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkRenderer::Render");
 #endif
-	if (shader_.GetProgram() == 0) return;
-
-	std::lock_guard<std::mutex> lock(updateMutex_);
+	/*if (shader_.GetProgram() == 0) return;
 
 	Mat4f view = camera_.GenerateViewMatrix();
 	Mat4f projection = camera_.GenerateProjectionMatrix();
 	shader_.Bind();
 	SetLightParameters();
 
-	const auto visibleChunks = chunkStatutManager_.GetVisibleChunks();
+	const auto visibleChunks = chunkStatusManager_.GetVisibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
 		const Vec3f chunkPos = transform3dManager_.GetPosition(visibleChunk);
@@ -109,21 +96,27 @@ void ChunkRenderer::Render()
 				}
 			}
 		}
+	}*/
+	
+	shader_.Bind();
+	SetCameraParameters(camera_);
+	glBindTexture(GL_TEXTURE_2D, atlasTex_);
+	const auto visibleChunks = chunkStatusManager_.GetVisibleChunks();
+	for (auto& chunk : visibleChunks)
+	{
+		shader_.SetVec3("chunkPos", Vec3f(chunkPosManager_.GetComponent(chunk)));
+		chunkRenderManager_.Draw(chunk);
 	}
 }
 
-void ChunkRenderer::SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos)
+void ChunkRenderer::SetCameraParameters(const Camera& camera) const
 {
-	shader_.SetMat4("model", model);
-	shader_.SetMat4("view", view);
-	shader_.SetMat4("projection", projection);
-	shader_.SetVec3("viewPos", pos);
-
-	const auto inverseTransposeModel = model.Inverse().Transpose();
-	shader_.SetMat4("inverseTransposeModel", inverseTransposeModel);
+	shader_.SetMat4("view", camera.GenerateViewMatrix());
+	shader_.SetMat4("projection", camera.GenerateProjectionMatrix());
+	shader_.SetVec3("viewPos", camera.position);
 }
 
-void ChunkRenderer::SetLightParameters()
+void ChunkRenderer::SetLightParameters() const
 {
 	shader_.SetVec3("light.color", directionalLight_.color_);
 	shader_.SetVec3("light.direction", directionalLight_.direction_.Normalized());
@@ -138,10 +131,7 @@ void ChunkRenderer::SetLightParameters()
 
 void ChunkRenderer::Destroy()
 {
-	cube_.Destroy();
 	shader_.Destroy();
-	gl::DestroyTexture(texture_[0]);
-	gl::DestroyTexture(texture_[1]);
-	gl::DestroyTexture(texture_[2]);
+	gl::DestroyTexture(atlasTex_);
 }
 }

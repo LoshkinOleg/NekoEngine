@@ -10,24 +10,17 @@
 
 namespace neko
 {
-class ChunkStatutManager;
+class ChunkStatusManager;
 class ChunkContentManager;
 class ChunkPosManager;
 class Transform3dManager;
 class EntityManager;
 class MinecraftLikeEngine;
 
-struct AabbBlock
-{
-	AabbBlock() {}
-	Vec3f blockPos = Vec3f(0.0f);
-	uint8_t blockType = 0;
-};
-
 struct Ray
 {
 	Index hitId = INVALID_INDEX;
-	Vec3f hitPos;
+	Entity hitChunk = INVALID_ENTITY;
 	Aabb3d hitAabb;
 	float hitDist = std::numeric_limits<float>::max();
 };
@@ -41,6 +34,7 @@ class IAabbManager
 public:
 	virtual ~IAabbManager() = default;
 	virtual bool RaycastChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual std::vector<Index> RaycastChunks(const Vec3f& origin, const Vec3f& dir) const = 0;
 	virtual bool RaycastBlock(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
 	virtual bool RaycastBlockInChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir, Index chunkIndex) const = 0;
 
@@ -57,31 +51,28 @@ class NullAabbManager final : public IAabbManager
 	bool RaycastChunk([[maybe_unused]] Ray& ray,
 	                  [[maybe_unused]] const Vec3f& origin,
 	                  [[maybe_unused]] const Vec3f& dir) const override
-	{
-		return false;
-	}
+	{ return false; }
+	
+	std::vector<Index> RaycastChunks(
+		[[maybe_unused]] const Vec3f& origin,
+		[[maybe_unused]] const Vec3f& dir) const override
+	{ return {}; }
 
 	bool RaycastBlock([[maybe_unused]] Ray& ray,
 	                  [[maybe_unused]] const Vec3f& origin,
 	                  [[maybe_unused]] const Vec3f& dir) const override
-	{
-		return false;
-	}
+	{ return false; }
 
 	bool RaycastBlockInChunk([[maybe_unused]] Ray& ray,
 	                         [[maybe_unused]] const Vec3f& origin,
 	                         [[maybe_unused]] const Vec3f& dir,
 	                         [[maybe_unused]] Index chunkIndex) const override
-	{
-		return false;
-	}
+	{ return false; }
 };
 
 //-----------------------------------------------------------------------------
 // AabbManager
 //-----------------------------------------------------------------------------
-/// \brief Draw gizmos
-
 class AabbManager final : public IAabbManager
 {
 public:
@@ -90,6 +81,9 @@ public:
 	bool RaycastChunk(Ray& ray,
 	                  const Vec3f& origin,
 	                  const Vec3f& dir) const override;
+	std::vector<Index> RaycastChunks(
+		const Vec3f& origin,
+		const Vec3f& dir) const override;
 	bool RaycastBlock(Ray& ray,
 	                  const Vec3f& origin,
 	                  const Vec3f& dir) const override;
@@ -103,7 +97,7 @@ private:
 	EntityManager& entityManager_;
 	ChunkPosManager& chunkPosManager_;
 	ChunkContentManager& chunkContentManager_;
-	ChunkStatutManager& chunkStatutManager_;
+	ChunkStatusManager& chunkStatusManager_;
 	Transform3dManager& transform3dManager_;
 };
 

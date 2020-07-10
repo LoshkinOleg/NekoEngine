@@ -8,10 +8,10 @@ class EntityManager;
 class Transform3dManager;
 class MinecraftLikeEngine;
 
-class ChunksSystem final : public SystemInterface
+class ChunkSystem final : public SystemInterface
 {
 public:
-	explicit ChunksSystem(MinecraftLikeEngine& engine);
+	explicit ChunkSystem(MinecraftLikeEngine& engine);
 
 	/**
 	 * \brief Generate a chunk depend on it position
@@ -35,9 +35,11 @@ public:
 
 private:
 	const float kMaxViewDist_ = 25;
+	BlockManager& blockManager_;
 	ChunkContentManager& chunkContentManager_;
-	ChunkStatutManager& chunkStatutManager_;
+	ChunkStatusManager& chunkStatusManager_;
 	ChunkPosManager& chunkPosManager_;
+	ChunkRenderManager& chunkRenderManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 };

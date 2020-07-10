@@ -1,38 +1,63 @@
 #pragma once
+#include "mathematics/aabb.h"
+#include "minelib/blocks/block.h"
 
 namespace neko
 {
-const static uint16_t kChunkSize = 4;
+const static uint16_t kChunkSize = 16;
+const static uint16_t kChunkBlockCount = kChunkSize * kChunkSize * kChunkSize;
+using BlockId = uint16_t;
 
-enum class ChunkFlags : uint8_t
+struct ChunkContent
 {
-	LOADED = 1u << 0u,
-	EMPTY = 1u << 1u,
-	PERSISTENT = 1u << 2u
+	explicit  ChunkContent(const BlockId bId = 0, const TextureHash tId = 0)
+		: blockId(bId), texId(tId) {}
+
+	BlockId blockId = 0;
+	TextureHash texId = 0;
 };
 
 class Chunk
 {
 public:
 	Chunk() = default;
+
+	void Init();
+	void Render() const;
+	void Destroy();
+
+	unsigned GetVao() const { return cube_.VAO; }
+	void SetVbo();
 	
-	void SetBlock(uint8_t blockId, const Vec3i& pos);
-	
-	uint8_t GetBlockId(const Vec3i& pos) const;
+	void SetBlock(std::shared_ptr<Block> block, const Vec3i& pos);
+	void SetBlock(std::shared_ptr<Block> block, BlockId blockId);
+	void RemoveBlock(const Vec3i& pos);
+	void RemoveBlock(BlockId blockId);
 	
 	Vec3f GetChunkPos() const { return chunkPos_; }
 	void SetChunkPos(const Vec3f& chunkPos);
+
+	size_t GetBlockAmount() const { return blocks_.size(); }
+	std::vector<ChunkContent> GetBlockIds() const { return blocks_; }
 	
 	Aabb3d GetAabb() const;
+	
 private:
 	Vec3f chunkPos_;
 
-	uint8_t chunkFlags_ = 0;
-	std::array<uint8_t, kChunkSize * kChunkSize * kChunkSize> blocksIds_ = { 0 };
+	std::vector<ChunkContent> blocks_{};
+	
+	unsigned instanceVbo_ = 0;
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f(kCubeHalfSize * 2.0f)};
 };
 
-static uint16_t PosToBlockId(const Vec3i& pos)
+static BlockId PosToBlockId(const Vec3i& pos)
 {
 	return pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize;
+}
+
+static Vec3i BlockIdToPos(const BlockId pos)
+{
+	return {pos % kChunkSize, pos / kChunkSize % kChunkSize, pos / (kChunkSize * kChunkSize)};
 }
 }

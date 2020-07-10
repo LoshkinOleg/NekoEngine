@@ -7,7 +7,6 @@ namespace neko
 {
 MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	: SdlEngine(config),
-	  entityManager(),
 	  entityHierarchy(entityManager),
 	  componentsManagerSystem(*this),
 	  drawSystem_(*this)
@@ -16,6 +15,7 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	RegisterOnEvent(drawSystem_);
 	RegisterOnDrawUi(drawSystem_);
 	RegisterSystem(componentsManagerSystem);
+	RegisterSystem(blockManager);
 #ifdef EASY_PROFILE_USE
 	EASY_PROFILER_ENABLE;
 #endif
@@ -39,6 +39,8 @@ void MinecraftLikeEngine::Destroy()
 	profiler::dumpBlocksToFile("minecraft_profile.prof");
 #endif
 	drawSystem_.Destroy();
+	componentsManagerSystem.Destroy();
+	blockManager.Destroy();
 	SdlEngine::Destroy();
 }
 

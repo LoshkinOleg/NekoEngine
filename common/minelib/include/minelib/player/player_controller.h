@@ -68,9 +68,11 @@ private:
 	Player player_;
 
 	MinecraftLikeEngine& engine_;
+	BlockManager& blockManager_;
+	ChunkContentManager& chunkContentManager_;
+	
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
-	ChunkContentManager& chunkContentManager_;
 	IAabbManager& aabbManager_;
 	IUiManager& uiManager_;
 	
