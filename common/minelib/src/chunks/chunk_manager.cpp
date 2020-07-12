@@ -239,10 +239,30 @@ void ChunksViewer::DrawImGui(const Entity selectedEntity) const
 		return;
 	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 	{
-		if (ImGui::CollapsingHeader("Chunk"))
+		if (ImGui::CollapsingHeader("ChunkPos"))
 		{
 			Vec3i chunkPos = chunkPosManager_.GetComponent(selectedEntity);
 			ImGui::DragInt3("ChunkPos", &chunkPos[0]);
+		}
+	}
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_STATUS)))
+	{
+		if (ImGui::CollapsingHeader("ChunkStatus"))
+		{
+			int chunkStatus = chunkStatusManager_.GetComponent(selectedEntity);
+			ImGui::DragInt("ChunkStatus", &chunkStatus);
+		}
+	}
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_RENDER)))
+	{
+		if (ImGui::CollapsingHeader("ChunkRender"))
+		{
+		}
+	}
+	if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_CONTENT)))
+	{
+		if (ImGui::CollapsingHeader("ChunkContent"))
+		{
 		}
 	}
 }
