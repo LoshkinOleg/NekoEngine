@@ -52,10 +52,11 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
 	{
-		/*viewBlock_ = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
+		Ray rayOut;
+		AabbLocator::get().RaycastBlock(rayOut, camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		GizmosLocator::get().DrawCube(viewBlock_.blockPos, Vec3f::one, Color4(1, 1, 1, 1));*/
+		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
 	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);
 }
