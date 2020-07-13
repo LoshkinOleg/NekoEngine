@@ -9,6 +9,16 @@ namespace neko
 {
 using ChunkContentVector = std::vector<ChunkContent>;
 
+static BlockId PosToBlockId(const Vec3i& pos)
+{
+	return pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize;
+}
+
+static Vec3i BlockIdToPos(const BlockId pos)
+{
+	return {pos % kChunkSize, pos / kChunkSize % kChunkSize, pos / (kChunkSize * kChunkSize)};
+}
+
 class ChunkContentManager final : public ComponentManager<ChunkContentVector, ComponentType::CHUNK_CONTENT>
 {
 	using ComponentManager::ComponentManager;
@@ -41,6 +51,10 @@ class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentTyp
 {
 	using ComponentManager::ComponentManager;
 public:
+	ChunkStatusManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager);
+	
+	Index AddComponent(Entity chunkIndex) override;
+
 	void AddStatus(Entity entity, ChunkFlag chunkFlag);
 	void RemoveStatus(Entity entity, ChunkFlag chunkFlag);
 	bool HasStatus(Entity entity, ChunkFlag chunkFlag) const;
@@ -48,9 +62,12 @@ public:
 	std::vector<Index> GetAccessibleChunks() const;
 	std::vector<Index> GetVisibleChunks() const;
 	std::vector<Index> GetLoadedChunks() const;
+	
+private:
+	ChunkContentManager& chunkContentManager_;
 };
 
-class ChunkPosManager final : public neko::ComponentManager<Vec3i, ComponentType::CHUNK_POS>
+class ChunkPosManager final : public ComponentManager<Vec3i, ComponentType::CHUNK_POS>
 {
 	using ComponentManager::ComponentManager;
 public:
@@ -74,21 +91,30 @@ private:
 	ChunkContentManager& chunkContentManager_;
 };
 
-class ChunksViewer
+class ChunkManager
 {
 public:
-	explicit ChunksViewer(
-		EntityManager& entityManager,
-		ChunkContentManager& chunkContentManager,
-		ChunkStatusManager& chunkStatusManager,
-		ChunkPosManager& chunkPosManager);
+	explicit ChunkManager(EntityManager& entityManager);
+	
+	void AddComponent(Entity chunkIndex);
+	void DestroyComponent(Entity chunkIndex);
+
+	ChunkContentManager chunkContentManager;
+	ChunkStatusManager chunkStatusManager;
+	ChunkPosManager chunkPosManager;
+	ChunkRenderManager chunkRenderManager;
+};
+
+class ChunkViewer
+{
+public:
+	explicit ChunkViewer(EntityManager& entityManager,
+		ChunkManager& chunkManager);
 
 	void DrawImGui(Entity selectedEntity) const;
 
 protected:
 	EntityManager& entityManager_;
-	ChunkContentManager& chunkContentManager_;
-	ChunkStatusManager& chunkStatusManager_;
-	ChunkPosManager& chunkPosManager_;
+	ChunkManager& chunkManager_;
 };
 }

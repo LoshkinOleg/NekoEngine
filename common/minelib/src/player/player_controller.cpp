@@ -8,7 +8,7 @@ namespace neko
 PlayerController::PlayerController(MinecraftLikeEngine& engine)
 	: engine_(engine),
 	  blockManager_(engine.blockManager),
-	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
+	  chunkManager_(engine.componentsManagerSystem.chunkManager),
 	  inputManager_(sdl::InputLocator::get()),
 	  gizmosRenderer_(GizmosLocator::get()),
 	  aabbManager_(AabbLocator::get()),
@@ -98,12 +98,12 @@ void PlayerController::Destroy()
 
 void PlayerController::PlaceCube(const size_t chunkId, const size_t blockId) const
 {
-	chunkContentManager_.SetBlock(chunkId, blockManager_.GetBlock(0), blockId);
+	chunkManager_.chunkContentManager.SetBlock(chunkId, blockManager_.GetBlock(0), blockId);
 }
 
 void PlayerController::DeleteCube(const size_t chunkId, const size_t blockId) const
 {
-	chunkContentManager_.RemoveBlock(chunkId, blockId);
+	chunkManager_.chunkContentManager.RemoveBlock(chunkId, blockId);
 }
 
 void PlayerController::MovePlayer()

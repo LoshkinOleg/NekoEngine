@@ -4,16 +4,15 @@
 #include "graphics/camera.h"
 #include "minelib/aabb_manager.h"
 #include "minelib/blocks/block_manager.h"
-#include "minelib/chunks/chunk.h"
 #include "minelib/chunks/chunk_manager.h"
 #include "minelib/gizmos_renderer.h"
 #include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {
-const static uint8_t kRenderDist = 8;
-const static uint8_t kChunkNumDiam = kRenderDist * 2 + 1;
-const static uint16_t kChunkNum = kChunkNumDiam * kChunkNumDiam;
+const static uint16_t kRenderDist = 6;
+const static uint16_t kChunkNumDiam = kRenderDist * 2 + 1;
+const static uint16_t kChunkNum = kChunkNumDiam * kChunkNumDiam * kChunkNumDiam;
 
 class HelloChunkRenderer final : public SampleProgram
 {
@@ -41,14 +40,17 @@ private:
 	EntityManager& entityManager_;
 	BlockManager& blockManager_;
 	AabbManager& aabbManager_;
+	Transform3dManager& transform3dManager_;
 
-	ChunkContentManager& chunkContentManager_;
-	ChunkRenderManager& chunkRenderManager_;
-	ChunkPosManager& chunkPosManager_;
-	ChunkStatusManager& chunkStatusManager_;
+	ChunkManager& chunkManager_;
 
 	ChunkRenderer chunkRenderer_;
-	
+
+	const uint8_t maxReach_ = 8u;
 	std::array<Entity, kChunkNum> chunks_{};
+	
+	TextureId skyboxTexture_ = 0;
+	gl::Shader skyboxShader_;
+	gl::RenderCubeMap skyboxCube_{Vec3f::zero};
 };
 }

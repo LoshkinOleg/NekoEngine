@@ -13,92 +13,84 @@ namespace neko
 {
 ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 	: blockManager_(engine.blockManager),
-	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
-	  chunkStatusManager_(engine.componentsManagerSystem.chunkStatusManager),
-	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager),
-	  chunkRenderManager_(engine.componentsManagerSystem.chunkRenderManager),
+	  chunkManager_(engine.componentsManagerSystem.chunkManager),
 	  transform3dManager_(engine.componentsManagerSystem.transform3dManager),
 	  entityManager_(engine.entityManager)
 {
 }
 
-void ChunkSystem::GenerateChunkArray(const Entity index, const Vec3i& pos) const
+void ChunkSystem::GenerateChunkArray(const Vec3i& pos) const
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkSystem::GenerateChunk");
 #endif
-	ChunkContentVector blocksArray;
+	const Entity newChunkIndex = entityManager_.CreateEntity();
+	chunkManager_.AddComponent(newChunkIndex);
+	transform3dManager_.AddComponent(newChunkIndex);
+				
 	const auto randBlock = blockManager_.GetRandomBlock();
+	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
 	for (uint16_t x = 0; x < kChunkSize; x++)
 	{
-		for (uint16_t y = 0; y < 1; y++)
+		for (uint16_t z = 0; z < kChunkSize; z++)
 		{
-			for (uint16_t z = 0; z < kChunkSize; z++)
-			{
-				chunkContentManager_.SetBlock(index, randBlock, PosToBlockId(Vec3i(x, y, z)));
-			}
+			chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(x, 0, z)));
 		}
 	}
+	
+	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
+	chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
+	transform3dManager_.SetPosition(newChunkIndex, Vec3f(pos * kChunkSize) + Vec3f((kChunkSize - 1) / 2.0f));
 }
 
 void ChunkSystem::Init()
 {
+	scheduledChunks_.reserve(16);
+	RendererLocator::get().Render(this);
 }
 
-void ChunkSystem::UpdateVisibleChunks() const
+void ChunkSystem::UpdateVisibleChunks()
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("Chunks_System::UpdateVisibleChunks");
 #endif
 	//Remove last visible chunks
 
-	const auto chunksNmb = entityManager_.GetEntitiesSize();
-	for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
-	{
-		if (!entityManager_.HasComponent(chunkIndex,
-		                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
-			continue;
-		chunkStatusManager_.RemoveStatus(chunkIndex, ChunkFlag::VISIBLE);
-	}
-
-	const Vec3f viewerPos = transform3dManager_.GetPosition(0);
+	const auto chunks = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
+	const Vec3f viewerPos = GizmosLocator::get().GetCameraPos();
 	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize), 0, std::floor(viewerPos.z / kChunkSize));
-	
-	for (int xOffset = -(kMaxViewDist_ / kChunkSize); xOffset <= (kMaxViewDist_ / kChunkSize);
-	     xOffset++)
+
+	const int drawSize = kMaxViewDist_ / kChunkSize;
+	for (int xOffset = -drawSize; xOffset <= drawSize; xOffset++)
 	{
-		for (int zOffset = -(kMaxViewDist_ / kChunkSize); zOffset <= (kMaxViewDist_ / kChunkSize);
-		     zOffset++)
+		for (int zOffset = -drawSize; zOffset <= drawSize;  zOffset++)
 		{
 			Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, 0, zOffset);
 			bool found = false;
-			for (Index chunkIndex = 0; chunkIndex < chunksNmb; chunkIndex++)
+			for (auto chunk : chunks)
 			{
-				if (!entityManager_.HasComponent(chunkIndex,
+				if (!entityManager_.HasComponent(chunk,
 				                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 					continue;
-				Vec3i chunkPos = chunkPosManager_.GetComponent(chunkIndex);
+				
+				const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
 				if (chunkPos == viewedChunkPos)
 				{
-					chunkStatusManager_.AddStatus(chunkIndex, ChunkFlag::VISIBLE);
+					chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::VISIBLE);
 					found = true;
 					break;
 				}
+
+				if (chunkPos.x > currentChunkPos.x + drawSize || 
+					chunkPos.z > currentChunkPos.z + drawSize ||
+					chunkPos.x < currentChunkPos.x - drawSize || 
+					chunkPos.z < currentChunkPos.z - drawSize)
+					chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::VISIBLE);
 			}
+			
 			if (!found)
 			{
-				const Entity newChunkIndex = entityManager_.CreateEntity();
-				chunkPosManager_.AddComponent(newChunkIndex);
-				chunkStatusManager_.AddComponent(newChunkIndex);
-				chunkContentManager_.AddComponent(newChunkIndex);
-				chunkRenderManager_.AddComponent(newChunkIndex);
-				transform3dManager_.AddComponent(newChunkIndex);
-				
-				GenerateChunkArray(newChunkIndex, viewedChunkPos);
-				chunkPosManager_.SetComponent(newChunkIndex, viewedChunkPos);
-				chunkStatusManager_.AddStatus(newChunkIndex, ChunkFlag::VISIBLE);
-				chunkStatusManager_.AddStatus(newChunkIndex, ChunkFlag::LOADED);
-				transform3dManager_.SetPosition(newChunkIndex, Vec3f(viewedChunkPos * kChunkSize));
+				scheduledChunks_.emplace_back([this, viewedChunkPos] {GenerateChunkArray(viewedChunkPos);});
 			}
 		}
 	}
@@ -106,24 +98,33 @@ void ChunkSystem::UpdateVisibleChunks() const
 
 void ChunkSystem::Update(seconds dt)
 {
+	RendererLocator::get().Render(this);
+	
 	//Update Visible Chunks
 	UpdateVisibleChunks();
-
+	
 	//Display Chunks Gizmos
-	const auto loadedChunks = chunkStatusManager_.GetLoadedChunks();
+	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
 	for (auto loadedChunk : loadedChunks)
 	{
 		if (entityManager_.HasComponent(loadedChunk,
 		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
 			GizmosLocator::get().DrawCube(
-				transform3dManager_.GetPosition(loadedChunk) + Vec3f::one * kChunkSize / 2 -
-				Vec3f::one / 2,
-				Vec3f::one * kChunkSize,
-				chunkStatusManager_.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
-					? Color4(1.0f, 0.0f, 0.0f, 1.0f)
-					: Color4(0.0f, 0.0f, 1.0f, 1.0f));
+				transform3dManager_.GetPosition(loadedChunk), Vec3f::one * kChunkSize,
+				chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
+					? Color::blue : Color::red);
 		}
+	}
+}
+
+void ChunkSystem::Render()
+{
+	while (!scheduledChunks_.empty())
+	{
+		Job& currentTask = scheduledChunks_.front();
+		currentTask.Execute();
+		scheduledChunks_.erase(scheduledChunks_.begin());
 	}
 }
 

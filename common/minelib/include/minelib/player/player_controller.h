@@ -69,7 +69,7 @@ private:
 
 	MinecraftLikeEngine& engine_;
 	BlockManager& blockManager_;
-	ChunkContentManager& chunkContentManager_;
+	ChunkManager& chunkManager_;
 	
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;

@@ -1,20 +1,21 @@
 #pragma once
-
-#include <mathematics/vector.h>
+#include <mathematics/matrix.h>
 #include <graphics/shape.h>
+#include <gl/texture.h>
+#include <gl/shader.h>
 
 namespace neko::gl
 {
 struct VertexArrayObject
 {
-    unsigned int VAO = 0;
-    unsigned int EBO = 0;
-    unsigned int VBO[4] = {0};
+    unsigned int vao = 0;
+    unsigned int ebo = 0;
+    unsigned int vbo[4] = {0};
 	
     unsigned int instanceVbo = 0;
 };
 
-class RenderCircle : public neko::RenderCircle, public VertexArrayObject
+class RenderCircle final : public neko::RenderCircle, public VertexArrayObject
 {
 public:
     using neko::RenderCircle::RenderCircle;
@@ -25,7 +26,7 @@ public:
     void Destroy() override;
 };
 
-class RenderQuad : public neko::RenderQuad, public VertexArrayObject
+class RenderQuad final : public neko::RenderQuad, public VertexArrayObject
 {
 public:
     using neko::RenderQuad::RenderQuad;
@@ -40,7 +41,7 @@ public:
 	void SetOffset(const Vec3f& newOffset);
 };
 
-class RenderCuboid : public neko::RenderCuboid, public VertexArrayObject
+class RenderCuboid final : public neko::RenderCuboid, public VertexArrayObject
 {
 public:
     using neko::RenderCuboid::RenderCuboid;
@@ -53,22 +54,24 @@ public:
     void Destroy() override;
 };
 
-class RenderCuboidUnique final : public neko::RenderCuboidUnique, public VertexArrayObject
+class RenderCubeMap final : public neko::RenderCubeMap, public VertexArrayObject
 {
 public:
-    using neko::RenderCuboidUnique::RenderCuboidUnique;
+    using neko::RenderCubeMap::RenderCubeMap;
     void Init() override;
-	void InitInstanced(const Vec3f& positions, int count);
+    void SetTexture(const TextureId texture) { texture_ = texture; }
 
-	void UpdateInstance(const Vec3f& positions, int count) const;
-
-	void Draw() const override;
-    void DrawInstanced(unsigned count) const;
+	void Draw() const override {};
+    void Draw(const Mat4f& view, const Mat4f& projection) const;
 
     void Destroy() override;
+
+protected:
+	Shader shader_;
+	TextureId texture_ = 0;
 };
 
-class RenderWireFrameCuboid : public neko::RenderWireFrameCuboid, public VertexArrayObject
+class RenderWireFrameCuboid final : public neko::RenderWireFrameCuboid, public VertexArrayObject
 {
 public:
     using neko::RenderWireFrameCuboid::RenderWireFrameCuboid;
@@ -79,7 +82,7 @@ public:
     void Destroy() override;
 };
 
-class RenderLine3d : public neko::RenderLine3d, public VertexArrayObject
+class RenderLine3d final : public neko::RenderLine3d, public VertexArrayObject
 {
 public:
     using neko::RenderLine3d::RenderLine3d;

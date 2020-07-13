@@ -4,12 +4,11 @@
 
 #include <gl/shape.h>
 #include <mathematics/trigo.h>
-#include "gl/gles3_include.h"
+
+#include "engine/engine.h"
 
 namespace neko::gl
 {
-
-
 void RenderQuad::Init()
 {
 	Vec2f vertices[4] = {
@@ -54,49 +53,49 @@ void RenderQuad::Init()
 		1, 2, 3    // second triangle
 	};
 
-	//Initialize the EBO program
-	glGenBuffers(4, &VBO[0]);
-	glGenBuffers(1, &EBO);
-	glGenVertexArrays(1, &VAO);
+	//Initialize the ebo program
+	glGenBuffers(4, &vbo[0]);
+	glGenBuffers(1, &ebo);
+	glGenVertexArrays(1, &vao);
 	// 1. bind Vertex Array Object
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	// 2. copy our vertices array in a buffer for OpenGL to use
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2f), (void*)0);
 	glEnableVertexAttribArray(0);
 	//bind texture coords data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
 	// bind normals data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*)0);
 	glEnableVertexAttribArray(2);
 	// bind tangent data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(tangent), &tangent[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*)0);
 	glEnableVertexAttribArray(3);
-	//bind EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//bind ebo
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 }
 
 void RenderQuad::Draw() const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void RenderQuad::Destroy()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(4, &VBO[0]);
-	glDeleteBuffers(1, &EBO);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(4, &vbo[0]);
+	glDeleteBuffers(1, &ebo);
 
 }
 
@@ -112,7 +111,7 @@ void RenderQuad::SetValues(const Vec2f& newSize, const Vec3f& newOffset)
 			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
 	};
 	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 }
 
@@ -127,7 +126,7 @@ void RenderQuad::SetSize(const Vec2f& newSize)
 			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
 	};
 	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 }
 
@@ -142,7 +141,7 @@ void RenderQuad::SetOffset(const Vec3f& newOffset)
 			Vec2f(-0.5f, 0.5f) * size_ + Vec2f(offset_)   // top left
 	};
 	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 }
 
@@ -299,27 +298,27 @@ void RenderCuboid::Init()
 		tangent[i + 2] = tangent[i];
 	}
 	
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(4, &VBO[0]);
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(4, &vbo[0]);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	// position attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
 	// texture coord attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(1);
 	// normal attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(2);
 	//tangent attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(tangent), tangent, GL_STATIC_DRAW);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(3);
@@ -332,7 +331,7 @@ void RenderCuboid::InitInstanced(const Vec3f& positions, const int count)
 {
 	Init();
 	
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	
 	//Instances Positions
 	glGenBuffers(1, &instanceVbo);
@@ -346,113 +345,69 @@ void RenderCuboid::InitInstanced(const Vec3f& positions, const int count)
 
 void RenderCuboid::Draw() const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void RenderCuboid::DrawInstanced(const unsigned count) const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
 }
 
 void RenderCuboid::Destroy()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(4, &VBO[0]);
-	//glDeleteBuffers(2, &EBO);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(4, &vbo[0]);
+	//glDeleteBuffers(2, &ebo);
 }
 
-void RenderCuboidUnique::Init()
+void RenderCubeMap::Init()
 {
 	Vec3f position[36] =
 	{
 		//Right face 
-		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
-		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
-		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
-		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		0.5f,	0.5f),	//Top Right
+		Vec3f(0.5f,		-0.5f,	0.5f),	//Bottom Right
+		Vec3f(0.5f,		0.5f,	-0.5f),	//Top Left
+		Vec3f(0.5f,		-0.5f,	0.5f),	//Bottom Right
+		Vec3f(0.5f,		-0.5f,	-0.5f),	//Bottom Left
+		Vec3f(0.5f,		0.5f,	-0.5f),	//Top Left
 		//Left face                 
-		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Right
-		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
-		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
-		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(-0.5f,	0.5f,	0.5f),	//Top Right
+		Vec3f(-0.5f,	0.5f,	-0.5f), //Top Left
+		Vec3f(-0.5f,	-0.5f,	0.5f),	//Bottom Right
+		Vec3f(-0.5f,	-0.5f,	0.5f),	//Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f), //Top Left
+		Vec3f(-0.5f,	-0.5f,	-0.5f), //Bottom Left
 		//Top face                  
-		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
-		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
-		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
-		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
+		Vec3f(0.5f,		0.5f,	0.5f),	//Top Right
+		Vec3f(0.5f,		0.5f,	-0.5f), //Bottom Right
+		Vec3f(-0.5f,	0.5f,	0.5f),	//Top Left
+		Vec3f(0.5f,		0.5f,	-0.5f), //Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f), //Bottom Left
+		Vec3f(-0.5f,	0.5f,	0.5f),	//Top Left
 		//Bottom face               
-		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Top Right
-		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Top Left
-		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Top Left
-		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(0.5f,		-0.5f,	0.5f),	//Top Right
+		Vec3f(-0.5f,	-0.5f,	0.5f),	//Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f), //Bottom Right
+		Vec3f(0.5f,		-0.5f,	-0.5f), //Bottom Right
+		Vec3f(-0.5f,	-0.5f,	0.5f),	//Top Left
+		Vec3f(-0.5f,	-0.5f,	-0.5f), //Bottom Left
 		//Front face                
-		Vec3f(0.5f,		0.5f,	0.5f)	* size_ + offset_, //Top Right
-		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
-		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(0.5f,		-0.5f,	0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	0.5f,	0.5f)	* size_ + offset_, //Top Left
-		Vec3f(-0.5f,	-0.5f,	0.5f)	* size_ + offset_, //Bottom Left
+		Vec3f(0.5f,		0.5f,	0.5f),	//Top Right
+		Vec3f(-0.5f,	0.5f,	0.5f),	//Top Left
+		Vec3f(0.5f,		-0.5f,	0.5f),	//Bottom Right
+		Vec3f(0.5f,		-0.5f,	0.5f),	//Bottom Right
+		Vec3f(-0.5f,	0.5f,	0.5f),	//Top Left
+		Vec3f(-0.5f,	-0.5f,	0.5f),	//Bottom Left
 		//Back face
-		Vec3f(0.5f,		0.5f,	-0.5f)	* size_ + offset_, //Top Right
-		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
-		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
-		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
-		Vec3f(-0.5f,	0.5f,	-0.5f)	* size_ + offset_, //Top Left
-	};
-	Vec2f texCoords[36] = {
-		//Right Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		Vec2f(0.0f, 1.0f),	//Top Left
-		//Left Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		//Top Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		Vec2f(0.0f, 1.0f),	//Top Left
-		//Bottom Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		//Front Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		//Back Face
-		Vec2f(1.0f, 1.0f),	//Top Right
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 1.0f),	//Top Left
-		Vec2f(1.0f, 0.0f),	//Bottom Right
-		Vec2f(0.0f, 0.0f),	//Bottom Left
-		Vec2f(0.0f, 1.0f),	//Top Left
+		Vec3f(0.5f,		0.5f,	-0.5f),	//Top Right
+		Vec3f(0.5f,		-0.5f,	-0.5f),	//Bottom Right
+		Vec3f(-0.5f,	0.5f,	-0.5f),	//Top Left
+		Vec3f(0.5f,		-0.5f,	-0.5f),	//Bottom Right
+		Vec3f(-0.5f,	-0.5f,	-0.5f),	//Bottom Left
+		Vec3f(-0.5f,	0.5f,	-0.5f),	//Top Left
 	};
 
 	Vec3f normals[36] =
@@ -499,99 +454,52 @@ void RenderCuboidUnique::Init()
 		Vec3f(0.0f, 0.0f, -1.0f),
 		Vec3f(0.0f, 0.0f, -1.0f),
 	};
-
-	Vec3f tangent[36]{};
-	for(int i = 0; i < 36; i+=3)
-	{
-		const Vec3f edge1 = position[i+1] - position[i];
-		const Vec3f edge2 = position[i+2] - position[i];
-		const Vec2f deltaUV1 = texCoords[i+1] - texCoords[i];
-		const Vec2f deltaUV2 = texCoords[i+2] - texCoords[i];
-
-		const float f = 1.0f / (deltaUV1.u * deltaUV2.v - deltaUV2.u * deltaUV1.v);
-		tangent[i].x = f * (deltaUV2.v * edge1.x - deltaUV1.v * edge2.x);
-		tangent[i].y = f * (deltaUV2.v * edge1.y - deltaUV1.v * edge2.y);
-		tangent[i].z = f * (deltaUV2.v * edge1.z - deltaUV1.v * edge2.z);
-		tangent[i + 1] = tangent[i];
-		tangent[i + 2] = tangent[i];
-	}
 	
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(4, &VBO[0]);
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(2, &vbo[0]);
 
-	glBindVertexArray(VAO);
-	// position attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindVertexArray(vao);
+	//Positions
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), nullptr);
 	glEnableVertexAttribArray(0);
-	// texture coord attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-	glEnableVertexAttribArray(1);
-	// normal attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	
+	//Normals
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-	glEnableVertexAttribArray(2);
-	//tangent attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tangent), tangent, GL_STATIC_DRAW);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-	glEnableVertexAttribArray(3);
-}
-
-void RenderCuboidUnique::InitInstanced(const Vec3f& positions, const int count)
-{
-	Init();
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), nullptr);
+	glEnableVertexAttribArray(1);
 	
-	glBindVertexArray(VAO);
-	
-	//Instances Positions
-	glGenBuffers(1, &instanceVbo);
-	glBindBuffer(GL_ARRAY_BUFFER, instanceVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * count, &positions, GL_STATIC_DRAW);
-	
-	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*) 0);
-	glVertexAttribDivisor(5, 1);
-	glEnableVertexAttribArray(5);
+	const auto& config = BasicEngine::GetInstance()->config;
+	shader_.LoadFromFile(
+		config.dataRootPath + "shaders/skybox.vert",
+		config.dataRootPath + "shaders/skybox.frag"
+	);
 }
 
-void RenderCuboidUnique::UpdateInstance(const Vec3f& positions, const int count) const
+void RenderCubeMap::Draw(const Mat4f& view, const Mat4f& projection) const
 {
-	glBindBuffer(GL_ARRAY_BUFFER, instanceVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3f) * count, &positions, GL_STATIC_DRAW);
+	glDepthFunc(GL_LEQUAL);
+	glCullFace(GL_FRONT);
+	shader_.Bind();
+	shader_.SetMat4("view", Mat4f(view.ToMat3()));
+	shader_.SetMat4("projection", projection);
+	shader_.SetInt("skybox", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_);
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LESS);
 }
 
-void RenderCuboidUnique::Draw() const
+void RenderCubeMap::Destroy()
 {
-	glBindVertexArray(VAO);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[0]);
-	glDrawArrays(GL_TRIANGLES, 0, 12);
-	glDrawArrays(GL_TRIANGLES, 24, 12);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[1]);
-	glDrawArrays(GL_TRIANGLES, 12, 6);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[2]);
-	glDrawArrays(GL_TRIANGLES, 18, 6);
-}
-
-void RenderCuboidUnique::DrawInstanced(const unsigned count) const
-{
-	glBindVertexArray(VAO);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[0]);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 12, count);
-	glDrawArraysInstanced(GL_TRIANGLES, 24, 12, count);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[1]);
-	glDrawArraysInstanced(GL_TRIANGLES, 12, 6, count);
-	glBindTexture(GL_TEXTURE_2D, cubeTex_[2]);
-	glDrawArraysInstanced(GL_TRIANGLES, 18, 6, count);
-}
-
-void RenderCuboidUnique::Destroy()
-{
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(4, &VBO[0]);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(2, &vbo[0]);
+	shader_.Destroy();
+	glDeleteTextures(1, &texture_);
 }
 
 void RenderWireFrameCuboid::Init()
@@ -635,12 +543,12 @@ void RenderWireFrameCuboid::Init()
 		Vec3f(0.5f,		-0.5f,	-0.5f)	* size_ + offset_, //Bottom Right
 		Vec3f(-0.5f,	-0.5f,	-0.5f)	* size_ + offset_, //Bottom Left
 	};
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(4, &VBO[0]);
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(4, &vbo[0]);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	// position attribute
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
@@ -648,14 +556,14 @@ void RenderWireFrameCuboid::Init()
 
 void RenderWireFrameCuboid::Draw() const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_LINES, 0, 24);
 }
 
 void RenderWireFrameCuboid::Destroy()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO[0]);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo[0]);
 }
 
 void RenderCircle::Init()
@@ -677,33 +585,33 @@ void RenderCircle::Init()
 	vertices[resolution + 1] = vertices[1];
 	texCoords[resolution + 1] = texCoords[resolution + 1];
 
-	//Initialize the EBO program
-	glGenBuffers(2, &VBO[0]);
-	glGenBuffers(1, &EBO);
-	glGenVertexArrays(1, &VAO);
+	//Initialize the ebo program
+	glGenBuffers(2, &vbo[0]);
+	glGenBuffers(1, &ebo);
+	glGenVertexArrays(1, &vao);
 	// 1. bind Vertex Array Object
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	// 2. copy our vertices array in a buffer for OpenGL to use
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2f), (void*) nullptr);
 	glEnableVertexAttribArray(0);
 	//bind texture coords data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2f), (void*) nullptr);
 }
 
 void RenderCircle::Draw() const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, resolution + 2);
 }
 
 void RenderCircle::Destroy()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(2, &VBO[0]);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(2, &vbo[0]);
 }
 
 void RenderLine3d::Init()
@@ -719,17 +627,17 @@ void RenderLine3d::Init()
 		0,
 		1
 	};
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(2, &VBO[0]);
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(2, &vbo[0]);
 	// 1. bind Vertex Array Object
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	// 2. copy our vertices array in a buffer for OpenGL to use
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void*) nullptr);
 	glEnableVertexAttribArray(0);
 	//bind texture coords data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(linePos), linePos, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*) nullptr);
 	
@@ -738,13 +646,13 @@ void RenderLine3d::Init()
 
 void RenderLine3d::Draw() const
 {
-	glBindVertexArray(VAO);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_LINES, 0, 2);
 }
 
 void RenderLine3d::Destroy()
 {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(2, &VBO[0]);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(2, &vbo[0]);
 }
 }

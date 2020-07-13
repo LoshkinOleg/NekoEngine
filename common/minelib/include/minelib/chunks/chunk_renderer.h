@@ -2,6 +2,7 @@
 #include "gl/shader.h"
 #include "gl/shape.h"
 
+#include "chunk_manager.h"
 #include "graphics/camera.h"
 #include "graphics/graphics.h"
 #include "graphics/texture.h"
@@ -20,6 +21,7 @@ struct ChunkRender
 	gl::RenderCuboid cube{Vec3f::zero, Vec3f::one};
 };
 
+class ChunkManager;
 class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
 {
 public:
@@ -42,14 +44,12 @@ private:
 	Camera& camera_;
 
 	MinecraftLikeEngine& engine_;
-	ChunkStatusManager& chunkStatusManager_;
-	ChunkContentManager& chunkContentManager_;
-	ChunkRenderManager& chunkRenderManager_;
-	ChunkPosManager& chunkPosManager_;
+	ChunkManager& chunkManager_;
 
 	DirectionalLight directionalLight_;
 
 	gl::Shader shader_;
 	TextureId atlasTex_ = 0;
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
 };
 }

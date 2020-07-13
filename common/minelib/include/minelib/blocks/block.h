@@ -1,5 +1,5 @@
 #pragma once
-#include "gl/shape.h"
+#include "graphics/texture.h"
 
 namespace neko
 {
@@ -40,7 +40,7 @@ struct Block final
 	BlockTex blockTex;
 };
 
-static TextureHash BlockTexToBlockHash(const BlockTex& blockTex)
+static TextureHash BlockTexToTexHash(const BlockTex& blockTex)
 {
     TextureHash result = blockTex.sideTexId;
     result = (result << 8) + blockTex.topTexId;
@@ -48,7 +48,7 @@ static TextureHash BlockTexToBlockHash(const BlockTex& blockTex)
 	return result;
 }
 
-static BlockTex BlockHashToBlockTex(const TextureHash blockHash)
+static BlockTex TexHashToBlockTex(const TextureHash blockHash)
 {
 	return BlockTex(blockHash >> 16 & 0xFF, blockHash >> 8 & 0xFF, blockHash & 0xFF);
 }

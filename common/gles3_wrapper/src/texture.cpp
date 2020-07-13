@@ -96,13 +96,11 @@ TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlag
     return texture;
 }
 
-TextureId LoadCubemap(std::vector<std::string> facesFilename)
+TextureId LoadCubemap(std::array<std::string, 6> facesFilename)
 {
-    TextureId textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-
+    TextureId textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
     for (unsigned int i = 0; i < facesFilename.size(); i++)
     {
         BufferFile textureFile;
@@ -118,7 +116,7 @@ TextureId LoadCubemap(std::vector<std::string> facesFilename)
         if (image.data != nullptr)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data
+                0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data
             );
         }
         else
@@ -133,7 +131,7 @@ TextureId LoadCubemap(std::vector<std::string> facesFilename)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    return textureID;
+    return textureId;
 }
 
 void DestroyTexture(TextureId textureId)

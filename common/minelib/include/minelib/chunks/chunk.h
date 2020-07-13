@@ -1,6 +1,7 @@
 #pragma once
 #include "mathematics/aabb.h"
 #include "minelib/blocks/block.h"
+#include "gl/shape.h"
 
 namespace neko
 {
@@ -26,7 +27,7 @@ public:
 	void Render() const;
 	void Destroy();
 
-	unsigned GetVao() const { return cube_.VAO; }
+	unsigned GetVao() const { return cube_.vao; }
 	void SetVbo();
 	
 	void SetBlock(std::shared_ptr<Block> block, const Vec3i& pos);
@@ -50,14 +51,4 @@ private:
 	unsigned instanceVbo_ = 0;
 	gl::RenderCuboid cube_{Vec3f::zero, Vec3f(kCubeHalfSize * 2.0f)};
 };
-
-static BlockId PosToBlockId(const Vec3i& pos)
-{
-	return pos.x + pos.y * kChunkSize + pos.z * kChunkSize * kChunkSize;
-}
-
-static Vec3i BlockIdToPos(const BlockId pos)
-{
-	return {pos % kChunkSize, pos / kChunkSize % kChunkSize, pos / (kChunkSize * kChunkSize)};
-}
 }

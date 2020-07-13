@@ -201,6 +201,26 @@ struct Vec2
         return !(*this == right);
     }
 
+    bool operator>(const Vec2<T>& right) const
+    {
+        return x > right.x && y > right.y;
+    }
+	
+    bool operator>=(const Vec2<T>& right) const
+    {
+        return x >= right.x && y >= right.y;
+    }
+
+    bool operator<(const Vec2<T>& right) const
+    {
+        return x < right.x && y < right.y;
+    }
+	
+    bool operator<=(const Vec2<T>& right) const
+    {
+        return x <= right.x && y <= right.y;
+    }
+
     const T& operator[](size_t pAxis) const
     {
 
@@ -297,7 +317,11 @@ struct Vec2
 //-----------------------------------------------------------------------------
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
-using Vec2u = Vec2<unsigned>;
+using Vec2u = Vec2<uint32_t>;
+using Vec2u64 = Vec4<uint64_t>;
+using Vec2u32 = Vec4<uint32_t>;
+using Vec2u16 = Vec4<uint16_t>;
+using Vec2u8 = Vec4<uint8_t>;
 
 template<typename T>
 inline Vec2<T> const Vec2<T>::zero = Vec2<T>(0, 0);
@@ -475,6 +499,26 @@ struct Vec3
         return !(*this == right);
     }
 
+    bool operator>(const Vec3<T>& right) const
+    {
+        return x > right.x && y > right.y && z > right.z;
+    }
+	
+    bool operator>=(const Vec3<T>& right) const
+    {
+        return x >= right.x && y >= right.y && z >= right.z;
+    }
+
+    bool operator<(const Vec3<T>& right) const
+    {
+        return x < right.x && y < right.y && z < right.z;
+    }
+	
+    bool operator<=(const Vec3<T>& right) const
+    {
+        return x <= right.x && y <= right.y && z <= right.z;
+    }
+
     const T& operator[](size_t p_axis) const
     {
         return coord[p_axis];
@@ -569,7 +613,11 @@ struct Vec3
 //-----------------------------------------------------------------------------
 using Vec3f = Vec3<float>;
 using Vec3i = Vec3<int>;
-using Vec3u = Vec3<unsigned int>;
+using Vec3u = Vec3<uint32_t>;
+using Vec3u64 = Vec3<uint64_t>;
+using Vec3u32 = Vec3<uint32_t>;
+using Vec3u16 = Vec3<uint16_t>;
+using Vec3u8 = Vec3<uint8_t>;
 using EulerAngles = Vec3<degree_t>;
 using RadianAngles = Vec3<radian_t>;
 
@@ -737,6 +785,26 @@ struct alignas(4 * sizeof(T)) Vec4
         return !(*this == right);
     }
 
+    bool operator>(const Vec4<T>& right) const
+    {
+        return x > right.x && y > right.y && z > right.z && w > right.w;
+    }
+	
+    bool operator>=(const Vec4<T>& right) const
+    {
+        return x >= right.x && y >= right.y && z >= right.z && w >= right.w;
+    }
+
+    bool operator<(const Vec4<T>& right) const
+    {
+        return x < right.x && y < right.y && z < right.z && w < right.w;
+    }
+	
+    bool operator<=(const Vec4<T>& right) const
+    {
+        return x <= right.x && y <= right.y && z <= right.z && w <= right.w;
+    }
+
     const T& operator[](size_t p_axis) const
     {
 
@@ -812,6 +880,12 @@ struct alignas(4 * sizeof(T)) Vec4
 // Vec4 Aliases
 //-----------------------------------------------------------------------------
 using Vec4f = Vec4<float>;
+using Vec4i = Vec4<int>;
+using Vec4u = Vec4<uint32_t>;
+using Vec4u64 = Vec4<uint64_t>;
+using Vec4u32 = Vec4<uint32_t>;
+using Vec4u16 = Vec4<uint16_t>;
+using Vec4u8 = Vec4<uint8_t>;
 
 template<typename T>
 inline Vec4<T> const Vec4<T>::zero = Vec4<T>(0.0f);

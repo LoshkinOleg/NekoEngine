@@ -57,6 +57,8 @@ public:
 		const Vec3f& startPos,
 		const Vec3f& endPos,
 		const Color4& color = Color::red) = 0;
+	
+	virtual Vec3f GetCameraPos() const = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -78,6 +80,8 @@ class NullGizmosRenderer final : public IGizmosRenderer
 		[[maybe_unused]] const Color4& color = Color::red) override
 	{
 	}
+
+	Vec3f GetCameraPos() const override { return {}; }
 };
 
 //-----------------------------------------------------------------------------
@@ -110,6 +114,8 @@ public:
 		const Vec3f& endPos,
 		const Color4& color = Color::red) override;
 
+	Vec3f GetCameraPos() const override { return camera_.position; }
+	
 private:
 	std::mutex updateMutex_;
 

@@ -7,13 +7,10 @@ namespace neko
 ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	: transform3dManager(engine.entityManager),
 	  aabbManager(engine),
-	  chunkContentManager(engine.entityManager),
-	  chunkPosManager(engine.entityManager),
-	  chunkRenderManager(engine.entityManager, chunkContentManager),
-	  chunkStatusManager(engine.entityManager),
-	  chunksSystem_(engine)
+	  chunkManager(engine.entityManager),
+	  chunkSystem(engine)
 {
-	engine.RegisterSystem(chunksSystem_);
+	engine.RegisterSystem(chunkSystem);
 }
 
 void ComponentsManagerSystem::Init()
