@@ -4,7 +4,6 @@
 
 #include <mathematics/vector.h>
 #include <mathematics/circle.h>
-#include <graphics/texture.h>
 
 namespace neko
 {
@@ -64,25 +63,18 @@ protected:
     Vec3f size_;
 };
 
-class RenderCuboidUnique : public RenderShape
+class RenderCubeMap : public RenderShape
 {
 public:
-    RenderCuboidUnique()=delete;
-    explicit RenderCuboidUnique(const Vec3f& offset, const Vec3f& size) : RenderShape(offset), size_(size){}
+	RenderCubeMap() = delete;
+    explicit RenderCubeMap(const Vec3f& offset) : RenderShape(offset) {}
 
-    void SetTextures(const std::array<TextureId, 3>& textures) { cubeTex_ = textures; }
-	
     [[nodiscard]] Sphere3D GenerateBoundingSphere() const
     {
         Sphere3D s;
         s.center = offset_;
-        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
         return s;
     }
-
-protected:
-    Vec3f size_;
-	std::array<TextureId, 3> cubeTex_{0};
 };
 
 class RenderWireFrameCuboid : public RenderShape

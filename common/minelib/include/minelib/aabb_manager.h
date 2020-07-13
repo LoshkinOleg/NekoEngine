@@ -4,9 +4,8 @@
 #include <mathematics/vector.h>
 #include <utilities/service_locator.h>
 
+#include "chunks/chunk_manager.h"
 #include "mathematics/aabb.h"
-#include "mathematics/vector.h"
-#include "utilities/service_locator.h"
 
 namespace neko
 {
@@ -95,9 +94,7 @@ public:
 private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
-	ChunkPosManager& chunkPosManager_;
-	ChunkContentManager& chunkContentManager_;
-	ChunkStatusManager& chunkStatusManager_;
+	ChunkManager& chunkManager_;
 	Transform3dManager& transform3dManager_;
 };
 

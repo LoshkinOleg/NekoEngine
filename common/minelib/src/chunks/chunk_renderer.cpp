@@ -1,11 +1,13 @@
 #include "minelib/chunks/chunk_renderer.h"
 
-#include <graphics/camera.h>
 #ifdef EASY_PROFILE_USE
 #include <easy/profiler.h>
 #endif
 
+#include <stb_image.h>
+
 #include "gl/texture.h"
+#include "graphics/camera.h"
 #include "minelib/minecraft_like_engine.h"
 
 namespace neko
@@ -13,15 +15,13 @@ namespace neko
 ChunkRenderer::ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera)
 	: camera_(camera),
 	  engine_(engine),
-	  chunkStatusManager_(engine.componentsManagerSystem.chunkStatusManager),
-	  chunkContentManager_(engine.componentsManagerSystem.chunkContentManager),
-	  chunkRenderManager_(engine.componentsManagerSystem.chunkRenderManager),
-	  chunkPosManager_(engine.componentsManagerSystem.chunkPosManager)
+	  chunkManager_(engine.componentsManagerSystem.chunkManager)
 {
 }
 
 void ChunkRenderer::Init()
 {
+	stbi_set_flip_vertically_on_load(true);
 	const auto& config = BasicEngine::GetInstance()->config;
 	/*shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/light.vert",
@@ -60,52 +60,22 @@ void ChunkRenderer::Render()
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkRenderer::Render");
 #endif
-	/*if (shader_.GetProgram() == 0) return;
-
-	Mat4f view = camera_.GenerateViewMatrix();
-	Mat4f projection = camera_.GenerateProjectionMatrix();
-	shader_.Bind();
-	SetLightParameters();
-
-	const auto visibleChunks = chunkStatusManager_.GetVisibleChunks();
-	for (auto visibleChunk : visibleChunks)
-	{
-		const Vec3f chunkPos = transform3dManager_.GetPosition(visibleChunk);
-		for (int x = 0; x < kChunkSize; x++)
-		{
-			for (int y = 0; y < kChunkSize; y++)
-			{
-				for (int z = 0; z < kChunkSize; z++)
-				{
-					const int blockId = chunkContentManager_.GetBlockId(visibleChunk, Vec3i(x, y, z));
-					if (blockId != 0)
-					{
-						if (texture_[blockId - 1] == INVALID_TEXTURE_ID) continue;
-						Mat4f model = Mat4f::Identity;
-						model = Transform3d::Translate(model, Vec3f(x, y, z) + chunkPos);
-
-						SetCameraParameters(model, view, projection, camera_.position);
-
-						glBindTexture(GL_TEXTURE_2D, texture_[blockId - 1]);
-						//bind texture id to texture slot
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-						cube_.Draw();
-					}
-				}
-			}
-		}
-	}*/
-	
 	shader_.Bind();
 	SetCameraParameters(camera_);
 	glBindTexture(GL_TEXTURE_2D, atlasTex_);
-	const auto visibleChunks = chunkStatusManager_.GetVisibleChunks();
+	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
 	for (auto& chunk : visibleChunks)
 	{
-		shader_.SetVec3("chunkPos", Vec3f(chunkPosManager_.GetComponent(chunk)));
-		chunkRenderManager_.Draw(chunk);
+		if (chunkManager_.chunkContentManager.GetChunkSize(chunk) == 0)
+			chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::EMPTY);
+		else
+			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
+		if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
+			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
+			continue;
+		
+		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
+		chunkManager_.chunkRenderManager.Draw(chunk);
 	}
 }
 

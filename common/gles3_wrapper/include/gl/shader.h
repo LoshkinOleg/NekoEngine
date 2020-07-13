@@ -12,9 +12,8 @@ class Shader : neko::Shader
 {
 public:
     void LoadFromFile(
-            const std::string_view vertexShaderPath,
-            const std::string_view fragmentShaderPath) override;
-
+            std::string_view vertexShaderPath,
+            std::string_view fragmentShaderPath) override;
 
     void Bind() const;
 

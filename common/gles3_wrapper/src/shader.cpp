@@ -28,7 +28,6 @@
 
 namespace neko::gl
 {
-
 void Shader::LoadFromFile(const std::string_view vertexShaderPath, const std::string_view fragmentShaderPath)
 {
     if(!FileExists(vertexShaderPath))

@@ -8,18 +8,19 @@ void HelloCubemapsProgram::Init()
 	const auto& config = BasicEngine::GetInstance()->config;
 	skyboxCube_.Init();
 	skyboxTexture_ = gl::LoadCubemap({
-        config.dataRootPath+"sprites/skybox/right.jpg",
-		config.dataRootPath+"sprites/skybox/left.jpg",
-		config.dataRootPath+"sprites/skybox/top.jpg",
-		config.dataRootPath+"sprites/skybox/bottom.jpg",
-		config.dataRootPath+"sprites/skybox/front.jpg",
-		config.dataRootPath+"sprites/skybox/back.jpg"
+		config.dataRootPath + "sprites/skybox/right.jpg",
+		config.dataRootPath + "sprites/skybox/left.jpg",
+		config.dataRootPath + "sprites/skybox/top.jpg",
+		config.dataRootPath + "sprites/skybox/bottom.jpg",
+		config.dataRootPath + "sprites/skybox/front.jpg",
+		config.dataRootPath + "sprites/skybox/back.jpg"
 	});
 	skyboxShader_.LoadFromFile(
 		config.dataRootPath + "shaders/15_hello_cubemaps/skybox.vert",
 		config.dataRootPath + "shaders/15_hello_cubemaps/skybox.frag"
 	);
 	model_.LoadModel(config.dataRootPath + "model/nanosuit2/nanosuit.obj");
+	
 	modelShader_.LoadFromFile(config.dataRootPath + "shaders/15_hello_cubemaps/model.vert",
 		config.dataRootPath + "shaders/15_hello_cubemaps/model.frag");
 	modelReflectionShader_.LoadFromFile(config.dataRootPath + "shaders/15_hello_cubemaps/model.vert",

@@ -24,12 +24,7 @@ public:
 
 	Transform3dManager transform3dManager;
 	AabbManager aabbManager;
-	ChunkContentManager chunkContentManager;
-	ChunkPosManager chunkPosManager;
-	ChunkRenderManager chunkRenderManager;
-	ChunkStatusManager chunkStatusManager;
-protected:
-	ChunkSystem chunksSystem_;
-
+	ChunkManager chunkManager;
+	ChunkSystem chunkSystem;
 };
 }

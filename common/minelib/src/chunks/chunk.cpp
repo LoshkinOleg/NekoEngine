@@ -56,11 +56,11 @@ void Chunk::SetBlock(const std::shared_ptr<Block> block, const BlockId blockId)
 		{ return content.blockId == blockId; }); 
 	if (it != blocks_.end())
 	{
-		blocks_[it - blocks_.begin()].texId = BlockTexToBlockHash(block->blockTex);
+		blocks_[it - blocks_.begin()].texId = BlockTexToTexHash(block->blockTex);
 		return;
 	}
 
-	blocks_.emplace_back(blockId, BlockTexToBlockHash(block->blockTex));
+	blocks_.emplace_back(blockId, BlockTexToTexHash(block->blockTex));
 }
 
 void Chunk::RemoveBlock(const Vec3i& pos)

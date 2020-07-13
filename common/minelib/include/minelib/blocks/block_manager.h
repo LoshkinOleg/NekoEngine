@@ -2,6 +2,7 @@
 #include "engine/system.h"
 
 #include "gl/shader.h"
+#include "gl/shape.h"
 #include "graphics/camera.h"
 #include "graphics/graphics.h"
 

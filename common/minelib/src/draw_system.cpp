@@ -8,15 +8,13 @@
 namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
-	: chunkRenderer_(engine, camera_),
+	: engine_(engine),
+	  chunkRenderer_(engine, camera_),
+	  chunkSystem_(engine.componentsManagerSystem.chunkSystem),
 	  gizmosRenderer_(camera_),
 	  entityViewer_(engine.entityManager, engine.entityHierarchy),
 	  transformViewer_(engine.entityManager, engine.componentsManagerSystem.transform3dManager),
-	  chunksViewer_(engine.entityManager,
-	                engine.componentsManagerSystem.chunkContentManager,
-	                engine.componentsManagerSystem.chunkStatusManager,
-	                engine.componentsManagerSystem.chunkPosManager),
-	  engine_(engine)
+	  chunkViewer_(engine.entityManager, engine.componentsManagerSystem.chunkManager)
 {
 	engine.RegisterSystem(camera_);
 	engine.RegisterOnEvent(camera_);
@@ -29,21 +27,10 @@ void DrawSystem::Init()
 	camera_.Init();
 	chunkRenderer_.Init();
 	gizmosRenderer_.Init();
+	RendererLocator::get().Render(&chunkRenderer_);
+	RendererLocator::get().Render(&gizmosRenderer_);
 
 	camera_.position = Vec3f::up;
-}
-
-void DrawSystem::DrawImGui()
-{
-	std::lock_guard<std::mutex> lock(updateMutex_);
-	entityViewer_.DrawImGui();
-	transformViewer_.SetSelectedEntity(entityViewer_.GetSelectedEntity());
-	ImGui::Begin("Inspector");
-	transformViewer_.DrawImGui();
-	chunksViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
-	ImGui::End();
-
-	chunkRenderer_.DrawImGui();
 }
 
 void DrawSystem::Update(seconds dt)
@@ -64,6 +51,19 @@ void DrawSystem::Destroy()
 {
 	chunkRenderer_.Destroy();
 	gizmosRenderer_.Destroy();
+}
+
+void DrawSystem::DrawImGui()
+{
+	entityViewer_.DrawImGui();
+	transformViewer_.SetSelectedEntity(entityViewer_.GetSelectedEntity());
+	
+	ImGui::Begin("Inspector");
+	transformViewer_.DrawImGui();
+	chunkViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
+	ImGui::End();
+
+	chunkRenderer_.DrawImGui();
 }
 
 void DrawSystem::OnEvent(const SDL_Event& event)

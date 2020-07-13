@@ -1,8 +1,5 @@
 #pragma once
-
-#include <string_view>
 #include <graphics/texture.h>
-#include "gl/gles3_include.h"
 
 namespace neko::gl
 {
@@ -56,7 +53,7 @@ protected:
 };
 
 TextureId stbCreateTexture(const std::string_view filename, Texture::TextureFlags flags = Texture::DEFAULT);
-TextureId LoadCubemap(std::vector<std::string> facesFilename);
+TextureId LoadCubemap(std::array<std::string, 6> facesFilename);
 void DestroyTexture(TextureId);
 
 
