@@ -1,6 +1,9 @@
 #pragma once
 #include <engine/system.h>
 #include <engine/entity.h>
+#include <mathematics/vector.h>
+#include <thread>
+#include <mutex>
 
 namespace neko
 {
@@ -16,7 +19,7 @@ public:
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	void GenerateChunkArray(const Vec3i& pos) const;
+	void GenerateChunkArray(const Vec3i& pos);
 
 	void Init() override;
 
@@ -35,7 +38,11 @@ public:
 	void Destroy() override;
 
 private:
-	const float kMaxViewDist_ = 100;
+
+	std::mutex mutex_;
+	
+	const float kMaxViewDist_ = 32;
+	const float kHeighChunktLimit_ = 16;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	Transform3dManager& transform3dManager_;

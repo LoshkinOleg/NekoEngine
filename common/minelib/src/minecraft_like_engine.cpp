@@ -28,9 +28,6 @@ void MinecraftLikeEngine::Init()
 	//Temporary scene init
     const auto entity = entityManager.CreateEntity();
 	componentsManagerSystem.transform3dManager.AddComponent(entity);
-	for (int i = 0; i < kInitEntityNmb_; i++)
-	{
-	}
 }
 
 void MinecraftLikeEngine::Destroy()
