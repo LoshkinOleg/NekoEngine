@@ -1,5 +1,9 @@
 #include "minelib/chunks/chunk_manager.h"
 
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
+
 namespace neko
 {
 //-----------------------------------------------------------------------------
@@ -20,6 +24,9 @@ void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_pt
 
 void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_ptr<Block> block, BlockId blockId)
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkContentManager::SetBlock");
+#endif
 	if (block->blockTex.sideTexId == 0) return;
 	if (blockId > kChunkBlockCount - 1)
 	{
@@ -38,6 +45,22 @@ void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_pt
 
 	components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block->blockTex));
 }
+
+
+void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const std::shared_ptr<Block> block)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkContentManager::FillOfBlock");
+#endif
+	if (block->blockTex.sideTexId == 0) return;
+	components_[chunkIndex].resize(kChunkBlockCount);
+	for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
+	{
+		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block->blockTex));
+		components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block->blockTex));
+	}
+}
+
 
 void ChunkContentManager::RemoveBlock(const Entity chunkIndex, const Vec3i& pos)
 {

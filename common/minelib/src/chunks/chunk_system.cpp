@@ -22,43 +22,36 @@ ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkSystem::GenerateChunk");
+	EASY_BLOCK("ChunkSystem::GenerateChunk", profiler::colors::Blue);
 #endif
 	const Entity newChunkIndex = entityManager_.CreateEntity();
 	chunkManager_.AddComponent(newChunkIndex);
 	transform3dManager_.AddComponent(newChunkIndex);
 
-
 	const auto randBlock = blockManager_.GetRandomBlock();
 	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
 	if (pos.y > kHeighChunktLimit_ / 2)
 	{
-		
-	} else if (pos.y < kHeighChunktLimit_/2)
+	}
+	else if (pos.y < kHeighChunktLimit_ / 2)
 	{
-		for (uint16_t x = 0; x < kChunkSize; x++)
-		{
-			for (uint16_t y = 0; y < kChunkSize; y++)
-			{
-				for (uint16_t z = 0; z < kChunkSize; z++)
-				{
-					chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(x, y, z)));
-				}
-			}
-		}
+		chunkManager_.chunkContentManager.FillOfBlock(newChunkIndex, randBlock);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_UP);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_LEFT);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_RIGHT);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_FRONT);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_BACK);
-	} else
+	}
+	else
 	{
 		for (uint16_t x = 0; x < kChunkSize; x++)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(x, 0, z)));
+				chunkManager_.chunkContentManager.SetBlock(newChunkIndex,
+				                                           randBlock,
+				                                           PosToBlockId(Vec3i(x, 0, z)));
 			}
 		}
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
@@ -68,7 +61,8 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 #endif
 
 	chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
-	transform3dManager_.SetPosition(newChunkIndex, Vec3f(pos * kChunkSize) + Vec3f((kChunkSize - 1) / 2.0f));
+	transform3dManager_.SetPosition(newChunkIndex,
+	                                Vec3f(pos * kChunkSize) + Vec3f((kChunkSize - 1) / 2.0f));
 }
 
 void ChunkSystem::Init()
@@ -85,41 +79,47 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex)
 #endif
 	Vec3i pos = chunkManager_.chunkPosManager.GetComponent(chunkIndex);
 	bool visible = false;
-	const auto chunks = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::CHUNK_STATUS));
+	const auto chunks = entityManager_.FilterEntities(
+		static_cast<EntityMask>(ComponentType::CHUNK_STATUS));
 	for (auto chunk : chunks)
 	{
 		if (!entityManager_.HasComponent(chunk,
-			static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+		                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 			continue;
 
 		const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
-		for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <= static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+		for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
+		     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
 		{
 			Vec3i offset;
-			switch (static_cast<ChunkFlag>(occlude)) {
+			switch (static_cast<ChunkFlag>(occlude))
+			{
 				case ChunkFlag::OCCLUDE_DOWN:
 					offset = Vec3i::up;
-				break;
+					break;
 				case ChunkFlag::OCCLUDE_UP:
 					offset = Vec3i::down;
-				break;
+					break;
 				case ChunkFlag::OCCLUDE_RIGHT:
 					offset = Vec3i::left;
-				break;
+					break;
 				case ChunkFlag::OCCLUDE_LEFT:
 					offset = Vec3i::right;
-				break;
+					break;
 				case ChunkFlag::OCCLUDE_FRONT:
 					offset = Vec3i::back;
-				break;
+					break;
 				case ChunkFlag::OCCLUDE_BACK:
 					offset = Vec3i::forward;
-				break;
+					break;
 				default: ;
 			}
 			if (chunkPos == pos + offset)
 			{
-				if (chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::VISIBLE) && !chunkManager_.chunkStatusManager.HasStatus(chunk, static_cast<ChunkFlag>(occlude)))
+				if (chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::VISIBLE) && !
+					chunkManager_.chunkStatusManager.HasStatus(
+						chunk,
+						static_cast<ChunkFlag>(occlude)))
 				{
 					visible = true;
 					break;
@@ -142,9 +142,12 @@ void ChunkSystem::UpdateVisibleChunks()
 	//Remove last visible chunks
 
 	std::lock_guard<std::mutex> lock(mutex_);
-	const auto chunks = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
+	const auto chunks = entityManager_.FilterEntities(
+		static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
 	const Vec3f viewerPos = GizmosLocator::get().GetCameraPos();
-	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize), 0, std::floor(viewerPos.z / kChunkSize));
+	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize),
+	                                    0,
+	                                    std::floor(viewerPos.z / kChunkSize));
 
 	const int drawSize = kMaxViewDist_ / kChunkSize;
 	for (int xOffset = -drawSize; xOffset <= drawSize; xOffset++)
@@ -158,7 +161,8 @@ void ChunkSystem::UpdateVisibleChunks()
 				for (auto chunk : chunks)
 				{
 					if (!entityManager_.HasComponent(chunk,
-						static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+					                                 static_cast<EntityMask>(
+						                                 ComponentType::CHUNK_POS)))
 						continue;
 
 					const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
@@ -178,7 +182,10 @@ void ChunkSystem::UpdateVisibleChunks()
 
 				if (!found)
 				{
-					scheduledChunks_.emplace_back([this, viewedChunkPos] {GenerateChunkArray(viewedChunkPos); });
+					scheduledChunks_.emplace_back([this, viewedChunkPos]
+					{
+						GenerateChunkArray(viewedChunkPos);
+					});
 				}
 			}
 		}
@@ -194,10 +201,10 @@ void ChunkSystem::UpdateVisibleChunks()
 void ChunkSystem::Update(seconds dt)
 {
 	RendererLocator::get().Render(this);
-	
+
 	//Update Visible Chunks
 	UpdateVisibleChunks();
-	
+
 	//Display Chunks Gizmos
 	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
 	for (auto loadedChunk : loadedChunks)
@@ -206,9 +213,11 @@ void ChunkSystem::Update(seconds dt)
 		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
 			GizmosLocator::get().DrawCube(
-				transform3dManager_.GetPosition(loadedChunk), Vec3f::one * kChunkSize,
+				transform3dManager_.GetPosition(loadedChunk),
+				Vec3f::one * kChunkSize,
 				chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
-					? Color::blue : Color::red);
+					? Color::blue
+					: Color::red);
 		}
 	}
 }

@@ -27,6 +27,9 @@ public:
 	
 	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, const Vec3i& pos);
 	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, BlockId blockId);
+
+	void FillOfBlock(Entity chunkIndex, std::shared_ptr<Block> block);
+
 	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
 	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
