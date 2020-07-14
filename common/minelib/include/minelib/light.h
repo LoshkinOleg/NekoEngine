@@ -1,19 +1,19 @@
 #pragma once
 #include <mathematics/vector.h>
 
-#include "gl/shader.h"
 #include "graphics/color.h"
 
 namespace neko
 {
-struct DirectionalLight {
-	Vec3f position_ = Vec3f::one * 10.0f;
-	Vec3f direction_ = Vec3f(-1.0f, -1.0f, 0.0f);
-	Color3 color_{ 1,1,1 };
+struct DirectionalLight
+{
+	Vec3f position = Vec3f::one * 10.0f;
+	Vec3f direction = Vec3f(-1.0f, -1.0f, 0.0f);
+	Color3 color = Vec3f::one;
 	
-	float ambientStrength_ = 0.1f;
-	float diffuseStrength_ = 1.0f;
-	float specularStrength_ = 0.5f;
-	int specularPow_ = 32;
+	float ambientStrength = 0.1f;
+	float diffuseStrength = 1.0f;
+	float specularStrength = 0.5f;
+	int specularPow = 32;
 };
 };

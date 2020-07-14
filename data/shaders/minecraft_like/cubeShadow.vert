@@ -6,9 +6,8 @@ layout(location = 5) in uint blockId;
 layout(location = 6) in uint blockHash;
 
 out vec3 FragPos;
-out vec2 TexCoords;
-out vec4 FragPosLightSpace;
 out vec3 Normal;
+out vec4 FragPosLightSpace;
 out vec2 SideTexCoord;
 out vec2 TopTexCoord;
 out vec2 BottomTexCoord;
@@ -16,8 +15,6 @@ out vec2 BottomTexCoord;
 uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 chunkPos;
-uniform mat4 model;
-uniform mat4 transposeInverseModel;
 uniform mat4 lightSpaceMatrix;
 
 const uint chunkSize = 16u;
@@ -45,11 +42,6 @@ vec3 idToPos(uint id)
 
 void main()
 {
-	FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = mat3(transposeInverseModel) * aNormal;
-	TexCoords = aTexCoords;
-	FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
-
 	uint sideTexId = blockHash >> 16 & 0xFFu;
 	uint topTexId = blockHash >> 8 & 0xFFu;
 	uint bottomTexId = blockHash & 0xFFu;
@@ -69,7 +61,10 @@ void main()
 	    BottomTexCoord = vec2(0.0);
 	}
 	
-	vec3 blockPos = idToPos(blockId);
-    vec4 pos = projection * view * translate(blockPos) * vec4(aPos, 1.0);
-    gl_Position = pos;
+	mat4 model = translate(idToPos(blockId));
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    
+	FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = transpose(inverse(mat3(model))) * aNormal;
+	FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
 }

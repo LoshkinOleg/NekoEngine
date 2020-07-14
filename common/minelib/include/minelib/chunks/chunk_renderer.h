@@ -40,7 +40,7 @@ public:
 
 	void SetLightParameters() const;
 
-	void RenderScene(gl::Shader shader);
+	void RenderScene(const gl::Shader& shader) const;
 
 private:
 	Camera& camera_;
