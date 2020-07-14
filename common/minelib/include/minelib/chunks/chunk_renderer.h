@@ -40,16 +40,27 @@ public:
 
 	void SetLightParameters() const;
 
+	void RenderScene(gl::Shader shader);
+
 private:
 	Camera& camera_;
-
+	Camera2D depthCamera_;
+	
 	MinecraftLikeEngine& engine_;
 	ChunkManager& chunkManager_;
 
 	DirectionalLight directionalLight_;
 
 	gl::Shader shader_;
+	gl::Shader simpleDepthShader_;
+
 	TextureId atlasTex_ = 0;
 	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
+	
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	unsigned int depthMapFBO = 0;
+	unsigned int depthMap_ = 0;
+
+	bool enableShadows = false;
 };
 }

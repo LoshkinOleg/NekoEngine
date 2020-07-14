@@ -24,9 +24,6 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 
 void DrawSystem::Init()
 {
-	camera_.Init();
-	chunkRenderer_.Init();
-	gizmosRenderer_.Init();
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 

@@ -37,6 +37,8 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos) const
 			chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(x, 0, z)));
 		}
 	}
+
+	chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(8, 1, 8)));
 	
 	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
 	chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
