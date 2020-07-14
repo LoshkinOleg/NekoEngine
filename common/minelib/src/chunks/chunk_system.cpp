@@ -19,7 +19,7 @@ ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 {
 }
 
-void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
+void ChunkSystem::GenerateChunkArray(const Vec3i& pos) const
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkSystem::GenerateChunk", profiler::colors::Blue);
@@ -30,10 +30,10 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 
 	const auto randBlock = blockManager_.GetRandomBlock();
 	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
-	if (pos.y > kHeighChunktLimit_ / 2)
+	if (pos.y > kHeighChunkLimit_ / 2)
 	{
 	}
-	else if (pos.y < kHeighChunktLimit_ / 2)
+	else if (pos.y < kHeighChunkLimit_ / 2)
 	{
 		chunkManager_.chunkContentManager.FillOfBlock(newChunkIndex, randBlock);
 		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
@@ -72,7 +72,7 @@ void ChunkSystem::Init()
 	RendererLocator::get().Render(this);
 }
 
-void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex)
+void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling");
@@ -154,7 +154,7 @@ void ChunkSystem::UpdateVisibleChunks()
 	{
 		for (int zOffset = -drawSize; zOffset <= drawSize; zOffset++)
 		{
-			for (int yOffset = 0; yOffset < kHeighChunktLimit_; yOffset++)
+			for (int yOffset = 0; yOffset < kHeighChunkLimit_; yOffset++)
 			{
 				Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, yOffset, zOffset);
 				bool found = false;
@@ -204,7 +204,10 @@ void ChunkSystem::Update(seconds dt)
 
 	//Update Visible Chunks
 	UpdateVisibleChunks();
+}
 
+void ChunkSystem::Render()
+{
 	//Display Chunks Gizmos
 	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
 	for (auto loadedChunk : loadedChunks)
@@ -220,15 +223,13 @@ void ChunkSystem::Update(seconds dt)
 					: Color::red);
 		}
 	}
-}
-
-void ChunkSystem::Render()
-{
-	std::lock_guard<std::mutex> lock(mutex_);
+	
 	while (!scheduledChunks_.empty())
 	{
-		Job& currentTask = scheduledChunks_.front();
-		currentTask.Execute();
+		auto currentTask = scheduledChunks_.front();
+		if (!currentTask) continue;
+		
+		currentTask();
 		scheduledChunks_.erase(scheduledChunks_.begin());
 	}
 }

@@ -19,11 +19,11 @@ public:
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	void GenerateChunkArray(const Vec3i& pos);
+	void GenerateChunkArray(const Vec3i& pos) const;
 
 	void Init() override;
 
-	void SetChunkOcclusionCulling(Entity chunkIndex);
+	void SetChunkOcclusionCulling(Entity chunkIndex) const;
 
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
@@ -44,12 +44,12 @@ private:
 	std::mutex mutex_;
 	
 	const float kMaxViewDist_ = 32;
-	const float kHeighChunktLimit_ = 8;
+	const float kHeighChunkLimit_ = 8;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 
-	std::vector<Job> scheduledChunks_;
+	std::vector<std::function<void()>> scheduledChunks_;
 };
 }

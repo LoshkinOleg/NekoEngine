@@ -22,6 +22,13 @@ void GizmosRenderer::Init()
 	cube_.Init();
 	line_.Init();
 	gizmosQueue_.reserve(kGizmoReserveSize);
+
+	RendererLocator::get().Render(this);
+}
+
+void GizmosRenderer::Update(seconds dt)
+{
+	RendererLocator::get().Render(this);
 }
 
 void GizmosRenderer::Render()
