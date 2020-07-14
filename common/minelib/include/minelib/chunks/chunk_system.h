@@ -41,6 +41,6 @@ private:
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 
-	std::vector<Job> scheduledChunks_;
+	std::vector<std::function<void()>> scheduledChunks_;
 };
 }

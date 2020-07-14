@@ -2,7 +2,6 @@
 #include "gl/shader.h"
 #include "gl/shape.h"
 
-#include "chunk_manager.h"
 #include "graphics/camera.h"
 #include "graphics/graphics.h"
 #include "graphics/texture.h"

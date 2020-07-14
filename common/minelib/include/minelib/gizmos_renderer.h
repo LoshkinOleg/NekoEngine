@@ -97,7 +97,7 @@ public:
 
 	void Init() override;
 
-	void Update(seconds dt) override {}
+	void Update(seconds dt) override;
 	void FixedUpdate() override {}
 
 	void Render() override;

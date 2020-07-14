@@ -102,7 +102,10 @@ void ChunkSystem::Update(seconds dt)
 	
 	//Update Visible Chunks
 	UpdateVisibleChunks();
-	
+}
+
+void ChunkSystem::Render()
+{
 	//Display Chunks Gizmos
 	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
 	for (auto loadedChunk : loadedChunks)
@@ -116,14 +119,13 @@ void ChunkSystem::Update(seconds dt)
 					? Color::blue : Color::red);
 		}
 	}
-}
-
-void ChunkSystem::Render()
-{
+	
 	while (!scheduledChunks_.empty())
 	{
-		Job& currentTask = scheduledChunks_.front();
-		currentTask.Execute();
+		auto currentTask = scheduledChunks_.front();
+		if (!currentTask) continue;
+		
+		currentTask();
 		scheduledChunks_.erase(scheduledChunks_.begin());
 	}
 }
