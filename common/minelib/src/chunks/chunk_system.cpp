@@ -46,6 +46,12 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 				}
 			}
 		}
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_UP);
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_LEFT);
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_RIGHT);
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_FRONT);
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_BACK);
 	} else
 	{
 		for (uint16_t x = 0; x < kChunkSize; x++)
@@ -55,6 +61,7 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 				chunkManager_.chunkContentManager.SetBlock(newChunkIndex, randBlock, PosToBlockId(Vec3i(x, 0, z)));
 			}
 		}
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
 	}
 #ifdef EASY_PROFILE_USE
 	EASY_END_BLOCK
@@ -69,6 +76,62 @@ void ChunkSystem::Init()
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledChunks_.reserve(16);
 	RendererLocator::get().Render(this);
+}
+
+void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling");
+#endif
+	Vec3i pos = chunkManager_.chunkPosManager.GetComponent(chunkIndex);
+	bool visible = false;
+	const auto chunks = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::CHUNK_STATUS));
+	for (auto chunk : chunks)
+	{
+		if (!entityManager_.HasComponent(chunk,
+			static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+			continue;
+
+		const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
+		for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <= static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+		{
+			Vec3i offset;
+			switch (static_cast<ChunkFlag>(occlude)) {
+				case ChunkFlag::OCCLUDE_DOWN:
+					offset = Vec3i::up;
+				break;
+				case ChunkFlag::OCCLUDE_UP:
+					offset = Vec3i::down;
+				break;
+				case ChunkFlag::OCCLUDE_RIGHT:
+					offset = Vec3i::left;
+				break;
+				case ChunkFlag::OCCLUDE_LEFT:
+					offset = Vec3i::right;
+				break;
+				case ChunkFlag::OCCLUDE_FRONT:
+					offset = Vec3i::back;
+				break;
+				case ChunkFlag::OCCLUDE_BACK:
+					offset = Vec3i::forward;
+				break;
+				default: ;
+			}
+			if (chunkPos == pos + offset)
+			{
+				if (chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::VISIBLE) && !chunkManager_.chunkStatusManager.HasStatus(chunk, static_cast<ChunkFlag>(occlude)))
+				{
+					visible = true;
+					break;
+				}
+			}
+		}
+		if (visible) break;
+	}
+	if (!visible)
+	{
+		chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::VISIBLE);
+	}
 }
 
 void ChunkSystem::UpdateVisibleChunks()
@@ -119,6 +182,12 @@ void ChunkSystem::UpdateVisibleChunks()
 				}
 			}
 		}
+	}
+
+	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+	for (auto visibleChunk : visibleChunks)
+	{
+		SetChunkOcclusionCulling(visibleChunk);
 	}
 }
 

@@ -23,6 +23,8 @@ public:
 
 	void Init() override;
 
+	void SetChunkOcclusionCulling(Entity chunkIndex);
+
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
 	 */
@@ -42,7 +44,7 @@ private:
 	std::mutex mutex_;
 	
 	const float kMaxViewDist_ = 32;
-	const float kHeighChunktLimit_ = 16;
+	const float kHeighChunktLimit_ = 8;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	Transform3dManager& transform3dManager_;

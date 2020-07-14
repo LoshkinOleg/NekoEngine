@@ -38,13 +38,19 @@ public:
 	void DestroyComponent(Entity chunkIndex) override;
 };
 
-using ChunkMask = std::uint8_t;
-enum class ChunkFlag : std::uint8_t
+using ChunkMask = std::uint16_t;
+enum class ChunkFlag : std::uint16_t
 {
 	EMPTY = 1u << 0u,
 	ACCESSIBLE = 1u << 1u,
 	VISIBLE = 1u << 2u,
-	LOADED = 1u << 3u
+	LOADED = 1u << 3u,
+	OCCLUDE_DOWN = 1u << 4u,
+	OCCLUDE_UP = 1u << 5u,
+	OCCLUDE_RIGHT = 1u << 6u,
+	OCCLUDE_LEFT = 1u << 7u,
+	OCCLUDE_FRONT = 1u << 8u,
+	OCCLUDE_BACK = 1u << 9u,
 };
 
 class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentType::CHUNK_STATUS>
