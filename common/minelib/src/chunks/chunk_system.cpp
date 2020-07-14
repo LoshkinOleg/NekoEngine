@@ -14,7 +14,6 @@ namespace neko
 ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 	: blockManager_(engine.blockManager),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager),
-	  transform3dManager_(engine.componentsManagerSystem.transform3dManager),
 	  entityManager_(engine.entityManager)
 {
 }
@@ -26,7 +25,6 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 #endif
 	const Entity newChunkIndex = entityManager_.CreateEntity();
 	chunkManager_.AddComponent(newChunkIndex);
-	transform3dManager_.AddComponent(newChunkIndex);
 
 	const auto randBlock = blockManager_.GetRandomBlock();
 	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
@@ -61,8 +59,6 @@ void ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 #endif
 
 	chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
-	transform3dManager_.SetPosition(newChunkIndex,
-	                                Vec3f(pos * kChunkSize) + Vec3f((kChunkSize - 1) / 2.0f));
 }
 
 void ChunkSystem::Init()
@@ -212,8 +208,7 @@ void ChunkSystem::Update(seconds dt)
 		if (entityManager_.HasComponent(loadedChunk,
 		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
-			GizmosLocator::get().DrawCube(
-				transform3dManager_.GetPosition(loadedChunk),
+			GizmosLocator::get().DrawCube(Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f((kChunkSize - 1) / 2.0f),
 				Vec3f::one * kChunkSize,
 				chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
 					? Color::blue

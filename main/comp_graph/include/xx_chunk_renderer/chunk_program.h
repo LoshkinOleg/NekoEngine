@@ -40,7 +40,7 @@ private:
 	EntityManager& entityManager_;
 	BlockManager& blockManager_;
 	AabbManager& aabbManager_;
-	Transform3dManager& transform3dManager_;
+	//Transform3dManager& transform3dManager_;
 
 	ChunkManager& chunkManager_;
 

@@ -11,7 +11,6 @@ HelloChunkRenderer::HelloChunkRenderer()
 	  entityManager_(engine_.entityManager),
 	  blockManager_(engine_.blockManager),
 	  aabbManager_(engine_.componentsManagerSystem.aabbManager),
-	  transform3dManager_(engine_.componentsManagerSystem.transform3dManager),
 	  chunkManager_(engine_.componentsManagerSystem.chunkManager),
 	  chunkRenderer_(engine_, camera_)
 {
@@ -31,9 +30,6 @@ void HelloChunkRenderer::Init()
 		chunkManager_.AddComponent(chunk);
 		chunkManager_.chunkPosManager.SetComponent(chunk, 
 			Vec3i(chunk % kChunkNumDiam, chunk / kChunkNumDiam % kChunkNumDiam, chunk / (kChunkNumDiam * kChunkNumDiam)));
-		transform3dManager_.AddComponent(chunk);
-		transform3dManager_.SetPosition(chunk, 
-			Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk) * kChunkSize) + Vec3f(kChunkSize / 2.0f));
 		chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::LOADED);
 	}
 	
@@ -267,12 +263,12 @@ void HelloChunkRenderer::Render()
 
 	for (size_t i = 1; i < chunksInFront.size(); ++i)
 	{
-		const auto& chunkPos = transform3dManager_.GetPosition(chunksInFront[i]);
+		const auto& chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[i]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
 		for (size_t j = 1; j < chunksInFront.size(); ++j)
 		{
 			if (chunksInFront[j] == chunksInFront[i]) continue;
 			
-			const auto& otherChunkPos = transform3dManager_.GetPosition(chunksInFront[j]);
+			const auto& otherChunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[j]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
 			if ((chunkPos - camera_.position).SquareMagnitude() < (otherChunkPos - camera_.position).SquareMagnitude())
 				std::swap(chunksInFront[i], chunksInFront[j]);
 		}

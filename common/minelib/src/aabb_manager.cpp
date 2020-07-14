@@ -12,8 +12,7 @@ namespace neko
 AabbManager::AabbManager(MinecraftLikeEngine& engine)
 	: engine_(engine),
 	  entityManager_(engine.entityManager),
-	  chunkManager_(engine.componentsManagerSystem.chunkManager),
-	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
+	  chunkManager_(engine.componentsManagerSystem.chunkManager)
 {
 	AabbLocator::provide(this);
 }

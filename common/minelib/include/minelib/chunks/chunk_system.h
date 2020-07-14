@@ -47,7 +47,6 @@ private:
 	const float kHeighChunktLimit_ = 8;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
-	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 
 	std::vector<Job> scheduledChunks_;
