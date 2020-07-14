@@ -44,9 +44,8 @@ void ChunkRenderer::Init()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//Attatch depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
@@ -61,7 +60,7 @@ void ChunkRenderer::Init()
 	depthCamera_.SetSize(Vec2f::one * 10.0f);
 	depthCamera_.nearPlane = 1.0f;
 	depthCamera_.position = directionalLight_.position;
-	depthCamera_.reverseDirection = -directionalLight_.direction;
+	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
 }
 
 void ChunkRenderer::DrawImGui()
@@ -97,13 +96,14 @@ void ChunkRenderer::Render()
 	const auto& config = BasicEngine::GetInstance()->config;
 	
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	glCullFace(GL_FRONT);
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(simpleDepthShader_);
-
+	
+	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
 
@@ -112,49 +112,22 @@ void ChunkRenderer::Render()
 	
 }
 
-	/*
-	 * float ShadowCalculation(vec4 fragPosLightSpace)
-{
-    // perform perspective divide
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-	projCoords = projCoords * 0.5 + 0.5;
-	float closestDepth = texture(shadowMap, projCoords.xy).r;  
-	float currentDepth = projCoords.z;  
 	
-	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-
-	for(int x = -1; x <= 1; ++x)
-	{
-		for(int y = -1; y <= 1; ++y)
-		{
-			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-			shadow += currentDepth > pcfDepth ? 1.0 : 0.0;   
-		}    
-	}
-	shadow /= 9.0;
-	
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
-	
-	return shadow;
-}
-	 */
 void ChunkRenderer::RenderScene(const gl::Shader& shader) const
 {
 	const auto lightView = depthCamera_.GenerateViewMatrix();
 	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
 	const auto lightSpaceMatrix = lightProjection * lightView;
 	shader.Bind();
-	shader.SetVec3("light.color", directionalLight_.color);
-	shader.SetVec3("light.direction", directionalLight_.direction.Normalized());
+	//shader.SetVec3("light.color", directionalLight_.color);
+	//shader.SetVec3("light.direction", directionalLight_.direction.Normalized());
 	
 	shader.SetInt("shininess", directionalLight_.specularPow);
 
 	shader.SetFloat("ambientStrength", directionalLight_.ambientStrength);
 	shader.SetFloat("diffuseStrength", directionalLight_.diffuseStrength);
 	shader.SetFloat("specularStrength", directionalLight_.specularStrength);
-	
+
 	shader.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 	shader.SetMat4("view", camera_.GenerateViewMatrix());
@@ -164,7 +137,8 @@ void ChunkRenderer::RenderScene(const gl::Shader& shader) const
 	shader.SetTexture("diffuse", atlasTex_, 0);
 	shader.SetTexture("shadowMap", depthMap_, 1);
 	shader.SetVec3("lightPos", directionalLight_.position);
-	
+	shader.SetVec3("lightDirection", directionalLight_.direction.Normalized());
+
 	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
 	for (auto& chunk : visibleChunks)
 	{
