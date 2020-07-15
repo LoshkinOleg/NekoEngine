@@ -23,42 +23,25 @@ void ChunkRenderer::Init()
 {
 	stbi_set_flip_vertically_on_load(true);
 	const auto& config = BasicEngine::GetInstance()->config;
-	/*shader_.LoadFromFile(
-		config.dataRootPath + "shaders/minecraft_like/light.vert",
-		config.dataRootPath + "shaders/minecraft_like/light.frag");*/
+
+	//Load Shaders
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/cubeShadow.vert",
 		config.dataRootPath + "shaders/minecraft_like/cubeShadow.frag");
 	simpleDepthShader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.vert",
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.frag");
-	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
-	glEnable(GL_DEPTH_TEST);
 	
-	//Configure depth map FBO
-	glGenFramebuffers(1, &depthMapFBO);
+	//Load Textures
+	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
+	
+	InitShadow();
 
-	//Create depth texture
-	glGenTextures(1, &depthMap_);
-	glBindTexture(GL_TEXTURE_2D, depthMap_);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//Attatch depth texture as FBO's depth buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
-	glDrawBuffers(0, GL_NONE);
-	glReadBuffer(GL_NONE);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	//Set Light values
 	directionalLight_.position = camera_.position + Vec3f::up * 50.0f;
 	directionalLight_.direction = -Vec3f::one;
+
+	//Set depthCamera values
 	depthCamera_.SetSize(Vec2f::one * 50.0f);
 	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
@@ -103,14 +86,16 @@ void ChunkRenderer::Render()
 	EASY_BLOCK("ChunkRenderer::Render");
 #endif
 	const auto& config = BasicEngine::GetInstance()->config;
-	
+
+	//Render With shadows
 	glEnable(GL_CULL_FACE);
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
 	RenderScene(simpleDepthShader_);
-	
+
+	//Render normal
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -122,25 +107,12 @@ void ChunkRenderer::Render()
 }
 
 	
-void ChunkRenderer::RenderScene(const gl::Shader& shader) const
-{
-	const auto lightView = depthCamera_.GenerateViewMatrix();
-	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
-	const auto lightSpaceMatrix = lightProjection * lightView;
+void ChunkRenderer::RenderScene(gl::Shader& shader) const
+{	
+	SetCameraParameters(camera_, shader);
 	
-	shader.Bind();
-	/*shader.SetFloat("ambientStrength", directionalLight_.ambientStrength);
-	shader.SetFloat("diffuseStrength", directionalLight_.diffuseStrength);
-	shader.SetFloat("specularStrength", directionalLight_.specularStrength);
-	shader.SetInt("shininess", directionalLight_.specularPow);*/
-
-	shader.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-	SetCameraParameters(camera_);
-	shader.SetTexture("diffuse", atlasTex_, 0);
-	shader.SetTexture("shadowMap", depthMap_, 1);
-	shader.SetVec3("lightDirection", directionalLight_.direction.Normalized());
-
+	SetShadowParameters(shader);
+	
 	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
 	for (auto& chunk : visibleChunks)
 	{
@@ -157,12 +129,55 @@ void ChunkRenderer::RenderScene(const gl::Shader& shader) const
 	}
 }
 
-void ChunkRenderer::SetCameraParameters(const Camera& camera) const
-{
-	shader_.SetMat4("view", camera.GenerateViewMatrix());
-	shader_.SetMat4("projection", camera.GenerateProjectionMatrix());
-	shader_.SetVec3("viewPos", camera.position);
+
+void ChunkRenderer::InitShadow() {
+	glEnable(GL_DEPTH_TEST);
+
+	//Configure depth map FBO
+	glGenFramebuffers(1, &depthMapFBO);
+
+	//Create depth texture
+	glGenTextures(1, &depthMap_);
+	glBindTexture(GL_TEXTURE_2D, depthMap_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	//Attatch depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
+	glDrawBuffers(0, GL_NONE);
+	glReadBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+	
+void ChunkRenderer::SetCameraParameters(const Camera& camera, gl::Shader& shader) const
+{
+	shader.Bind();
+	shader.SetMat4("view", camera.GenerateViewMatrix());
+	shader.SetMat4("projection", camera.GenerateProjectionMatrix());
+	shader.SetVec3("viewPos", camera.position);
+}
+
+void ChunkRenderer::SetShadowParameters(gl::Shader& shader) const {
+	const auto lightView = depthCamera_.GenerateViewMatrix();
+	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
+	const auto lightSpaceMatrix = lightProjection * lightView;
+	
+	shader.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
+	shader.SetTexture("diffuse", atlasTex_, 0);
+	shader.SetTexture("shadowMap", depthMap_, 1);
+	shader.SetVec3("lightDirection", directionalLight_.direction.Normalized());
+	shader.SetFloat("bias", bias_);
+}
+
 
 void ChunkRenderer::SetLightParameters() const
 {
