@@ -72,7 +72,7 @@ void ChunkSystem::Init()
 	RendererLocator::get().Render(this);
 }
 
-void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex)
+void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling", profiler::colors::Pink100);
@@ -218,22 +218,22 @@ void ChunkSystem::Update(seconds dt)
 	//Update Visible Chunks
 	UpdateVisibleChunks();
 
-	////Display Chunks Gizmos
-	//const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
-	//for (auto loadedChunk : loadedChunks)
-	//{
-	//	if (entityManager_.HasComponent(loadedChunk,
-	//	                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
-	//	{
-	//		GizmosLocator::get().DrawCube(
-	//			Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
-	//				(kChunkSize - 1) / 2.0f),
-	//			Vec3f::one * kChunkSize,
-	//			chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
-	//				? Color::blue
-	//				: Color::red);
-	//	}
-	//}
+	//Display Chunks Gizmos
+	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
+	for (auto loadedChunk : loadedChunks)
+	{
+		if (entityManager_.HasComponent(loadedChunk,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+		{
+			GizmosLocator::get().DrawCube(
+				Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
+					(kChunkSize - 1) / 2.0f),
+				Vec3f::one * kChunkSize,
+				chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
+					? Color::blue
+					: Color::red);
+		}
+	}
 }
 
 void ChunkSystem::Render()
@@ -241,8 +241,10 @@ void ChunkSystem::Render()
 	std::lock_guard<std::mutex> lock(mutex_);
 	while (!scheduledChunks_.empty())
 	{
-		Job& currentTask = scheduledChunks_.front();
-		currentTask.Execute();
+		auto currentTask = scheduledChunks_.front();
+		if (!currentTask) continue;
+		
+		currentTask();
 		scheduledChunks_.erase(scheduledChunks_.begin());
 	}
 }

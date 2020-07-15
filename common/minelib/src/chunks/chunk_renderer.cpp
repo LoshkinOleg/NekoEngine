@@ -30,6 +30,8 @@ void ChunkRenderer::Init()
 		config.dataRootPath + "shaders/minecraft_like/base/cube_vertex.vert",
 		config.dataRootPath + "shaders/minecraft_like/base/cube.frag");
 	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
+	
+	RendererLocator::get().Render(this);
 }
 
 void ChunkRenderer::DrawImGui()
@@ -52,7 +54,8 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::Update(seconds dt)
 {
-	//GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
+	RendererLocator::get().Render(this);
+	GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
 void ChunkRenderer::Render()

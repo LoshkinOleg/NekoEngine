@@ -86,7 +86,7 @@ void HelloChunkRenderer::Render()
 		}
 	}
 
-	std::vector<Entity> chunksInFront;
+	/*std::vector<Entity> chunksInFront;
 	chunksInFront.push_back(closestChunk);
 	for (auto& chunk : chunks_)
 	{
@@ -287,7 +287,7 @@ void HelloChunkRenderer::Render()
 			gizmosRenderer_.Render();
 			break;
 		}
-	}
+	}*/
 	
 	skyboxCube_.Draw(camera_.GenerateViewMatrix(), camera_.GenerateProjectionMatrix());
 }

@@ -16,9 +16,7 @@ class ChunkSystem final : public RenderCommandInterface, public SystemInterface
 public:
 	explicit ChunkSystem(MinecraftLikeEngine& engine);
 
-
 	void Init() override;
-
 
 	void Update(seconds dt) override;
 	void Render() override;
@@ -35,7 +33,7 @@ private:
 	 */
 	Entity GenerateChunkArray(const Vec3i& pos);
 
-	void SetChunkOcclusionCulling(Entity chunkIndex);
+	void SetChunkOcclusionCulling(Entity chunkIndex) const;
 
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
@@ -48,6 +46,6 @@ private:
 	ChunkManager& chunkManager_;
 	EntityManager& entityManager_;
 
-	std::vector<Job> scheduledChunks_;
+	std::vector<std::function<void()>> scheduledChunks_;
 };
 }
