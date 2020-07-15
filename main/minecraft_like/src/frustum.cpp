@@ -80,7 +80,6 @@ bool Frustum::Contains(const neko::Vec3f & point)
 
 bool Frustum::Contains(const neko::Aabb3d & aabb)
 {
-	/*
 	if (Contains(aabb.lowerLeftBound))
 		return true;
 	if (Contains(aabb.upperRightBound))
@@ -98,8 +97,9 @@ bool Frustum::Contains(const neko::Aabb3d & aabb)
 		return true;
 	if (Contains(aabb.upperRightBound - neko::Vec3f(0, 0, 1)))
 		return true;
-	*/
+	return false;
 	
+	/*
 	if (aabb.upperRightBound.x < xMin)
 		return false;
 	if (aabb.upperRightBound.y < yMin)
@@ -114,6 +114,7 @@ bool Frustum::Contains(const neko::Aabb3d & aabb)
 	if (aabb.lowerLeftBound.z > zMax)
 		return false;
 	return true;
+	*/
 }
 
 bool Frustum::Contains(const neko::Vec3f & center, float radius)
