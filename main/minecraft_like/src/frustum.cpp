@@ -59,11 +59,11 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimiz
 	
 	xMax = std::max(std::max(std::max(ntr.x, nbr.x), std::max(nbl.x, ftr.x)), std::max(std::max(ftl.x, fbl.x), std::max(ntl.x, fbr.x)));
 	yMax = std::max(std::max(std::max(ntr.y, nbr.y), std::max(nbl.y, ftr.y)), std::max(std::max(ftl.y, fbl.y), std::max(ntl.y, fbr.y)));
-	zMax = std::max(std::max(std::max(ntr.z, nbr.z), std::max(nbl.z, ftr.z)), std::max(std::max(ftl.z, fbl.z), std::max(ntl.z, fbr.x)));
+	zMax = std::max(std::max(std::max(ntr.z, nbr.z), std::max(nbl.z, ftr.z)), std::max(std::max(ftl.z, fbl.z), std::max(ntl.z, fbr.z)));
 
 	xMin = std::min(std::min(std::min(ntr.x, nbr.x), std::min(nbl.x, ftr.x)), std::min(std::min(ftl.x, fbl.x), std::min(ntl.x, fbr.x)));
 	yMin = std::min(std::min(std::min(ntr.y, nbr.y), std::min(nbl.y, ftr.y)), std::min(std::min(ftl.y, fbl.y), std::min(ntl.y, fbr.y)));
-	zMin = std::min(std::min(std::min(ntr.z, nbr.z), std::min(nbl.z, ftr.z)), std::min(std::min(ftl.z, fbl.z), std::min(ntl.z, fbr.x)));	
+	zMin = std::min(std::min(std::min(ntr.z, nbr.z), std::min(nbl.z, ftr.z)), std::min(std::min(ftl.z, fbl.z), std::min(ntl.z, fbr.z)));	
 }
 
 bool Frustum::Contains(const neko::Vec3f & point)
