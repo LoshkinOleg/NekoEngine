@@ -56,9 +56,11 @@ void ChunkRenderer::Init()
 		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	 
-	depthCamera_.SetSize(Vec2f::one * 10.0f);
-	depthCamera_.nearPlane = 1.0f;
+
+	directionalLight_.position = camera_.position + Vec3f::up * 50.0f;
+	directionalLight_.direction = -Vec3f::one;
+	depthCamera_.SetSize(Vec2f::one * 50.0f);
+	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
 	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
 }
@@ -67,17 +69,23 @@ void ChunkRenderer::DrawImGui()
 {
 	ImGui::Begin("Light");
 	Vec3f lightDirection = directionalLight_.direction;
-	if (ImGui::DragFloat3("Direction", &lightDirection[0]))
+	if (ImGui::DragFloat3("Direction", &lightDirection[0], 0.01f, -1.0f, 1.0f))
 	{
 		directionalLight_.direction = lightDirection;
 		depthCamera_.reverseDirection = -lightDirection;
 	}
 
 	Vec3f lightPosition = directionalLight_.position;
-	if (ImGui::DragFloat3("Position", &lightPosition[0]))
+	if (ImGui::DragFloat3("Position", &lightPosition[0], 0.01f))
 	{
 		directionalLight_.position = lightPosition;
 		depthCamera_.position = lightPosition;
+	}
+
+	auto size = depthCamera_.GetSize();
+	if (ImGui::DragFloat2("Size", &size[0], 0.01f))
+	{
+		depthCamera_.SetSize(size);
 	}
 
 	ImGui::End();
@@ -85,7 +93,8 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::Update(seconds dt)
 {
-	GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
+	directionalLight_.position = camera_.position - directionalLight_.direction * 50.0f;
+	depthCamera_.position = directionalLight_.position;
 }
 
 void ChunkRenderer::Render()
@@ -96,20 +105,20 @@ void ChunkRenderer::Render()
 	const auto& config = BasicEngine::GetInstance()->config;
 	
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-
+	
 	RenderScene(simpleDepthShader_);
 	
-	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	SetLightParameters();
 	RenderScene(shader_);
 	
+	GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
 	
@@ -118,25 +127,18 @@ void ChunkRenderer::RenderScene(const gl::Shader& shader) const
 	const auto lightView = depthCamera_.GenerateViewMatrix();
 	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
 	const auto lightSpaceMatrix = lightProjection * lightView;
-	shader.Bind();
-	//shader.SetVec3("light.color", directionalLight_.color);
-	//shader.SetVec3("light.direction", directionalLight_.direction.Normalized());
 	
-	shader.SetInt("shininess", directionalLight_.specularPow);
-
-	shader.SetFloat("ambientStrength", directionalLight_.ambientStrength);
+	shader.Bind();
+	/*shader.SetFloat("ambientStrength", directionalLight_.ambientStrength);
 	shader.SetFloat("diffuseStrength", directionalLight_.diffuseStrength);
 	shader.SetFloat("specularStrength", directionalLight_.specularStrength);
+	shader.SetInt("shininess", directionalLight_.specularPow);*/
 
 	shader.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-	shader.SetMat4("view", camera_.GenerateViewMatrix());
-	shader.SetMat4("projection", camera_.GenerateProjectionMatrix());
-	shader.SetVec3("viewPos", camera_.position);
-
+	SetCameraParameters(camera_);
 	shader.SetTexture("diffuse", atlasTex_, 0);
 	shader.SetTexture("shadowMap", depthMap_, 1);
-	shader.SetVec3("lightPos", directionalLight_.position);
 	shader.SetVec3("lightDirection", directionalLight_.direction.Normalized());
 
 	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
