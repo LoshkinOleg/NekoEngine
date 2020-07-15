@@ -53,11 +53,21 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimiz
 	planes_[3] = leftP;
 	planes_[4] = topP;
 	planes_[5] = rightP;
+
+	neko::Vec3f ntl = nearP.point_ + up * heightNear / 2 - right * widthNear / 2;
+	neko::Vec3f fbr = farP.point_ - up * heightFar / 2 + right * widthFar / 2;
+	
+	xMax = std::max(std::max(std::max(ntr.x, nbr.x), std::max(nbl.x, ftr.x)), std::max(std::max(ftl.x, fbl.x), std::max(ntl.x, fbr.x)));
+	yMax = std::max(std::max(std::max(ntr.y, nbr.y), std::max(nbl.y, ftr.y)), std::max(std::max(ftl.y, fbl.y), std::max(ntl.y, fbr.y)));
+	zMax = std::max(std::max(std::max(ntr.z, nbr.z), std::max(nbl.z, ftr.z)), std::max(std::max(ftl.z, fbl.z), std::max(ntl.z, fbr.x)));
+
+	xMin = std::min(std::min(std::min(ntr.x, nbr.x), std::min(nbl.x, ftr.x)), std::min(std::min(ftl.x, fbl.x), std::min(ntl.x, fbr.x)));
+	yMin = std::min(std::min(std::min(ntr.y, nbr.y), std::min(nbl.y, ftr.y)), std::min(std::min(ftl.y, fbl.y), std::min(ntl.y, fbr.y)));
+	zMin = std::min(std::min(std::min(ntr.z, nbr.z), std::min(nbl.z, ftr.z)), std::min(std::min(ftl.z, fbl.z), std::min(ntl.z, fbr.x)));	
 }
 
 bool Frustum::Contains(const neko::Vec3f & point)
 {
-	//std::printf("Contains POINT \n");
 	for (int i = 0; i < 6;i++)
 	{
 		if (planes_[i].Distance(point) < 0)
@@ -70,10 +80,7 @@ bool Frustum::Contains(const neko::Vec3f & point)
 
 bool Frustum::Contains(const neko::Aabb3d & aabb)
 {
-	//std::printf("Contains BOX \n");
-	//TODO replace by SAT
-	// /!\ DOESNT WORK YET WITH CHUNKS
-
+	/*
 	if (Contains(aabb.lowerLeftBound))
 		return true;
 	if (Contains(aabb.upperRightBound))
@@ -91,13 +98,26 @@ bool Frustum::Contains(const neko::Aabb3d & aabb)
 		return true;
 	if (Contains(aabb.upperRightBound - neko::Vec3f(0, 0, 1)))
 		return true;
+	*/
 	
-	return false;
+	if (aabb.upperRightBound.x < xMin)
+		return false;
+	if (aabb.upperRightBound.y < yMin)
+		return false;
+	if (aabb.upperRightBound.z < zMin)
+		return false;
+
+	if (aabb.lowerLeftBound.x > xMax)
+		return false;
+	if (aabb.lowerLeftBound.y > yMax)
+		return false;
+	if (aabb.lowerLeftBound.z > zMax)
+		return false;
+	return true;
 }
 
 bool Frustum::Contains(const neko::Vec3f & center, float radius)
 {
-	//std::printf("Contains Sphere \n");
 	for(int i =0; i<6;i++)
 	{
 		if (planes_[i].Distance(center) < radius)

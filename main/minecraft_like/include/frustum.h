@@ -34,4 +34,10 @@ public:
 
 private:
 	std::array<Plane,6> planes_;
+	float xMax;
+	float yMax;
+	float zMax;
+	float xMin;
+	float yMin;
+	float zMin;
 };
