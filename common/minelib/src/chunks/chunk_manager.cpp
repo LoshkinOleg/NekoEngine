@@ -53,7 +53,8 @@ void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const std::shared
 	EASY_BLOCK("ChunkContentManager::FillOfBlock");
 #endif
 	if (block->blockTex.sideTexId == 0) return;
-	components_[chunkIndex].resize(kChunkBlockCount);
+	components_[chunkIndex].clear();
+	components_[chunkIndex].reserve(kChunkBlockCount);
 	for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
 	{
 		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block->blockTex));
@@ -228,10 +229,14 @@ Index ChunkRenderManager::AddComponent(const Entity chunkIndex)
     ResizeIfNecessary(components_, chunkIndex, ChunkRender{});
     entityManager_.AddComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_RENDER));
 	
+    return chunkIndex;
+}
+
+void ChunkRenderManager::Init(const Entity chunkIndex)
+{
 	components_[chunkIndex].cube.Init();
 	glGenBuffers(1, &components_[chunkIndex].vbo);
-	
-    return chunkIndex;
+
 }
 
 void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)

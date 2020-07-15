@@ -52,7 +52,7 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::Update(seconds dt)
 {
-	GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
+	//GizmosLocator::get().DrawCube(directionalLight_.position_, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
 void ChunkRenderer::Render()
@@ -71,7 +71,8 @@ void ChunkRenderer::Render()
 		else
 			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
 		if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
-			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
+			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY) ||
+			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::OCCLUDED))
 			continue;
 		
 		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));

@@ -54,6 +54,7 @@ enum class ChunkFlag : std::uint16_t
 	OCCLUDE_LEFT = 1u << 7u,
 	OCCLUDE_FRONT = 1u << 8u,
 	OCCLUDE_BACK = 1u << 9u,
+	OCCLUDED = 1u << 10
 };
 
 class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentType::CHUNK_STATUS>
@@ -90,7 +91,9 @@ public:
 	ChunkRenderManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager);
 
 	Index AddComponent(Entity chunkIndex) override;
-	
+
+	void Init(Entity chunkIndex);
+
 	void Draw(Entity chunkIndex) const;
 	void SetChunkValues(Entity chunkIndex);
 

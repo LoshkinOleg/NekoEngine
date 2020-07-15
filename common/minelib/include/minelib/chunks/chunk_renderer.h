@@ -41,6 +41,7 @@ public:
 	void SetLightParameters() const;
 
 private:
+	std::mutex mutex_;
 	Camera& camera_;
 
 	MinecraftLikeEngine& engine_;

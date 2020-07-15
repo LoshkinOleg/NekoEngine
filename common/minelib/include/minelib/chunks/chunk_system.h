@@ -16,19 +16,9 @@ class ChunkSystem final : public RenderCommandInterface, public SystemInterface
 public:
 	explicit ChunkSystem(MinecraftLikeEngine& engine);
 
-	/**
-	 * \brief Generate a chunk depend on it position
-	 */
-	void GenerateChunkArray(const Vec3i& pos);
 
 	void Init() override;
 
-	void SetChunkOcclusionCulling(Entity chunkIndex);
-
-	/**
-	 * \brief Update chunks if they are visible or not and load new chunks
-	 */
-	void UpdateVisibleChunks();
 
 	void Update(seconds dt) override;
 	void Render() override;
@@ -40,11 +30,20 @@ public:
 	void Destroy() override;
 
 private:
+	/**
+	 * \brief Generate a chunk depend on it position
+	 */
+	Entity GenerateChunkArray(const Vec3i& pos);
 
+	void SetChunkOcclusionCulling(Entity chunkIndex);
+
+	/**
+	 * \brief Update chunks if they are visible or not and load new chunks
+	 */
+	void UpdateVisibleChunks();
+	
 	std::mutex mutex_;
 	
-	const float kMaxViewDist_ = 32;
-	const float kHeighChunktLimit_ = 8;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	EntityManager& entityManager_;
