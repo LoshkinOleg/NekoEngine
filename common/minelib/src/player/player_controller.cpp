@@ -125,9 +125,9 @@ void PlayerController::MovePlayer()
 	
 	ResolvePhysics();
 
-	player_.pos += camera_.GetRight() * player_.velocity.x +
+	player_.pos += camera_.rightDirection * player_.velocity.x +
 		Vec3f::up * player_.velocity.y * Time::fixedDeltaTime - 
-		Vec3f::Cross(camera_.GetRight(), Vec3f::up) * player_.velocity.z;
+		Vec3f::Cross(camera_.rightDirection, Vec3f::up) * player_.velocity.z;
 	player_.aabb.SetFromCenter(player_.pos + Vec3f::up, player_.aabbSize);
 	
 	camera_.position = player_.pos + player_.cameraOffset;
@@ -183,7 +183,7 @@ void PlayerController::HeadBobbing()
 {
 	if (IsMoving())
     {
-        player_.cameraOffset = camera_.GetRight() * std::sin(player_.bobbingTimer / 2) * player_.bobbingAmount;
+        player_.cameraOffset = camera_.rightDirection * std::sin(player_.bobbingTimer / 2) * player_.bobbingAmount;
         player_.cameraOffset.y = player_.defaultPosY + std::sin(player_.bobbingTimer) * player_.bobbingAmount;
         player_.bobbingTimer += player_.bobbingSpeed * player_.speedMultiplier * Time::deltaTime;
     }

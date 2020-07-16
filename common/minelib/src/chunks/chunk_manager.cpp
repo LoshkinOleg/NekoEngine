@@ -242,11 +242,13 @@ void ChunkRenderManager::Init(const Entity chunkIndex)
 void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)
 {
 	const auto blocks = chunkContentManager_.GetBlocks(chunkIndex);
+	glCheckError();
 	if (blocks.empty()) return;
 	
 	glBindVertexArray(components_[chunkIndex].cube.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, components_[chunkIndex].vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkContent) * blocks.size(), &blocks[0], GL_STATIC_DRAW);
+	glCheckError();
 	glVertexAttribIPointer(5, 1, GL_SHORT, sizeof(ChunkContent), (void*) offsetof(ChunkContent, blockId));
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);

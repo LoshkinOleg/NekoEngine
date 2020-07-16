@@ -12,20 +12,19 @@ void HelloNormalProgram::Init()
 	normalTex_.SetPath(config.dataRootPath + "sprites/brickwall/brickwall_normal.jpg");
 	normalTex_.LoadFromDisk();
 
-	normalShader_.LoadFromFile(
-		config.dataRootPath + "shaders/18_hello_normal/normal.vert",
-		config.dataRootPath + "shaders/18_hello_normal/normal.frag");
-	diffuseShader_.LoadFromFile(
-		config.dataRootPath + "shaders/18_hello_normal/model.vert",
-		config.dataRootPath + "shaders/18_hello_normal/model.frag"
-	);
+    normalShader_.LoadFromFile(
+            config.dataRootPath + "shaders/18_hello_normal/normal.vert",
+            config.dataRootPath + "shaders/18_hello_normal/normal.frag");
+    diffuseShader_.LoadFromFile(
+            config.dataRootPath + "shaders/18_hello_normal/model.vert",
+            config.dataRootPath + "shaders/18_hello_normal/model.frag");
 
 	plane_.Init();
 	cube_.Init();
 	model_.LoadModel(config.dataRootPath + "model/nanosuit2/nanosuit.obj");
-
+	sphere_.Init();
 	camera_.position = Vec3f(-3.0f, 3.0f, 3.0f);
-	camera_.LookAt(Vec3f::zero);
+	camera_.WorldLookAt(Vec3f::zero);
 }
 
 void HelloNormalProgram::Update(seconds dt)
@@ -47,6 +46,7 @@ void HelloNormalProgram::Destroy()
 	model_.Destroy();
 	diffuseTex_.Destroy();
 	normalTex_.Destroy();
+	sphere_.Destroy();
 }
 
 void HelloNormalProgram::DrawImGui()
@@ -66,6 +66,11 @@ void HelloNormalProgram::DrawImGui()
 	if (ImGui::Checkbox("Use Cube", &useCube))
 	{
 		flags_ = useCube ? flags_ | ENABLE_CUBE : flags_ & ~ENABLE_CUBE;
+	}
+	bool enableSphere = flags_ & ENABLE_SPHERE;
+	if (ImGui::Checkbox("Enable Sphere", &enableSphere))
+	{
+		flags_ = enableSphere ? flags_ | ENABLE_SPHERE : flags_ & ENABLE_SPHERE;
 	}
 	bool enableNormal = flags_ & ENABLE_NORMAL_MAP;
 	if (ImGui::Checkbox("Enable Normal Map", &enableNormal))
@@ -146,6 +151,9 @@ void HelloNormalProgram::Render()
 		case ENABLE_CUBE:
 			cube_.Draw();
 			break;
+		case ENABLE_SPHERE:
+			sphere_.Draw();
+			break;
 		default:
 			break;
 		}
@@ -161,6 +169,10 @@ void HelloNormalProgram::Render()
 	if (flags_ & ENABLE_PLANE)
 	{
 		draw(ENABLE_PLANE);
+	}
+	if(flags_ & ENABLE_SPHERE)
+	{
+		draw(ENABLE_SPHERE);
 	}
 	
 }

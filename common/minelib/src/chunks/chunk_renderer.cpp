@@ -29,7 +29,7 @@ void ChunkRenderer::Init()
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/base/cube_vertex.vert",
 		config.dataRootPath + "shaders/minecraft_like/base/cube.frag");
-	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
+	atlasTex_ = gl::stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
 	
 	RendererLocator::get().Render(this);
 }

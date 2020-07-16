@@ -20,10 +20,12 @@ void HelloChunkRenderer::Init()
 {
 	stbi_set_flip_vertically_on_load(true);
 	camera_.position = Vec3f(kChunkSize * kRenderDist + kChunkSize / 2.0f, 17.0f, kChunkSize * kRenderDist + kChunkSize / 2.0f);
-	camera_.LookAt(Vec3f::one);
+	camera_.WorldLookAt(Vec3f::one);
 		
 	blockManager_.Init();
+	glCheckError();
 	gizmosRenderer_.Init();
+	glCheckError();
 	for (auto& chunk : chunks_)
 	{
 		chunk = entityManager_.CreateEntity();
@@ -32,7 +34,6 @@ void HelloChunkRenderer::Init()
 			Vec3i(chunk % kChunkNumDiam, chunk / kChunkNumDiam % kChunkNumDiam, chunk / (kChunkNumDiam * kChunkNumDiam)));
 		chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::LOADED);
 	}
-	
 	for (uint16_t x = 0; x < kChunkNumDiam; ++x)
 	{
 		for (uint16_t z = 0; z < kChunkNumDiam; ++z)
@@ -41,11 +42,14 @@ void HelloChunkRenderer::Init()
 			{
 				chunkManager_.chunkContentManager.SetBlock(chunks_[x + z * kChunkNumDiam * kChunkNumDiam], blockManager_.GetBlock(rand() % 6 + 1), id);
 			}
+			chunkManager_.chunkRenderManager.Init(chunks_[x + z * kChunkNumDiam * kChunkNumDiam]);
 			chunkManager_.chunkRenderManager.SetChunkValues(chunks_[x + z * kChunkNumDiam * kChunkNumDiam]);
 		}
 	}
 
+	glCheckError();
 	chunkRenderer_.Init();
+	glCheckError();
 	
 	stbi_set_flip_vertically_on_load(false);
 	const auto& config = BasicEngine::GetInstance()->config;

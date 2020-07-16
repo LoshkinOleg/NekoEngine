@@ -23,9 +23,14 @@ void JobSystem::ScheduleJob(Job* func, JobThreadType threadType)
 {
     auto scheduleJobFunc = [&func](JobQueue& jobQueue)
     {
+#ifndef NEKO_SAMETHREAD
         std::unique_lock<std::mutex> lock(jobQueue.mutex_);
         jobQueue.jobs_.push(func);
         jobQueue.cv_.notify_one();
+#else
+        jobQueue.jobs_.push(func);
+#endif
+
     };
 	switch (threadType)
 	{
@@ -52,40 +57,61 @@ void JobSystem::ScheduleJob(Job* func, JobThreadType threadType)
 	default: ;
 	}
 }
-
+#ifdef NEKO_SAMETHREAD
+void JobSystem::KickJobs()
+{
+    Work(resourceJobs_);
+    Work(jobs_);
+    Work(renderJobs_);
+}
+#endif
 void JobSystem::Work(JobQueue& jobQueue)
 {
-    ++initializedWorkers_; // Atomic increment.
-
-    while (status_ & Status::RUNNING) // Atomic check.
+    {
+#ifndef NEKO_SAMETHREAD
+        std::lock_guard<std::mutex> lock(statusMutex_);
+        ++workersStarted_;
+#endif
+    }
+    while (IsRunning())
     {
         Job* job = nullptr;
         {// CRITICAL
+#ifndef NEKO_SAMETHREAD
             std::unique_lock<std::mutex> lock(jobQueue.mutex_);
+#endif
             if (!jobQueue.jobs_.empty())
             {
                 job = jobQueue.jobs_.front();
                 jobQueue.jobs_.pop();
                 if (!job->CheckDependenciesStarted())
                 {
+#ifndef NEKO_SAMETHREAD
                 	if(jobQueue.jobs_.empty())
                 	{
 #ifdef EASY_PROFILE_USE
                         EASY_BLOCK("Wait for Dependencies");
 #endif
+
                         jobQueue.cv_.wait_for(lock, std::chrono::microseconds(100));
+
                 	}
+#endif
                     jobQueue.jobs_.push(job);
                     continue;
                 }
             }
             else
             {
-                if (status_ & RUNNING) // Atomic check.
+#ifdef NEKO_SAMETHREAD
+                break;
+#else
+                if (IsRunning()) // Atomic check.
                 {
                     jobQueue.cv_.wait(lock); // !CRITICAL
                 }
             	continue; //Refetch a new job
+#endif
             }
         }// !CRITICAL
         job->Execute();
@@ -94,8 +120,9 @@ void JobSystem::Work(JobQueue& jobQueue)
 
 void JobSystem::Init()
 {
-    numberOfWorkers = std::thread::hardware_concurrency() - 1;
-    //TODO@Oleg: Add neko assert to check number of worker threads is valid!
+    status_ = RUNNING;
+#ifndef NEKO_SAMETHREAD
+    numberOfWorkers = std::max(3u, std::thread::hardware_concurrency() - 1);
     workers_.resize(numberOfWorkers);
 
     const size_t len = numberOfWorkers;
@@ -121,18 +148,28 @@ void JobSystem::Init()
         }
 
     }
+#endif
 }
 
 void JobSystem::Destroy()
 {
+#ifndef NEKO_SAMETHREAD
 // Spin-lock waiting for all threads to become ready for shutdown.
-    while (initializedWorkers_ != numberOfWorkers ||
-        !jobs_.jobs_.empty() ||
-        !renderJobs_.jobs_.empty() ||
-        !resourceJobs_.jobs_.empty())
-    {} // WARNING: Not locking mutex for task_ access here!
-
-    status_ = 0u; // Atomic assign.
+    std::function<bool()> checkFunc = [this]()
+    {
+        std::lock_guard<std::mutex> lock(statusMutex_);
+        return workersStarted_ != numberOfWorkers ||
+                  !jobs_.jobs_.empty() ||
+                  !renderJobs_.jobs_.empty() ||
+                  !resourceJobs_.jobs_.empty();
+    };
+    while (checkFunc())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds (1));
+    }
+#endif
+    status_ = NONE;
+#ifndef NEKO_SAMETHREAD
     renderJobs_.cv_.notify_all();
     resourceJobs_.cv_.notify_all();
 	jobs_.cv_.notify_all(); // Wake all workers.
@@ -141,45 +178,65 @@ void JobSystem::Destroy()
     {
         workers_[i].join(); // Join all workers.
     }
+#endif
 }
 
+bool JobSystem::IsRunning()
+{
+#ifndef NEKO_SAMETHREAD
+    std::lock_guard<std::mutex> lock(statusMutex_);
+#endif
+    return status_ & Status::RUNNING;
+}
+#ifndef NEKO_SAMETHREAD
+std::uint8_t JobSystem::CountStartedWorkers()
+{
+    std::lock_guard<std::mutex> lock(statusMutex_);
+    return workersStarted_;
+}
+#endif
 
 Job::Job(std::function<void()> task) :
         task_(std::move(task)),
-        taskDoneFuture_(promise_.get_future()),
         status_(0)
+#ifndef NEKO_SAMETHREAD
+, taskDoneFuture_(promise_.get_future())
+#endif
 {
 
 }
 
 Job::Job(Job&& job) noexcept
 {
-	promise_ = std::move(job.promise_);
-	dependencies_ = std::move(job.dependencies_);
-	task_ = std::move(job.task_);
-	taskDoneFuture_ = std::move(job.taskDoneFuture_);
-	status_ = job.status_.load();
+    dependencies_ = std::move(job.dependencies_);
+    task_ = std::move(job.task_);
+    status_ = job.status_;
+#ifndef NEKO_SAMETHREAD
+    promise_ = std::move(job.promise_);
+    taskDoneFuture_ = std::move(job.taskDoneFuture_);
+#endif
 }
 
 Job& Job::operator=(Job&& job) noexcept
 {
-	promise_ = std::move(job.promise_);
-	dependencies_ = std::move(job.dependencies_);
-	task_ = std::move(job.task_);
-	taskDoneFuture_ = std::move(job.taskDoneFuture_);
-	status_ = job.status_.load();
-	return *this;
+    dependencies_ = std::move(job.dependencies_);
+    task_ = std::move(job.task_);
+    status_ = job.status_;
+    return *this;
 }
-
+#ifndef NEKO_SAMETHREAD
 void Job::Join() const
 {
-    if(!(status_ & DONE))
+    if(!IsDone())
+    {
         taskDoneFuture_.get();
+    }
 }
+#endif
 
 void Job::Execute()
 {
-
+#ifndef NEKO_SAMETHREAD
     for (auto& dep : dependencies_)
     {
         if (!dep->IsDone())
@@ -187,25 +244,49 @@ void Job::Execute()
             dep->Join();
         }
     }
+#endif
 
-    status_ |= STARTED;
+    {
+#ifndef NEKO_SAMETHREAD
+        std::lock_guard<std::mutex> lock(statusLock_);
+#endif
+        status_ |= STARTED;
+    }
     task_();
-    status_ |= DONE;
+    {
+#ifndef NEKO_SAMETHREAD
+        std::lock_guard<std::mutex> lock(statusLock_);
+#endif
+        status_ |= DONE;
+    }
+#ifndef NEKO_SAMETHREAD
     promise_.set_value();
+#endif
 }
 
-bool Job::CheckDependenciesStarted()
+bool Job::CheckDependenciesStarted() const
 {
 	for(auto& dep : dependencies_)
 	{
-		if(!(dep->status_ & STARTED))
+		if(!dep->HasStarted())
             return false;
 	}
     return true;
 }
 
+bool Job::HasStarted() const
+{
+#ifndef NEKO_SAMETHREAD
+    std::lock_guard<std::mutex> lock(statusLock_);
+#endif
+    return status_ & STARTED;
+}
+
 bool Job::IsDone() const
 {
+#ifndef NEKO_SAMETHREAD
+    std::lock_guard<std::mutex> lock(statusLock_);
+#endif
     return status_ & DONE;
 }
 
@@ -236,9 +317,15 @@ void Job::AddDependency(const Job* dependentJob)
 
 void Job::Reset()
 {
+#ifndef NEKO_SAMETHREAD
     promise_ = std::promise<void>();
     taskDoneFuture_ = promise_.get_future();
+#endif
     status_ = 0;
     dependencies_.clear();
 }
+
+
+
+
 }

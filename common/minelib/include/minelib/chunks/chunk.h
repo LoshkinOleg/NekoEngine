@@ -5,8 +5,8 @@
 
 namespace neko
 {
-const static float kMaxViewDist = 128;
-const static float kHeightChunkLimit = 16;
+const static float kMaxViewDist = 16;
+const static float kHeightChunkLimit = 4;
 const static uint16_t kChunkSize = 16;
 const static uint16_t kChunkBlockCount = kChunkSize * kChunkSize * kChunkSize;
 using BlockId = uint16_t;

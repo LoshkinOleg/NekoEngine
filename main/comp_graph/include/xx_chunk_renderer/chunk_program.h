@@ -10,7 +10,7 @@
 
 namespace neko
 {
-const static uint16_t kRenderDist = 6;
+const static uint16_t kRenderDist = 1;
 const static uint16_t kChunkNumDiam = kRenderDist * 2 + 1;
 const static uint16_t kChunkNum = kChunkNumDiam * kChunkNumDiam * kChunkNumDiam;
 
