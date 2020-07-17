@@ -1,7 +1,4 @@
 #include "minelib/minecraft_like_engine.h"
-#ifdef EASY_PROFILE_USE
-#include <easy/profiler.h>
-#endif
 
 namespace neko
 {
@@ -16,9 +13,6 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	RegisterOnDrawUi(drawSystem_);
 	RegisterSystem(componentsManagerSystem);
 	RegisterSystem(blockManager);
-#ifdef EASY_PROFILE_USE
-	EASY_PROFILER_ENABLE;
-#endif
 }
 
 void MinecraftLikeEngine::Init()
@@ -28,9 +22,6 @@ void MinecraftLikeEngine::Init()
 
 void MinecraftLikeEngine::Destroy()
 {
-#ifdef EASY_PROFILE_USE
-	profiler::dumpBlocksToFile("minecraft_profile.prof");
-#endif
 	drawSystem_.Destroy();
 	componentsManagerSystem.Destroy();
 	blockManager.Destroy();

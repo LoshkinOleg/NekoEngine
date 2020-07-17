@@ -104,6 +104,10 @@ public:
 
 	void Destroy() override;
 
+	void Start();
+	void Stop();
+	
+
 	void DrawCube(
 		const Vec3f& pos,
 		const Vec3f& size = Vec3f::one,
@@ -128,6 +132,7 @@ private:
 	gl::Shader shaderLine_;
 
 	std::vector<Gizmos> gizmosQueue_;
+	bool isRunning_ = false;
 };
 
 using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;

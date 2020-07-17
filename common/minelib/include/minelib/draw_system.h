@@ -39,5 +39,7 @@ protected:
 	//test
     Vec3f savedCameraPos_;
     Vec3f savedCameraDir_;
+    bool raycastOn_ = false;
+    bool gizmosOn_ = false;
 };
 }

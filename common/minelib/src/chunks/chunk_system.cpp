@@ -136,7 +136,7 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 	{
 		//chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::VISIBLE);
 		chunkManager_.chunkStatusManager.AddStatus(chunkIndex, ChunkFlag::OCCLUDED);
-	}
+	} 
 }
 
 void ChunkSystem::UpdateVisibleChunks()
@@ -220,6 +220,9 @@ void ChunkSystem::UpdateVisibleChunks()
 
 void ChunkSystem::Update(seconds dt)
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkSystem::Update", profiler::colors::Green);
+#endif
 	RendererLocator::get().Render(this);
 
 	//Update Visible Chunks
