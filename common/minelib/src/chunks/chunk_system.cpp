@@ -14,21 +14,20 @@ namespace neko
 ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 	: blockManager_(engine.blockManager),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager),
-	  entityManager_(engine.entityManager)
+	  entityManager_(engine.entityManager),
+	  engine_(engine)
 {
 }
 
-Entity ChunkSystem::GenerateChunkArray(const Vec3i& pos)
+Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkSystem::GenerateChunk", profiler::colors::Blue);
 #endif
-	const Entity newChunkIndex = entityManager_.CreateEntity();
-	chunkManager_.AddComponent(newChunkIndex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
 	//const auto randBlock = blockManager_.GetRandomBlock();
 	const auto randBlock = blockManager_.GetBlock(RandomRange(1, 6));
-	chunkManager_.chunkPosManager.SetComponent(newChunkIndex, pos);
 	if (pos.y > kHeightChunkLimit / 2)
 	{
 	}
@@ -59,6 +58,11 @@ Entity ChunkSystem::GenerateChunkArray(const Vec3i& pos)
 			chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
 		}
 	}
+	scheduledChunks_.emplace_back([this, newChunkIndex]
+		{
+			chunkManager_.chunkRenderManager.Init(newChunkIndex);
+			chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
+		});
 #ifdef EASY_PROFILE_USE
 	EASY_END_BLOCK
 #endif
@@ -184,12 +188,14 @@ void ChunkSystem::UpdateVisibleChunks()
 				std::lock_guard<std::mutex> lock(mutex_);
 				if (it == chunks.end())
 				{
-					Entity newChunkIndex = GenerateChunkArray(viewedChunkPos);
-					scheduledChunks_.emplace_back([this, newChunkIndex]
-					{
-						chunkManager_.chunkRenderManager.Init(newChunkIndex);
-						chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
-					});
+					const Entity newChunkIndex = entityManager_.CreateEntity();
+					chunkManager_.AddComponent(newChunkIndex);
+					chunkManager_.chunkPosManager.SetComponent(newChunkIndex, viewedChunkPos);
+					generationJobs_.push_back(std::make_unique<Job>([this, newChunkIndex, viewedChunkPos]
+						{
+							GenerateChunkArray(newChunkIndex, viewedChunkPos);
+						}));
+					engine_.ScheduleJob(generationJobs_.back().get(), JobThreadType::OTHER_THREAD);
 					dirtyChunks.push_back(newChunkIndex);
 				}
 				else
@@ -207,6 +213,7 @@ void ChunkSystem::UpdateVisibleChunks()
 #endif
 	for (auto dirtyChunk : dirtyChunks)
 	{
+		std::lock_guard<std::mutex> lock(mutex_);
 		SetChunkOcclusionCulling(dirtyChunk);
 	}
 }

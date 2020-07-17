@@ -4,6 +4,7 @@
 #include <mathematics/vector.h>
 #include <thread>
 #include <mutex>
+#include <minelib/chunks/chunk.h>
 
 namespace neko
 {
@@ -31,7 +32,7 @@ private:
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	Entity GenerateChunkArray(const Vec3i& pos);
+	Entity GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos);
 
 	void SetChunkOcclusionCulling(Entity chunkIndex) const;
 
@@ -45,7 +46,9 @@ private:
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	EntityManager& entityManager_;
+	MinecraftLikeEngine& engine_;
 
 	std::vector<std::function<void()>> scheduledChunks_;
+	std::vector<std::unique_ptr<Job>> generationJobs_;
 };
 }

@@ -19,7 +19,6 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 #ifdef EASY_PROFILE_USE
 	EASY_PROFILER_ENABLE;
 #endif
-
 }
 
 void MinecraftLikeEngine::Init()
