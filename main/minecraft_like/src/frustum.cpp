@@ -18,8 +18,8 @@ Frustum::Frustum(){}
 
 Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimize
 {
-	neko::Vec3f position = camera.position;
 	neko::Vec3f direction = -camera.reverseDirection;
+	neko::Vec3f position = camera.position + direction;//*10;
 	neko::Vec3f right = camera.GetRight();
 	neko::Vec3f up = camera.GetUp();
 	float nearPlaneDistance = camera.nearPlane;
@@ -30,17 +30,17 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimiz
 	Plane nearP = Plane(position + direction.Normalized() * nearPlaneDistance, direction.Normalized());
 	Plane farP = Plane(position + direction.Normalized() * farPlaneDistance, -direction.Normalized());
 
-	float heightNear = neko::Cos(fovX / 2) * nearPlaneDistance;
-	float widthNear = neko::Cos(fovY / 2) * nearPlaneDistance;
-	float heightFar = neko::Cos(fovX / 2) * farPlaneDistance;
-	float widthFar = neko::Cos(fovY / 2) * farPlaneDistance;
+	float heightNear = neko::Sin(fovY / 2) * nearPlaneDistance*2;
+	float widthNear = neko::Sin(fovY / 2)* nearPlaneDistance*2;
+	float heightFar = neko::Sin(fovX / 2) * farPlaneDistance*2;
+	float widthFar = neko::Sin(fovY / 2) * farPlaneDistance*2;
 
-	neko::Vec3f ntr = nearP.point_ + up * heightNear/2 + right * widthNear/2; //Near Top Right
-	neko::Vec3f nbr = nearP.point_ - up * heightNear/2 + right * widthNear/2;
-	neko::Vec3f nbl = nearP.point_ - up * heightNear/2 - right * widthNear/2;
-	neko::Vec3f ftr = farP.point_ + up * heightFar/2 + right * widthFar/2;
-	neko::Vec3f ftl = farP.point_ + up * heightFar/2 - right * widthFar/2;
-	neko::Vec3f fbl = farP.point_ - up * heightFar/2- right * widthFar/2; //Far Bottom Left
+	neko::Vec3f ntr = nearP.point_ + up * heightNear + right * widthNear; //Near Top Right
+	neko::Vec3f nbr = nearP.point_ - up * heightNear + right * widthNear;
+	neko::Vec3f nbl = nearP.point_ - up * heightNear - right * widthNear;
+	neko::Vec3f ftr = farP.point_ + up * heightFar + right * widthFar;
+	neko::Vec3f ftl = farP.point_ + up * heightFar - right * widthFar;
+	neko::Vec3f fbl = farP.point_ - up * heightFar - right * widthFar; //Far Bottom Left
 
 	Plane rightP = Plane(ntr, nbr, ftr);
 	Plane leftP = Plane(ftl, fbl, nbl);
@@ -54,8 +54,8 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimiz
 	planes_[4] = topP;
 	planes_[5] = bottomP;
 
-	neko::Vec3f ntl = nearP.point_ + up * heightNear / 2 - right * widthNear / 2;
-	neko::Vec3f fbr = farP.point_ - up * heightFar / 2 + right * widthFar / 2;
+	neko::Vec3f ntl = nearP.point_ + up * heightNear - right * widthNear;
+	neko::Vec3f fbr = farP.point_ - up * heightFar + right * widthFar;
 
 	fbr_ = fbr;
 	ftr_ = ftr;
@@ -70,7 +70,7 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera) //TODO clean and optimiz
 	axis[4] = camera.GetRight();
 	axis[5] = camera.GetUp();
 
-	cameraPosition = camera.position;
+	cameraPosition = position;
 	
 	xMax = std::max(std::max(std::max(ntr.x, nbr.x), std::max(nbl.x, ftr.x)), std::max(std::max(ftl.x, fbl.x), std::max(ntl.x, fbr.x)));
 	yMax = std::max(std::max(std::max(ntr.y, nbr.y), std::max(nbl.y, ftr.y)), std::max(std::max(ftl.y, fbl.y), std::max(ntl.y, fbr.y)));
@@ -113,9 +113,10 @@ bool Frustum::Contains(const neko::Aabb3d& aabb)
 		return true;
 	if (Contains(aabb.upperRightBound - neko::Vec3f(0, 0, 1)))
 		return true;
-	return false;
-	
+		return false;
 
+	//TODO Fix SAT
+	/*
 	//Projects frustum on aabb axis
 	if (aabb.upperRightBound.x < xMin)
 		return false;
@@ -132,6 +133,8 @@ bool Frustum::Contains(const neko::Aabb3d& aabb)
 		return false;
 
 	
+	
+	//Projects aabb on frustum axis
 	std::array<neko::Vec3f, 6> aabbBounds;
 
 	aabbBounds[0] = aabb.lowerLeftBound;
@@ -140,9 +143,7 @@ bool Frustum::Contains(const neko::Aabb3d& aabb)
 	aabbBounds[3] = neko::Vec3f(aabb.upperRightBound.x, aabb.lowerLeftBound.y, aabb.lowerLeftBound.z);
 	aabbBounds[4] = neko::Vec3f(aabb.upperRightBound.x, aabb.lowerLeftBound.y, aabb.upperRightBound.z);
 	aabbBounds[5] = aabb.upperRightBound;
-
-	/*
-	//Projects aabb on frustum axis
+	
 	//top right axis
 	for (int i = 0; i < 6;i++)
 	{
@@ -152,53 +153,54 @@ bool Frustum::Contains(const neko::Aabb3d& aabb)
 		if (i == 5)
 			return false;
 	}
+	//top left axis
 	for (int i = 0; i < 6;i++)
 	{
-			//top left axis
 			if (!(neko::Vec3f::Dot(aabbBounds[i] - nbl_, axis[1]) > neko::Vec3f::Dot(planes_[3].point_ - nbl_, axis[1])) &&
 				(!(neko::Vec3f::Dot(aabbBounds[i] - planes_[3].point_, -axis[1]) > neko::Vec3f::Dot(ntl_ - planes_[3].point_, -axis[1]))))
 				break;
 			if (i == 5)
 				return false;
 	}
+	//bottom left axis
 	for (int i = 0; i < 6;i++)
 	{
-			//bottom left axis
-			if ((!neko::Vec3f::Dot(aabbBounds[i] - ntl_, axis[2]) > neko::Vec3f::Dot(fbl_ - ntl_, axis[2])) &&
-				((!neko::Vec3f::Dot(aabbBounds[i] - fbl_, -axis[2]) > neko::Vec3f::Dot(ntl_ - fbl_, -axis[2]))))
-				break;
-			if (i == 5)
-				return false;
+			
+		if (!(neko::Vec3f::Dot(aabbBounds[i] - ntl_, axis[2]) > neko::Vec3f::Dot(fbl_ - ntl_, axis[2])) &&
+			(!(neko::Vec3f::Dot(aabbBounds[i] - fbl_, -axis[2]) > neko::Vec3f::Dot(ntl_ - fbl_, -axis[2]))))
+			break;
+		if (i == 5)
+			return false;
 	}
+	//bottom right axis
 	for (int i = 0; i < 6;i++)
 	{
-			//bottom right axis
-			if ((!neko::Vec3f::Dot(aabbBounds[i] - planes_[2].point_, axis[3]) > neko::Vec3f::Dot(fbr_ - planes_[2].point_, axis[3])) &&
-				((!neko::Vec3f::Dot(aabbBounds[i] - fbr_, -axis[3]) > neko::Vec3f::Dot(planes_[2].point_ - fbr_, -axis[3]))))
-				break;;
-			if (i == 5)
-				return false;
+		if (!(neko::Vec3f::Dot(aabbBounds[i] - planes_[2].point_, axis[3]) > neko::Vec3f::Dot(fbr_ - planes_[2].point_, axis[3])) &&
+			(!(neko::Vec3f::Dot(aabbBounds[i] - fbr_, -axis[3]) > neko::Vec3f::Dot(planes_[2].point_ - fbr_, -axis[3]))))
+			break;;
+		if (i == 5)
+			return false;
 	}
+	//horizontal axis
 	for (int i = 0; i < 6;i++)
 	{
-			//horizontal axis
-			if ((!neko::Vec3f::Dot(aabbBounds[i] - fbl_, axis[4]) > neko::Vec3f::Dot(fbr_ - fbl_, axis[4])) &&
-				((!neko::Vec3f::Dot(aabbBounds[i] - fbr_, -axis[4]) > neko::Vec3f::Dot(fbl_ - fbr_, -axis[4]))))
-				break;
-			if (i == 5)
-				return false;
+		if (!(neko::Vec3f::Dot(aabbBounds[i] - fbl_, axis[4]) > neko::Vec3f::Dot(fbr_ - fbl_, axis[4])) &&
+			(!(neko::Vec3f::Dot(aabbBounds[i] - fbr_, -axis[4]) > neko::Vec3f::Dot(fbl_ - fbr_, -axis[4]))))
+			break;
+		if (i == 5)
+			return false;
 	}
+	//vertical axis
 	for (int i = 0; i < 6;i++)
 	{
-			//vertical axis
-			if ((!neko::Vec3f::Dot(aabbBounds[i] - fbl_, axis[5]) > neko::Vec3f::Dot(planes_[3].point_ - fbl_, axis[5])) && 
-				((!neko::Vec3f::Dot(aabbBounds[i] - planes_[3].point_, -axis[5]) > neko::Vec3f::Dot(fbl_ - planes_[3].point_, -axis[5]))))
-				break;
-			if (i == 5)
-				return false;
-	}
-	*/
+		if (!(neko::Vec3f::Dot(aabbBounds[i] - fbl_, axis[5]) > neko::Vec3f::Dot(planes_[3].point_ - fbl_, axis[5])) && 
+			(!(neko::Vec3f::Dot(aabbBounds[i] - planes_[3].point_, -axis[5]) > neko::Vec3f::Dot(fbl_ - planes_[3].point_, -axis[5]))))
+			break;
+		if (i == 5)
+			return false;
+	}	
 	return true;
+	*/
 }
 
 bool Frustum::Contains(const neko::Vec3f & center, float radius)

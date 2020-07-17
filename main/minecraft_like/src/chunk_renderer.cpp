@@ -34,7 +34,7 @@ namespace neko
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 
-		//frustum_ = Frustum(camera_); // For testing
+		frustum_ = Frustum(camera_); // For testing
 	}
 
 	void ChunkRenderer::Update(seconds dt)
@@ -72,7 +72,7 @@ namespace neko
 					{
 						for (int z = 0; z < kChunkSize; z++)
 						{
-							if(frustum_.Contains(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(),Vec3f(0.5,0.5,0.5))))
+							if (frustum_.Contains(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(), Vec3f(0.5, 0.5, 0.5))))
 							{
 #ifdef EASY_PROFILE_USE
 								EASY_BLOCK("ChunkRenderer::Render::Air");
