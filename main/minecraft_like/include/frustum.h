@@ -33,6 +33,12 @@ public:
 	bool Contains(const neko::Vec3f & center, float radius);
 
 private:
+	neko::Vec3f fbr_;
+	neko::Vec3f ftr_;
+	neko::Vec3f ntl_;
+	neko::Vec3f nbl_;
+	neko::Vec3f fbl_;
+	
 	std::array<Plane,6> planes_;
 	float xMax;
 	float yMax;
@@ -40,4 +46,7 @@ private:
 	float xMin;
 	float yMin;
 	float zMin;
+
+	std::array<neko::Vec3f, 6> axis;
+	neko::Vec3f cameraPosition;
 };
