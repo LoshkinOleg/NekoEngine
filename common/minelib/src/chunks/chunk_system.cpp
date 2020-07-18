@@ -24,8 +24,9 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkSystem::GenerateChunk", profiler::colors::Blue);
 #endif
-	std::lock_guard<std::mutex> lock(mutex_);
-
+	ChunkContentVector chunkContent;
+	chunkContent.reserve(kChunkBlockCount);
+	ChunkMask chunkMask = 0;
 	//const auto randBlock = blockManager_.GetRandomBlock();
 	const auto randBlock = blockManager_.GetBlock(RandomRange(1, 6));
 	if (pos.y > kHeightChunkLimit / 2)
@@ -34,13 +35,19 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 	else if (pos.y < kHeightChunkLimit / 2)
 	{
 		const auto stoneBlock = blockManager_.GetBlock(RandomRange(1, 6));
-		chunkManager_.chunkContentManager.FillOfBlock(newChunkIndex, stoneBlock);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_UP);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_LEFT);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_RIGHT);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_FRONT);
-		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_BACK);
+
+		for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
+		{
+			const ChunkContent content = ChunkContent(blockId,
+			                                          BlockTexToTexHash(stoneBlock->blockTex));
+			chunkContent.emplace_back(blockId, BlockTexToTexHash(stoneBlock->blockTex));
+		}
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_UP);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_LEFT);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_RIGHT);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_FRONT);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_BACK);
 	}
 	else
 	{
@@ -48,21 +55,26 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				chunkManager_.chunkContentManager.SetBlock(newChunkIndex,
-				                                           randBlock,
-				                                           PosToBlockId(Vec3i(x, 0, z)));
+				chunkContent.emplace_back(PosToBlockId(Vec3i(x, 0, z)),
+				                          BlockTexToTexHash(randBlock->blockTex));
+				chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
 			}
 		}
 		if (randBlock->name != "Glass")
 		{
-			chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::OCCLUDE_DOWN);
 		}
 	}
+
+	chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, chunkMask);
+	chunkManager_.chunkContentManager.FillOfBlocks(newChunkIndex, chunkContent);
+
+	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledChunks_.emplace_back([this, newChunkIndex]
-		{
-			chunkManager_.chunkRenderManager.Init(newChunkIndex);
-			chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
-		});
+	{
+		chunkManager_.chunkRenderManager.Init(newChunkIndex);
+		chunkManager_.chunkRenderManager.SetChunkValues(newChunkIndex);
+	});
+
 #ifdef EASY_PROFILE_USE
 	EASY_END_BLOCK
 #endif
@@ -136,7 +148,7 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 	{
 		//chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::VISIBLE);
 		chunkManager_.chunkStatusManager.AddStatus(chunkIndex, ChunkFlag::OCCLUDED);
-	} 
+	}
 }
 
 void ChunkSystem::UpdateVisibleChunks()
@@ -176,6 +188,9 @@ void ChunkSystem::UpdateVisibleChunks()
 			{
 				Vec3i viewedChunkPos = currentChunkPos + Vec3i(xOffset, yOffset, zOffset);
 
+#ifdef EASY_PROFILE_USE
+				EASY_BLOCK("Chunks_System::find_if", profiler::colors::Green100);
+#endif
 				const auto it = std::find_if(chunks.begin(),
 				                             chunks.end(),
 				                             [this, viewedChunkPos](const Entity& chunk)
@@ -185,21 +200,35 @@ void ChunkSystem::UpdateVisibleChunks()
 					                                                    GetComponent(chunk);
 					                             return (chunkPos == viewedChunkPos);
 				                             });
-				std::lock_guard<std::mutex> lock(mutex_);
+#ifdef EASY_PROFILE_USE
+				EASY_END_BLOCK
+				EASY_BLOCK("Chunks_System::AddComponent", profiler::colors::Green100);
+#endif
 				if (it == chunks.end())
 				{
+#ifdef EASY_PROFILE_USE
+						EASY_BLOCK("Chunks_System::CreateEntity", profiler::colors::Green100);
+#endif
 					const Entity newChunkIndex = entityManager_.CreateEntity();
 					chunkManager_.AddComponent(newChunkIndex);
 					chunkManager_.chunkPosManager.SetComponent(newChunkIndex, viewedChunkPos);
-					generationJobs_.push_back(std::make_unique<Job>([this, newChunkIndex, viewedChunkPos]
+					generationJobs_.push_back(std::make_unique<Job>(
+						[this, newChunkIndex, viewedChunkPos]
 						{
 							GenerateChunkArray(newChunkIndex, viewedChunkPos);
 						}));
 					engine_.ScheduleJob(generationJobs_.back().get(), JobThreadType::OTHER_THREAD);
+#ifdef EASY_PROFILE_USE
+					EASY_END_BLOCK
+						EASY_BLOCK("Chunks_System::ScheduleJob", profiler::colors::Green100);
+#endif
 					dirtyChunks.push_back(newChunkIndex);
 				}
 				else
 				{
+#ifdef EASY_PROFILE_USE
+						EASY_BLOCK("Chunks_System::AddStatusVisible", profiler::colors::Green100);
+#endif
 					int index = std::distance(chunks.begin(), it);
 					chunkManager_.chunkStatusManager.AddStatus(chunks[index], ChunkFlag::VISIBLE);
 					chunks.erase(chunks.begin() + index);
@@ -208,14 +237,19 @@ void ChunkSystem::UpdateVisibleChunks()
 		}
 	}
 #ifdef EASY_PROFILE_USE
-	EASY_END_BLOCK
+	EASY_END_BLOCK;
 	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling", profiler::colors::Pink);
 #endif
-	for (auto dirtyChunk : dirtyChunks)
-	{
-		std::lock_guard<std::mutex> lock(mutex_);
-		SetChunkOcclusionCulling(dirtyChunk);
-	}
+	generationJobs_.push_back(std::make_unique<Job>(
+		[this, dirtyChunks]
+		{
+			for (auto dirtyChunk : dirtyChunks)
+		{
+			SetChunkOcclusionCulling(dirtyChunk);
+		}
+		}));
+	engine_.ScheduleJob(generationJobs_.back().get(), JobThreadType::OTHER_THREAD);
+	
 }
 
 void ChunkSystem::Update(seconds dt)
@@ -253,7 +287,7 @@ void ChunkSystem::Render()
 	{
 		auto currentTask = scheduledChunks_.front();
 		if (!currentTask) continue;
-		
+
 		currentTask();
 		scheduledChunks_.erase(scheduledChunks_.begin());
 	}

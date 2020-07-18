@@ -30,15 +30,19 @@ public:
 
 	void FillOfBlock(Entity chunkIndex, std::shared_ptr<Block> block);
 
+	void FillOfBlocks(Entity chunkIndex, const ChunkContentVector& chunkContentVector);
+
 	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
 	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
-	size_t GetChunkSize(Entity chunkIndex) const;
-	ChunkContentVector GetBlocks(Entity chunkIndex) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId) const;
+	size_t GetChunkSize(Entity chunkIndex);
+	ChunkContentVector GetBlocks(Entity chunkIndex);
+	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos);
+	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId);
 
 	void DestroyComponent(Entity chunkIndex) override;
+private:
+	std::mutex mutex_;
 };
 
 using ChunkMask = std::uint16_t;
@@ -66,15 +70,19 @@ public:
 	Index AddComponent(Entity chunkIndex) override;
 
 	void AddStatus(Entity entity, ChunkFlag chunkFlag);
-	void RemoveStatus(Entity entity, ChunkFlag chunkFlag);
-	bool HasStatus(Entity entity, ChunkFlag chunkFlag) const;
 
-	std::vector<Index> GetAccessibleChunks() const;
-	std::vector<Index> GetVisibleChunks() const;
-	std::vector<Index> GetLoadedChunks() const;
+	void AddStatus(Entity entity, ChunkMask chunkMask);
+
+	void RemoveStatus(Entity entity, ChunkFlag chunkFlag);
+	bool HasStatus(Entity entity, ChunkFlag chunkFlag);
+
+	std::vector<Index> GetAccessibleChunks();
+	std::vector<Index> GetVisibleChunks();
+	std::vector<Index> GetLoadedChunks();
 	
 private:
 	ChunkContentManager& chunkContentManager_;
+	std::mutex mutex_;
 };
 
 class ChunkPosManager final : public ComponentManager<Vec3i, ComponentType::CHUNK_POS>
@@ -94,13 +102,14 @@ public:
 
 	void Init(Entity chunkIndex);
 
-	void Draw(Entity chunkIndex) const;
+	void Draw(Entity chunkIndex);
 	void SetChunkValues(Entity chunkIndex);
 
 	void DestroyComponent(Entity chunkIndex) override;
 	
 private:
 	ChunkContentManager& chunkContentManager_;
+	std::mutex mutex_;
 };
 
 class ChunkManager
