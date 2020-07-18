@@ -3,9 +3,9 @@
 #include "mathematics/aabb.h"
 #include <graphics/camera.h>
 
-struct Plane //TODO change syntax to project standards
+struct Plane
 {
-	Plane();
+	Plane(){};
 	explicit Plane(const neko::Vec3f & point, const neko::Vec3f & normal)
 	{
 		point_ = point;
@@ -16,7 +16,7 @@ struct Plane //TODO change syntax to project standards
 		point_ = pointA;
 		normal_ = CalculateNormalFrom(pointA, pointB, pointC);
 	}
-	[[nodiscard]] neko::Vec3f CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC) const;
+	[[nodiscard]] static neko::Vec3f CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC);
 	[[nodiscard]] float Distance(const neko::Vec3f & point) const;
 	neko::Vec3f normal_; //Towards inside
 	neko::Vec3f point_;
@@ -25,28 +25,15 @@ struct Plane //TODO change syntax to project standards
 class Frustum
 {
 public:
-	Frustum();
+	Frustum(){};
+	
 	explicit Frustum(const neko::MoveableCamera3D & camera);
 
 	bool Contains(const neko::Vec3f & point);
 	bool Contains(const neko::Aabb3d & aabb);
 	bool Contains(const neko::Vec3f & center, float radius);
 
+	float cameraRecoil = 0.0f;
 private:
-	neko::Vec3f fbr_;
-	neko::Vec3f ftr_;
-	neko::Vec3f ntl_;
-	neko::Vec3f nbl_;
-	neko::Vec3f fbl_;
-	
 	std::array<Plane,6> planes_;
-	float xMax;
-	float yMax;
-	float zMax;
-	float xMin;
-	float yMin;
-	float zMin;
-
-	std::array<neko::Vec3f, 6> axis;
-	neko::Vec3f cameraPosition;
 };

@@ -61,7 +61,7 @@ namespace neko
 		{
 			if (!engine_.entityManager_.HasComponent(i, static_cast<EntityMask>(ComponentType::CHUNK))) { continue; }
 			Chunk chunk = engine_.componentsManagerSystem_.chunkManager_.GetComponent(i);
-			if(true) //(frustum_.Contains(chunk.GetAabb())) //False negatives
+			if(frustum_.Contains(Aabb3d(chunk.GetChunkPos() + Vec3f(8.0f, 8.0f, 8.0f), Vec3f(8.0f, 8.0f, 8.0f))))
 			{
 #ifdef EASY_PROFILE_USE
 				EASY_BLOCK("ChunkRenderer::Render::Chunk");
@@ -72,7 +72,7 @@ namespace neko
 					{
 						for (int z = 0; z < kChunkSize; z++)
 						{
-							if (frustum_.Contains(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(), Vec3f(0.5, 0.5, 0.5))))
+							if (frustum_.Contains(Aabb3d(Vec3f(x, y, z) + chunk.GetChunkPos(), Vec3f(0.5f, 0.5f, 0.5f))))
 							{
 #ifdef EASY_PROFILE_USE
 								EASY_BLOCK("ChunkRenderer::Render::Air");
