@@ -10,18 +10,21 @@ void HelloModelProgram::Init()
 	const auto& config = BasicEngine::GetInstance()->config;
 
 	const std::string path = config.dataRootPath + "model/nanosuit2/nanosuit.obj";
+    glCheckError();
 	model_.LoadModel(path);
 	camera_.Init();
-	shader_.LoadFromFile(
-		config.dataRootPath + "shaders/06_hello_model/model.vert",
-		config.dataRootPath + "shaders/06_hello_model/model.frag");
+    shader_.LoadFromFile(
+            config.dataRootPath + "shaders/06_hello_model/model.vert",
+            config.dataRootPath + "shaders/06_hello_model/model.frag");
 
+	glCheckError();
 
 
 }
 void HelloModelProgram::Update(seconds dt)
 {
 	std::lock_guard<std::mutex> lock(updateMutex_);
+
 	camera_.Update(dt);
 	const auto& config = BasicEngine::GetInstance()->config;
 
@@ -46,9 +49,12 @@ void HelloModelProgram::Render()
 {
 	if (shader_.GetProgram() == 0)
 		return;
+    glCheckError();
 	std::lock_guard<std::mutex> lock(updateMutex_);
 	if(!model_.IsLoaded())
 		return;
+
+	glCheckError();
 	shader_.Bind();
 	shader_.SetMat4("view", camera_.GenerateViewMatrix());
 	shader_.SetMat4("projection", projection_);
@@ -56,6 +62,7 @@ void HelloModelProgram::Render()
 	model = Transform3d::Rotate(model, degree_t(180.0f), Vec3f::up);
 	model = Transform3d::Scale(model, Vec3f(0.1f, 0.1f, 0.1f));
 	shader_.SetMat4("model", model);
+	shader_.SetMat4("normalMatrix", model.Inverse().Transpose());
 	model_.Draw(shader_);
 }
 

@@ -9,7 +9,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS On)
 include(cmake/neko_executable.cmake)
 
 
-set(Neko_SameThread OFF CACHE BOOL "Used for Emscripten and other system when render and engine has to be in the same thread")
 set(Neko_Profile OFF CACHE BOOL "Activate Profiling with Easy Profile")
 set(Neko_GLES3 ON CACHE BOOL "Activate OpenGL ES 3.0")
 set(Neko_SDL2 ON CACHE BOOL "Activate SDL2")
@@ -19,6 +18,8 @@ set(Neko_Assert ON CACHE BOOL "Activate Neko Assertion")
 set(Neko_Benchmark ON CACHE BOOL "Activate Benchmark")
 set(Neko_Lua ON CACHE BOOL "Activate Lua Wrapper")
 set(Neko_Assimp ON CACHE BOOL "Activate Assimp Wrapper")
+set(MineLib ON CACHE BOOL "Activate MineLib")
+set(Neko_SameThread OFF CACHE BOOL "Activate Same Thread Rendering and Resource Loading")
 
 MESSAGE("CMAKE SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 
@@ -26,7 +27,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
     include(cmake/platforms/emscripten.cmake)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
-    set(Neko_SameThread ON CACHE BOOL "Used for Emscripten and other system when render and engine has to be in the same thread")
+    set(Neko_SameThread ON CACHE BOOL "")
     mark_as_advanced(Neko_SameThread)
 endif()
 
@@ -50,11 +51,12 @@ if(Neko_Assert)
 endif()
 
 if(Neko_SameThread)
-    MESSAGE("Neko Update and Render will be on the same thread")
     add_compile_definitions("NEKO_SAMETHREAD=1")
 endif()
 
+
 if(Neko_Profile)
+    MESSAGE("Enable profiling")
     set(EASY_PROFILE_DIR "${EXTERNAL_DIR}/easy_profiler-2.1.0")
     add_compile_definitions("EASY_PROFILE_USE=1")
     add_subdirectory(${EASY_PROFILE_DIR})
@@ -164,6 +166,10 @@ if(Neko_Benchmark)
     add_subdirectory("benchmark/")
     set_target_properties (benchmark PROPERTIES FOLDER Externals/GTest)
     set_target_properties(benchmark_main PROPERTIES FOLDER Externals/GTest)
+endif()
+
+if(MineLib)
+    add_subdirectory("common/minelib")
 endif()
 
 set(main_project_dir "main/")

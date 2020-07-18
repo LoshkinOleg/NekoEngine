@@ -33,21 +33,19 @@ void HelloFrustumProgram::Init()
     const auto& config = BasicEngine::GetInstance()->config;
     model_.LoadModel(config.dataRootPath + "model/rock/rock.obj");
 
-    
     vertexInstancingDrawShader_.LoadFromFile(
-        config.dataRootPath + "shaders/17_hello_frustum/asteroid_vertex_instancing.vert",
-        config.dataRootPath + "shaders/17_hello_frustum/asteroid.frag");
+            config.dataRootPath + "shaders/17_hello_frustum/asteroid_vertex_instancing.vert",
+            config.dataRootPath + "shaders/17_hello_frustum/asteroid.frag");
     screenShader_.LoadFromFile(config.dataRootPath + "shaders/17_hello_frustum/screen.vert",
-        config.dataRootPath + "shaders/17_hello_frustum/screen.frag"
-    );
+                               config.dataRootPath + "shaders/17_hello_frustum/screen.frag");
 
     camera_.position = Vec3f(0.0f, 600.0f, -500.0f);
     camera_.farPlane = 1'000.0f;
-    camera_.LookAt(Vec3f::zero);
+    camera_.WorldLookAt(Vec3f::zero);
 
     overCamera_.position = Vec3f(0.0f, 600.0f, -500.0f);
     overCamera_.farPlane = 1'000.0f;
-    overCamera_.LookAt(Vec3f::zero);
+    overCamera_.WorldLookAt(Vec3f::zero);
     overCamera_.SetAspect(1024,1024);
 	
     mainPlane_.Init();
@@ -280,10 +278,10 @@ void HelloFrustumProgram::Culling(size_t begin, size_t end)
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Culling");
 #endif
-	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius;
+	const auto asteroidRadius = model_.GetMesh(0).GenerateBoundingSphere().radius_;
     const auto cameraDir = -camera_.reverseDirection;
-    const auto cameraRight = camera_.GetRight();
-    const auto cameraUp = camera_.GetUp();
+    const auto cameraRight = camera_.rightDirection;
+    const auto cameraUp = camera_.upDirection;
     const auto fovX = camera_.GetFovX();
 	
     const auto rightQuaternion = Quaternion::AngleAxis(fovX / 2.0f, cameraUp);
