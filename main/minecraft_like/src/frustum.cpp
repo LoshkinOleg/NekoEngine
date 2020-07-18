@@ -1,17 +1,5 @@
 #include "frustum.h"
 
-float Plane::Distance(const neko::Vec3f & point) const
-{
-	return neko::Vec3f::Dot(point - point_, normal_);
-}
-
-neko::Vec3f Plane::CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC)
-{
-	neko::Vec3f vecA = pointA - pointB;
-	neko::Vec3f vecB = pointC - pointB;
-	return neko::Vec3f::Cross(vecA, vecB).Normalized();
-}
-
 Frustum::Frustum(const neko::MoveableCamera3D & camera)
 {
 	neko::Vec3f direction = -camera.reverseDirection;
@@ -48,18 +36,6 @@ Frustum::Frustum(const neko::MoveableCamera3D & camera)
 
 	neko::Vec3f ntl = planes_[NEAR].point_ + up * heightNear - right * widthNear;
 	neko::Vec3f fbr = planes_[FAR].point_ - up * heightFar + right * widthFar;
-}
-
-bool Frustum::Contains(const neko::Vec3f & point)
-{
-	for (int i = 0; i < 6;i++)
-	{
-		if (planes_[i].Distance(point) < 0.0f)
-		{
-			return false;
-		}
-	}
-	return true;
 }
 
 bool Frustum::Contains(const neko::Aabb3d& aabb)

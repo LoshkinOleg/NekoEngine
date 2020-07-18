@@ -16,8 +16,16 @@ struct Plane
 		point_ = pointA;
 		normal_ = CalculateNormalFrom(pointA, pointB, pointC);
 	}
-	[[nodiscard]] static neko::Vec3f CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC);
-	[[nodiscard]] float Distance(const neko::Vec3f & point) const;
+	[[nodiscard]] static neko::Vec3f CalculateNormalFrom(const neko::Vec3f& pointA, const neko::Vec3f& pointB, const neko::Vec3f& pointC)
+	{
+		neko::Vec3f vecA = pointA - pointB;
+		neko::Vec3f vecB = pointC - pointB;
+		return neko::Vec3f::Cross(vecA, vecB).Normalized();
+	}
+	[[nodiscard]] float Distance(const neko::Vec3f& point) const
+	{
+		return neko::Vec3f::Dot(point - point_, normal_);
+	}
 	neko::Vec3f normal_; //Towards inside
 	neko::Vec3f point_;
 };
@@ -29,9 +37,7 @@ public:
 	
 	explicit Frustum(const neko::MoveableCamera3D & camera);
 
-	bool Contains(const neko::Vec3f & point);
 	bool Contains(const neko::Aabb3d & aabb);
-	bool Contains(const neko::Vec3f & center, float radius);
 
 	float cameraRecoil = 0.0f;
 private:
