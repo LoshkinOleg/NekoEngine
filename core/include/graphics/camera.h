@@ -240,7 +240,7 @@ struct MoveableCamera3D : Camera3D, public MovableCamera
 		
 		//Boost key test
 		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
-			cameraMove *= 3.0f;
+			cameraMove *= 25.0f;
 		
 		//Apply camera movement
 		position += (rightDirection * cameraMove.x +
