@@ -12,9 +12,13 @@ void UiElement::Init(const Vec2u& screenSize)
 void UiElement::Draw(const Vec2u& screenSize)
 {
 	glBindTexture(GL_TEXTURE_2D, textureId);
+	quad.Draw();
+}
+
+void UiElement::Update(const Vec2u& screenSize)
+{
 	const Vec2f normalSpaceSize = Vec2f(size) / Vec2f(screenSize);
 	quad.SetValues(normalSpaceSize, position);
-	quad.Draw();
 }
 
 void UiElement::Destroy()

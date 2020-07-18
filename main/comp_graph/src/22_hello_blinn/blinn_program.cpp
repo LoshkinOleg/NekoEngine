@@ -6,10 +6,10 @@ namespace neko
 void HelloBlinnProgram::Init()
 {
 	const auto& config = BasicEngine::GetInstance()->config;
-	modelShader_.LoadFromFile(config.dataRootPath + "shaders/22_hello_blinn/model.vert",
-		config.dataRootPath + "shaders/22_hello_blinn/model.frag");
-	blinnShader_.LoadFromFile(config.dataRootPath + "shaders/22_hello_blinn/model.vert",
-		config.dataRootPath + "shaders/22_hello_blinn/model_blinn.frag");
+    modelShader_.LoadFromFile(config.dataRootPath + "shaders/22_hello_blinn/model.vert",
+                              config.dataRootPath + "shaders/22_hello_blinn/model.frag");
+    blinnShader_.LoadFromFile(config.dataRootPath + "shaders/22_hello_blinn/model.vert",
+                              config.dataRootPath + "shaders/22_hello_blinn/model_blinn.frag");
 	floor_.Init();
 	floorTexture_.SetTextureFlags(gl::Texture::TextureFlags(gl::Texture::REPEAT_WRAP | gl::Texture::DEFAULT));
 	floorTexture_.SetPath(config.dataRootPath + "sprites/brickwall/brickwall.jpg");
@@ -17,7 +17,7 @@ void HelloBlinnProgram::Init()
 	model_.LoadModel(config.dataRootPath + "model/nanosuit2/nanosuit.obj");
 
 	camera_.position = Vec3f(0.0f, 3.0f, 3.0f);
-	camera_.LookAt(Vec3f::zero);
+	camera_.WorldLookAt(Vec3f::zero);
 }
 
 void HelloBlinnProgram::Update(seconds dt)

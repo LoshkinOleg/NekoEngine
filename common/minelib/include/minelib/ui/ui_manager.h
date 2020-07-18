@@ -31,8 +31,9 @@ class NullUiManager final : public IUiManager
 //-----------------------------------------------------------------------------
 /// \brief Draw gizmos
 class UiManager final : public RenderCommandInterface,
-                             public SystemInterface,
-                             public IUiManager
+                        public SystemInterface,
+                        public sdl::SdlEventSystemInterface,
+                        public IUiManager
 {
 public:
 	UiManager() = default;
@@ -45,6 +46,8 @@ public:
 	void AddUiElement(UiElement* uiElement) override;
 
 	void Render() override;
+
+	void OnEvent(const SDL_Event& event) override;
 
 	void Destroy() override;
 

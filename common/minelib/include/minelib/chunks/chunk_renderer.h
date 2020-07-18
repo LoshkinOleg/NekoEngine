@@ -1,62 +1,55 @@
 #pragma once
-#include <gl/shader.h>
-#include <gl/shape.h>
+#include "gl/shader.h"
+#include "gl/shape.h"
 
-#include <graphics/graphics.h>
-#include <sdl_engine/sdl_engine.h>
-#include <graphics/camera.h>
-#include <graphics/texture.h>
-#include <minelib/light.h>
+#include "graphics/camera.h"
+#include "graphics/graphics.h"
+#include "graphics/texture.h"
+#include "minelib/light.h"
 
 namespace neko
 {
-	class ChunksManager;
-	class Transform3dManager;
-	struct MoveableCamera3D;
-	class MinecraftLikeEngine;
+class Transform3dManager;
+struct MoveableCamera3D;
+class MinecraftLikeEngine;
+class ChunkRenderManager;
 
-	class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
-	{
-	public:
-		ChunkRenderer(
-			MinecraftLikeEngine& engine,
-			MoveableCamera3D& camera,
-			EntityViewer& entityViewer);
+struct ChunkRender
+{
+	unsigned vbo = 0;
+	gl::RenderCuboid cube{Vec3f::zero, Vec3f::one};
+};
 
-		void Init() override;
+class ChunkManager;
+class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
+{
+public:
+	ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera);
 
-		void Update(seconds dt) override;
+	void Init() override;
+	void Update(seconds dt) override;
+	void FixedUpdate() override {}
+	void Destroy() override;
 
-		void FixedUpdate() override
-		{
-		}
+	void Render() override;
 
-		void Destroy() override;
+	void DrawImGui();
 
-		void Render() override;
+	void SetCameraParameters(const Camera& camera) const;
 
-		void DrawImGui();
+	void SetLightParameters() const;
 
-		void SetCameraParameters(Mat4f& model, Mat4f& view, Mat4f& projection, Vec3f pos);
+private:
+	std::mutex mutex_;
+	Camera& camera_;
 
-		void SetLightParameters();
+	MinecraftLikeEngine& engine_;
+	ChunkManager& chunkManager_;
 
-	private:
+	DirectionalLight directionalLight_;
 
-		MoveableCamera3D& camera_;
-
-		gl::RenderCuboid cube_{ Vec3f::zero, Vec3f::one };
-		gl::Shader shader_;
-
-		TextureId texture_[3];
-
-		std::mutex updateMutex_;
-		MinecraftLikeEngine& engine_;
-		EntityViewer& entityViewer_;
-		EntityManager& entityManager_;
-		ChunksManager& chunksManager_;
-		Transform3dManager& transform3dManager_;
-
-		DirectionalLight directionalLight_;
-	};
+	gl::Shader shader_;
+	TextureId atlasTex_ = 0;
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
+};
 }

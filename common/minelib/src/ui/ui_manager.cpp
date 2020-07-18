@@ -19,7 +19,7 @@ void UiManager::AddUiElement(UiElement* uiElement)
 	uiElements_.push_back(uiElement);
 
 	if (uiElement->textureId == INVALID_TEXTURE_ID)
-		uiElement->textureId = stbCreateTexture(uiElement->texturePath, gl::Texture::CLAMP_WRAP);
+		uiElement->textureId = gl::stbCreateTexture(uiElement->texturePath, gl::Texture::CLAMP_WRAP);
 	
 	const auto& config = BasicEngine::GetInstance()->config;
 	uiElement->Init(config.windowSize);
@@ -35,10 +35,26 @@ void UiManager::Render()
 	glCullFace(GL_FRONT);
 	for (auto& element : uiElements_)
 	{
+		if (element->flags & UiElement::RESIZE)
+		{
+			element->Update(config.windowSize);
+			element->flags &= ~UiElement::RESIZE;
+		}
 		element->Draw(config.windowSize);
 	}
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
+}
+
+void UiManager::OnEvent(const SDL_Event& event)
+{
+	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+	{
+		for (auto& element : uiElements_)
+		{
+			element->flags |= UiElement::RESIZE;
+		}
+	}
 }
 
 void UiManager::Destroy()

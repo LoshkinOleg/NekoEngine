@@ -4,7 +4,7 @@
 
 namespace neko
 {
-GizmosRenderer::GizmosRenderer(Camera3D& camera)
+GizmosRenderer::GizmosRenderer(Camera& camera)
 	: camera_(camera)
 {
 	GizmosLocator::provide(this);
@@ -22,53 +22,49 @@ void GizmosRenderer::Init()
 	cube_.Init();
 	line_.Init();
 	gizmosQueue_.reserve(kGizmoReserveSize);
+
+	RendererLocator::get().Render(this);
 }
 
 void GizmosRenderer::Update(seconds dt)
 {
-	std::lock_guard<std::mutex> lock(updateMutex_);
+	RendererLocator::get().Render(this);
 }
 
 void GizmosRenderer::Render()
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	for (auto gizmo : gizmosQueue_)
 	{
-		if (gizmo.shape == GizmoShape::CUBE)
+		if (shaderCube_.GetProgram() == 0) continue;
+
+		std::lock_guard<std::mutex> lock(updateMutex_);
+		
+		shaderCube_.Bind();
+		shaderCube_.SetMat4("view", camera_.GenerateViewMatrix());
+		shaderCube_.SetMat4("projection", camera_.GenerateProjectionMatrix());
+		shaderCube_.SetVec4("color", gizmo.color);
+
+		switch (gizmo.shape)
 		{
-			if (shaderCube_.GetProgram() == 0) continue;
-
-			std::lock_guard<std::mutex> lock(updateMutex_);
-
-			shaderCube_.Bind();
-			shaderCube_.SetMat4("view", camera_.GenerateViewMatrix());
-			shaderCube_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-
-			Mat4f model = Mat4f::Identity; //model transform matrix
-			model = Transform3d::Scale(model, gizmo.cubeSize);
-			model = Transform3d::Translate(model, gizmo.pos);
-			shaderCube_.SetMat4("model", model);
-			shaderCube_.SetVec4("color", gizmo.color);
-			cube_.Draw();
-		}
-
-		if (gizmo.shape == GizmoShape::LINE)
-		{
-			if (shaderCube_.GetProgram() == 0) continue;
-
-			std::lock_guard<std::mutex> lock(updateMutex_);
-
-			shaderLine_.Bind();
-			shaderLine_.SetMat4("view", camera_.GenerateViewMatrix());
-			shaderLine_.SetMat4("projection", camera_.GenerateProjectionMatrix());
-
-			Mat4f model = Transform3d::Translate(Mat4f::Identity, gizmo.pos);
-			shaderLine_.SetMat4("model", model);
-			shaderLine_.SetVec4("color", gizmo.color);
-			shaderLine_.SetVec3("endPos", gizmo.lineEndPos - gizmo.pos);
-			line_.Draw();
+		case GizmoShape::CUBE:
+			{
+				Mat4f model = Mat4f::Identity;
+				model = Transform3d::Scale(model, gizmo.cubeSize);
+				model = Transform3d::Translate(model, gizmo.pos);
+				shaderCube_.SetMat4("model", model);
+				cube_.Draw();
+			}
+			break;
+		case GizmoShape::LINE:
+			{
+				Mat4f model = Transform3d::Translate(Mat4f::Identity, gizmo.pos);
+				shaderLine_.SetMat4("model", model);
+				shaderLine_.SetVec3("endPos", gizmo.lineEndPos - gizmo.pos);
+				line_.Draw();
+			}
+			break;
+		default:
+			LogError("Invalid Gizmo shape!");
 		}
 	}
 	gizmosQueue_.clear();
@@ -88,10 +84,10 @@ void GizmosRenderer::DrawCube(
 	const Color4& color)
 {
 	Gizmos gizmo;
-	gizmo.color = color;
 	gizmo.pos = pos;
-	gizmo.shape = GizmoShape::CUBE;
 	gizmo.cubeSize = size;
+	gizmo.color = color;
+	gizmo.shape = GizmoShape::CUBE;
 	gizmosQueue_.push_back(gizmo);
 }
 
@@ -101,10 +97,10 @@ void GizmosRenderer::DrawLine(
 	const Color4& color)
 {
 	Gizmos gizmo;
-	gizmo.color = color;
 	gizmo.pos = startPos;
-	gizmo.shape = GizmoShape::LINE;
 	gizmo.lineEndPos = endPos;
+	gizmo.color = color;
+	gizmo.shape = GizmoShape::LINE;
 	gizmosQueue_.push_back(gizmo);
 }
 }

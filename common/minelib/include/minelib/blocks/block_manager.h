@@ -2,13 +2,16 @@
 #include "engine/system.h"
 
 #include "gl/shader.h"
+#include "gl/shape.h"
+#include "graphics/camera.h"
+#include "graphics/graphics.h"
 
 #include "minelib/blocks/block.h"
 
 namespace neko
 {
-
 const static size_t kMaxBlocksNum = 16;
+
 //-----------------------------------------------------------------------------
 // BlockManagerInterface
 //-----------------------------------------------------------------------------
@@ -39,32 +42,33 @@ public:
 	BlockManager();
 
 	void Init() override;
+	void InitRegister();
 
 	void Update(seconds dt) override {}
 	void FixedUpdate() override {}
 
 	void Render() override;
 
-	void RegisterBlock(BaseBlock* block);
+	void RegisterBlock(Block& block);
 	
-	BaseBlock* GetBlock(const size_t blockIndex)
-	{ return registeredBlocks_[blockIndex]; }
+	std::shared_ptr<Block> GetBlock(const size_t blockIndex)
+	{ return std::make_shared<Block>(registeredBlocks_[blockIndex]); }
+	std::shared_ptr<Block> GetRandomBlock()
+	{ return std::make_shared<Block>(registeredBlocks_[RandomRange(1, registeredBlocks_.size())]); }
 
 	void Destroy() override;
 
 private:
-	std::mutex updateMutex_;
-
 	Camera2D previewCam_;
 	unsigned previewFbo_ = 0;
 	unsigned previewRbo_ = 0;
 	size_t previewTexSize_ = 32;
+	TextureId atlas_ = 0;
+
+	std::vector<Block> registeredBlocks_{};
+
 	gl::Shader previewShader_;
-
-	std::vector<BaseBlock*> registeredBlocks_{};
-
-	gl::Shader testShader_;
-	gl::RenderQuad testQuad_{Vec3f::zero, Vec2f::one};
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
 };
 
 using BlockManagerLocator = Locator<IBlockManager, NullBlockManager>;

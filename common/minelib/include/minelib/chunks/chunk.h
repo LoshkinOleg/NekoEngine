@@ -1,19 +1,23 @@
 #pragma once
-#include <cstdint>
-#include <array>
-
-#include <mathematics/vector.h>
-#include <mathematics/aabb.h>
+#include "mathematics/aabb.h"
+#include "minelib/blocks/block.h"
+#include "gl/shape.h"
 
 namespace neko
 {
-const static unsigned int kChunkSize = 16;
+const static float kMaxViewDist = 16;
+const static float kHeightChunkLimit = 4;
+const static uint16_t kChunkSize = 16;
+const static uint16_t kChunkBlockCount = kChunkSize * kChunkSize * kChunkSize;
+using BlockId = uint16_t;
 
-enum class ChunkFlags : uint8_t
+struct ChunkContent
 {
-	EMPTY = 1u << 0u,
-	VISIBLE = 1u << 1u,
-	LOADED = 1u << 2u
+	explicit  ChunkContent(const BlockId bId = 0, const TextureHash tId = 0)
+		: blockId(bId), texId(tId) {}
+
+	BlockId blockId = 0;
+	TextureHash texId = 0;
 };
 
 class Chunk
@@ -21,25 +25,32 @@ class Chunk
 public:
 	Chunk() = default;
 
-	void SetBlock(const uint8_t blockId, const Vec3i& pos);
+	void Init();
+	void Render() const;
+	void Destroy();
 
-	uint8_t GetBlockId(const Vec3i& pos) const;
+	unsigned GetVao() const { return cube_.vao; }
+	void SetVbo();
+	
+	void SetBlock(std::shared_ptr<Block> block, const Vec3i& pos);
+	void SetBlock(std::shared_ptr<Block> block, BlockId blockId);
+	void RemoveBlock(const Vec3i& pos);
+	void RemoveBlock(BlockId blockId);
+	
+	Vec3f GetChunkPos() const { return chunkPos_; }
+	void SetChunkPos(const Vec3f& chunkPos);
 
-	Vec3i GetChunkPos() const;
-
-	void SetChunkPos(const Vec3i& chunkPos);
-
+	size_t GetBlockAmount() const { return blocks_.size(); }
+	std::vector<ChunkContent> GetBlockIds() const { return blocks_; }
+	
 	Aabb3d GetAabb() const;
-
-	bool IsVisible() const;
-
-	void SetVisible(bool visible);
-
+	
 private:
-	Vec3i chunkPos_;
-	bool visible_ = false;
+	Vec3f chunkPos_;
 
-	ChunkFlags chunkFlags_ = ChunkFlags::EMPTY;
-	std::array<uint8_t, kChunkSize * kChunkSize * kChunkSize> blocksIds_ = {0};
+	std::vector<ChunkContent> blocks_{};
+	
+	unsigned instanceVbo_ = 0;
+	gl::RenderCuboid cube_{Vec3f::zero, Vec3f(kCubeHalfSize * 2.0f)};
 };
 }

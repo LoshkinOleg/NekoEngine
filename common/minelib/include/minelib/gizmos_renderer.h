@@ -16,24 +16,21 @@ const static size_t kGizmoReserveSize = 128;
 
 enum class GizmoShape : std::uint8_t
 {
-	NONE = 0u,
-	CUBE = 1u,
-	LINE = 1u << 1u,
+	CUBE = 0u,
+	LINE,
 };
 
 struct Gizmos
 {
-	Gizmos()
-	{
-	}
-
-	GizmoShape shape = GizmoShape::NONE;
+	Gizmos() {}
+	
+	Vec3f pos = Vec3f::zero;
 	Color4 color = Color::red;
-	Vec3f pos = Vec3f(0.0f, 0.0f, 0.0f);
+	GizmoShape shape = GizmoShape::CUBE;
 
 	union
 	{
-		Vec3f cubeSize = Vec3f(0.0f, 0.0f, 0.0f);
+		Vec3f cubeSize = Vec3f::zero;
 		Vec3f lineEndPos;
 	};
 };
@@ -42,11 +39,8 @@ struct Gizmos
 // GizmosManagerInterface
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class GizmosManagerInterface
+class IGizmosRenderer
 {
-protected:
-	~GizmosManagerInterface() = default;
-
 public:
 	/**
 	 * \brief Generate a wire cube.
@@ -63,13 +57,15 @@ public:
 		const Vec3f& startPos,
 		const Vec3f& endPos,
 		const Color4& color = Color::red) = 0;
+	
+	virtual Vec3f GetCameraPos() const = 0;
 };
 
 //-----------------------------------------------------------------------------
 // NullGizmoManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class NullGizmoManager final : public GizmosManagerInterface
+class NullGizmosRenderer final : public IGizmosRenderer
 {
 	void DrawCube(
 		[[maybe_unused]] const Vec3f& pos,
@@ -84,6 +80,8 @@ class NullGizmoManager final : public GizmosManagerInterface
 		[[maybe_unused]] const Color4& color = Color::red) override
 	{
 	}
+
+	Vec3f GetCameraPos() const override { return {}; }
 };
 
 //-----------------------------------------------------------------------------
@@ -92,18 +90,15 @@ class NullGizmoManager final : public GizmosManagerInterface
 /// \brief Draw gizmos
 class GizmosRenderer final : public RenderCommandInterface,
                              public SystemInterface,
-                             public GizmosManagerInterface
+                             public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera3D& camera);
+	explicit GizmosRenderer(Camera& camera);
 
 	void Init() override;
 
 	void Update(seconds dt) override;
-
-	void FixedUpdate() override
-	{
-	}
+	void FixedUpdate() override {}
 
 	void Render() override;
 
@@ -119,10 +114,12 @@ public:
 		const Vec3f& endPos,
 		const Color4& color = Color::red) override;
 
+	Vec3f GetCameraPos() const override { return camera_.position; }
+	
 private:
 	std::mutex updateMutex_;
 
-	Camera3D& camera_;
+	Camera& camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
@@ -133,5 +130,5 @@ private:
 	std::vector<Gizmos> gizmosQueue_;
 };
 
-using GizmosLocator = Locator<GizmosManagerInterface, NullGizmoManager>;
+using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;
 }

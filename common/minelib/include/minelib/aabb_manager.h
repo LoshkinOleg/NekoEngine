@@ -4,54 +4,40 @@
 #include <mathematics/vector.h>
 #include <utilities/service_locator.h>
 
+#include "chunks/chunk_manager.h"
+#include "mathematics/aabb.h"
+
 namespace neko
 {
+class ChunkStatusManager;
+class ChunkContentManager;
+class ChunkPosManager;
 class Transform3dManager;
 class EntityManager;
-class ChunksManager;
 class MinecraftLikeEngine;
 
-struct AabbBlock
+struct Ray
 {
-	AabbBlock() {}
-	Vec3f blockPos = Vec3f(0.0f);
-	uint8_t blockType = 0;
+	Index hitId = INVALID_INDEX;
+	Entity hitChunk = INVALID_ENTITY;
+	Aabb3d hitAabb;
+	float hitDist = std::numeric_limits<float>::max();
 };
 
 //-----------------------------------------------------------------------------
-// AabbManagerInterface
+// IAabbManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class AabbManagerInterface
+class IAabbManager
 {
 public:
-	/**
-	 * \brief Return all chunk in the raycast
-	 * \param origin : origin of the raycast
-	 * \param dir : direction of the raycast
-	 * \return 
-	 */
-	virtual std::vector<Index> RaycastChunk(const Vec3f& origin, const Vec3f& dir) = 0;
-
-	/**
-	 * \brief Return the nearest block in the raycast
-	 * \param origin : origin of the raycast
-	 * \param dir : direction of the raycast
-	 * \return
-	 */
-	virtual AabbBlock RaycastBlock(const Vec3f& origin, const Vec3f& dir) = 0;
-
-	/**
-	 * \brief Return nearest block in the raycast a specified chunk
-	 * \param origin : origin of the raycast
-	 * \param chunkIndex : index of the raycasted chunk
-	 * \return
-	 */
-	virtual AabbBlock RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir, const Index chunkIndex) = 0;
+	virtual ~IAabbManager() = default;
+	virtual bool RaycastChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual std::vector<Index> RaycastChunks(const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual bool RaycastBlock(Ray& ray, const Vec3f& origin, const Vec3f& dir) const = 0;
+	virtual bool RaycastBlockInChunk(Ray& ray, const Vec3f& origin, const Vec3f& dir, Index chunkIndex) const = 0;
 
 protected:
-	~AabbManagerInterface() = default;
-
 	const int kInvalidPos_ = -1;
 };
 
@@ -59,46 +45,57 @@ protected:
 // NullAabbManager
 //-----------------------------------------------------------------------------
 /// \brief Used for the service locator
-class NullAabbManager final : public AabbManagerInterface
+class NullAabbManager final : public IAabbManager
 {
-	std::vector<Index> RaycastChunk(const Vec3f& origin, const Vec3f& dir) override
-	{
-		return std::vector<Index>();
-	}
+	bool RaycastChunk([[maybe_unused]] Ray& ray,
+	                  [[maybe_unused]] const Vec3f& origin,
+	                  [[maybe_unused]] const Vec3f& dir) const override
+	{ return false; }
+	
+	std::vector<Index> RaycastChunks(
+		[[maybe_unused]] const Vec3f& origin,
+		[[maybe_unused]] const Vec3f& dir) const override
+	{ return {}; }
 
-	AabbBlock RaycastBlock(const Vec3f& origin, const Vec3f& dir) override
-	{
-		return AabbBlock();
-	}
+	bool RaycastBlock([[maybe_unused]] Ray& ray,
+	                  [[maybe_unused]] const Vec3f& origin,
+	                  [[maybe_unused]] const Vec3f& dir) const override
+	{ return false; }
 
-	AabbBlock RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir, const Index chunkIndex) override
-	{
-		return AabbBlock();
-	}
+	bool RaycastBlockInChunk([[maybe_unused]] Ray& ray,
+	                         [[maybe_unused]] const Vec3f& origin,
+	                         [[maybe_unused]] const Vec3f& dir,
+	                         [[maybe_unused]] Index chunkIndex) const override
+	{ return false; }
 };
 
 //-----------------------------------------------------------------------------
 // AabbManager
 //-----------------------------------------------------------------------------
-/// \brief Draw gizmos
-
-class AabbManager final : AabbManagerInterface
+class AabbManager final : public IAabbManager
 {
 public:
 	explicit AabbManager(MinecraftLikeEngine& engine);
 
-	std::vector<Index> RaycastChunk(const Vec3f& origin, const Vec3f& dir) override;
-
-	AabbBlock RaycastBlock(const Vec3f& origin, const Vec3f& dir) override;
-
-	AabbBlock RaycastBlockInChunk(const Vec3f& origin, const Vec3f& dir, const Index chunkIndex) override;
+	bool RaycastChunk(Ray& ray,
+	                  const Vec3f& origin,
+	                  const Vec3f& dir) const override;
+	std::vector<Index> RaycastChunks(
+		const Vec3f& origin,
+		const Vec3f& dir) const override;
+	bool RaycastBlock(Ray& ray,
+	                  const Vec3f& origin,
+	                  const Vec3f& dir) const override;
+	bool RaycastBlockInChunk(Ray& ray,
+	                         const Vec3f& origin,
+	                         const Vec3f& dir,
+	                         Index chunkIndex) const override;
 
 private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
-	ChunksManager& chunksManager_;
-	Transform3dManager& transform3dManager_;
+	ChunkManager& chunkManager_;
 };
 
-using AabbLocator = Locator<AabbManagerInterface, NullAabbManager>;
+using AabbLocator = Locator<IAabbManager, NullAabbManager>;
 }
