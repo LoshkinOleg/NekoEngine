@@ -26,7 +26,7 @@ namespace neko::sdl
 	void Camera3D::Init()
 	{
 		position = cameraOriginPos;
-		SetDirectionFromEuler(cameraOriginAngles);
+		WorldLookAt(Vec3f::zero);
 	}
 
 	void Camera3D::Update(seconds dt)
@@ -84,7 +84,7 @@ namespace neko::sdl
 			cameraMove.y -= 1.0f * dt.count();
 		}
 		position +=
-			(GetRight() * cameraMove.x -
+			(rightDirection * cameraMove.x -
 				reverseDirection * cameraMove.y) *
 			(cameraMovement_ & ACCELERATE ? cameraFast_ : cameraSpeed_);
 	}

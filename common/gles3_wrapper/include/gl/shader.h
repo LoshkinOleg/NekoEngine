@@ -15,7 +15,6 @@ public:
             const std::string_view vertexShaderPath,
             const std::string_view fragmentShaderPath) override;
 
-
     void Bind() const;
 
     void Destroy();
@@ -25,6 +24,8 @@ public:
     void SetBool(const std::string& attributeName, bool value) const;
 
     void SetInt(const std::string& attributeName, int value) const;
+	
+    void SetUInt(const std::string& attributeName, uint32_t value) const;
 
     void SetFloat(const std::string& attributeName, float value) const;
 
@@ -51,6 +52,9 @@ public:
 
     void SetTexture(const std::string& name, const neko::Texture& texture, unsigned int slot = 0) const ;
     void SetTexture(const std::string& name, TextureId texture, unsigned int slot = 0) const;
+	
+    void SetCubemap(const std::string& name, const neko::Texture& texture, unsigned int slot = 0);
+    void SetCubemap(const std::string& name, TextureId texture, unsigned int slot = 0);
 private:
     GLuint shaderProgram_ = 0;
 };

@@ -28,7 +28,6 @@
 
 namespace neko::gl
 {
-
 void Shader::LoadFromFile(const std::string_view vertexShaderPath, const std::string_view fragmentShaderPath)
 {
     if(!FileExists(vertexShaderPath))
@@ -119,6 +118,11 @@ void Shader::SetInt(const std::string& attributeName, int value) const
     glUniform1i(glGetUniformLocation(shaderProgram_, attributeName.c_str()), value);
 }
 
+void Shader::SetUInt(const std::string& attributeName, uint32_t value) const
+{
+    glUniform1ui(glGetUniformLocation(shaderProgram_, attributeName.c_str()), value);
+}
+
 void Shader::SetFloat(const std::string& attributeName, float value) const
 {
     glUniform1f(glGetUniformLocation(shaderProgram_, attributeName.c_str()), value);
@@ -199,5 +203,19 @@ void Shader::SetTexture(const std::string& name, TextureId texture, unsigned slo
     glUniform1i(glGetUniformLocation(shaderProgram_, name.c_str()), slot);
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, texture);
+}
+
+void Shader::SetCubemap(const std::string& name, const neko::Texture& texture, unsigned slot)
+{
+    glUniform1i(glGetUniformLocation(shaderProgram_, name.c_str()), slot);
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture.GetTextureId());
+}
+
+void Shader::SetCubemap(const std::string& name, TextureId texture, unsigned slot)
+{
+    glUniform1i(glGetUniformLocation(shaderProgram_, name.c_str()), slot);
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 }
 }

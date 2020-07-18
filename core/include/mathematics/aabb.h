@@ -646,7 +646,7 @@ struct Aabb3d
     	minDist = touchMin;
         return true;
     }
-
+	
     float CalculateRayDist(const Vec3f& dirRay, const Vec3f& origin, const float& minDist) const
     {
         neko_assert(Vec3f(0, 0, 0) != dirRay, "Null Ray Direction");
