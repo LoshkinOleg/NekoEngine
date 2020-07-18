@@ -15,36 +15,17 @@
 
 namespace neko
 {
- Image StbImageConvert(BufferFile imageFile, int requireComponents)
-    {
-#ifdef EASY_PROFILE_USE
-        EASY_BLOCK("Convert Image");
-#endif
-        Image image;
-        image.data = stbi_load_from_memory((unsigned char*)(imageFile.dataBuffer),
-            imageFile.dataLength, &image.width, &image.height, &image.nbChannels, 0);
-        return image;
-    }
 
-Image StbImageConvert(BufferFile imageFile, bool flipY, bool hdr)
+
+Image StbImageConvert(BufferFile imageFile, int requireComponents)
 {
 #ifdef EASY_PROFILE_USE
     EASY_BLOCK("Convert Image");
 #endif
     Image image;
-	
-    stbi_set_flip_vertically_on_load(flipY);
-    if (hdr)
-    {
-        image.data = (unsigned char*)stbi_loadf_from_memory((unsigned char*)(imageFile.dataBuffer),
-            imageFile.dataLength, &image.width, &image.height, &image.nbChannels, 0);
-    }
-    else
-    {
-        image.data = stbi_load_from_memory((unsigned char*)(imageFile.dataBuffer),
-            imageFile.dataLength, &image.width, &image.height, &image.nbChannels, 0);
-    }
-	return image;
+    image.data = stbi_load_from_memory((unsigned char*) (imageFile.dataBuffer),
+                                       imageFile.dataLength, &image.width, &image.height, &image.nbChannels, 0);
+    return image;
 }
 Texture::Texture() :
 	uploadToGpuJob_([this]
@@ -58,8 +39,12 @@ Texture::Texture() :
     {
         const auto filename = diskLoadJob_.GetFilePath();
         const auto extension = GetFilenameExtension(filename);
-       
-    	image_ = StbImageConvert(diskLoadJob_.GetBufferFile(), flags_ & FLIP_Y,flags_ & HDR);
+        int reqComponents = 0;
+        if (extension == ".jpg" || extension == ".tga" || extension == ".hdr")
+            reqComponents = 3;
+        else if (extension == ".png")
+            reqComponents = 4;
+    	image_ = StbImageConvert(diskLoadJob_.GetBufferFile(),reqComponents);
 	    diskLoadJob_.GetBufferFile().Destroy();
 	    RendererLocator::get().AddPreRenderJob(&uploadToGpuJob_);
     })

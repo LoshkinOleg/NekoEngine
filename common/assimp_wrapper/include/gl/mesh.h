@@ -1,4 +1,3 @@
-
 #pragma once
 #include <vector>
 
@@ -19,9 +18,9 @@ namespace neko::assimp
 		Vec3f position;
 		Vec3f normal;
 		Vec2f texCoords;
-		Vec3f tangent;
-		Vec3f bitangent;
-	};
+        Vec3f tangent;
+        Vec3f bitangent;
+    };
 	struct Texture
 	{
 		Texture() = default;
@@ -40,7 +39,7 @@ namespace neko::assimp
 		Mesh();
 		void Init();
 		void Draw(const gl::Shader& shader) const;
-		void BindTextures(const gl::Shader& shader) const;
+        void BindTextures(const gl::Shader& shader) const;
 		void Destroy();
 
 		void ProcessMesh(const aiMesh* mesh, const aiScene* scene,
@@ -48,10 +47,10 @@ namespace neko::assimp
 		bool IsLoaded() const;
 
 
-		[[nodiscard]] unsigned int GetVao() const { return VAO; }
-		[[nodiscard]] size_t GetElementsCount() const { return indices_.size(); }
+		[[nodiscard]] unsigned int GetVao() const {return VAO;}
+		[[nodiscard]] size_t GetElementsCount() const {return indices_.size();}
 
-		[[nodiscard]] Sphere GenerateBoundingSphere() const;
+		[[nodiscard]] Sphere3D GenerateBoundingSphere() const;
 	protected:
 
 		void LoadMaterialTextures(aiMaterial* material, aiTextureType aiTexture, Texture::TextureType texture,
@@ -59,7 +58,6 @@ namespace neko::assimp
 		std::vector<Vertex> vertices_;
 		std::vector<unsigned int> indices_;
 		std::vector<Texture> textures_;
-		float specularExponent_ = 0.0f;
 		Vec3f min_, max_;
 		Job loadMeshToGpu;
 		//  render data

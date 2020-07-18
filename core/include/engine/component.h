@@ -36,27 +36,24 @@ namespace neko
 
 enum class ComponentType : EntityMask
 {
-	EMPTY = 1u << 0u,
-	POSITION2D = 1u << 1u,
-	SCALE2D = 1u << 2u,
-	ROTATION2D = 1u << 3u,
-	TRANSFORM2D = ROTATION2D | SCALE2D | POSITION2D,
-	POSITION3D = 1u << 4u,
-	SCALE3D = 1u << 5u,
-	ROTATION3D = 1u << 6u,
-	TRANSFORM3D = POSITION3D | SCALE3D | ROTATION3D,
-	SPRITE2D = 1u << 7u,
-	BODY2D = 1u << 8u,
-	BOX_COLLIDER2D = 1u << 9u,
-	CIRCLE_COLLIDER2D = 1u << 10u,
-	POLYGON_COLLIDER2D = 1u << 11u,
-	CONVEX_SHAPE2D = 1u << 12u,
-	PREFAB = 1u << 13u,
-	CHUNK_CONTENT = 1u << 14u,
-	CHUNK_STATUS = 1u << 15u,
-	CHUNK_POS = 1u << 16u,
-	CHUNK_RENDER = 1u << 17u,
-	OTHER_TYPE = 1u << 18u
+    EMPTY = 1u << 0u,
+    POSITION2D = 1u << 1u,
+    SCALE2D = 1u << 2u,
+    ROTATION2D = 1u << 3u,
+    TRANSFORM2D = ROTATION2D|SCALE2D|POSITION2D,
+    POSITION3D = 1u << 4u,
+    SCALE3D = 1u << 5u,
+    ROTATION3D = 1u << 6u,
+    TRANSFORM3D = POSITION3D|SCALE3D|ROTATION3D,
+    SPRITE2D = 1u << 7u,
+    BODY2D = 1u << 8u,
+    BOX_COLLIDER2D = 1u << 9u,
+    CIRCLE_COLLIDER2D = 1u << 10u,
+    POLYGON_COLLIDER2D = 1u << 11u,
+    CONVEX_SHAPE2D = 1u << 12u,
+    PREFAB = 1u << 13u,
+    CHUNK = 1u << 14u,
+    OTHER_TYPE = 1u << 15u
 };
 
 struct Component

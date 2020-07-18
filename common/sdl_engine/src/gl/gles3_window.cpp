@@ -57,9 +57,8 @@ void Gles3Window::Init()
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
 	SdlWindow::Init();
-	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 #ifndef __EMSCRIPTEN__
-
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
 	std::string videoDriver = SDL_GetCurrentVideoDriver();
 	LogDebug(videoDriver);
@@ -67,16 +66,13 @@ void Gles3Window::Init()
 
 	glRenderContext_ = SDL_GL_CreateContext(window_);
 	MakeCurrentContext();
-#ifndef __EMSCRIPTEN__
 	SDL_GL_SetSwapInterval(config.vSync);
-
+#ifndef __EMSCRIPTEN__
 	if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress))
 	{
 		LogDebug("Failed to initialize OpenGL context\n");
 		assert(false);
 	}
-#else
-	SDL_GL_SetSwapInterval(false);
 #endif
 
 	InitImGui();

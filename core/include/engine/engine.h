@@ -30,6 +30,7 @@
 #include <graphics/color.h>
 #include <utilities/time_utility.h>
 #include <mathematics/vector.h>
+#include <atomic>
 #include <engine/log.h>
 
 #include "jobsystem.h"
@@ -83,6 +84,7 @@ public:
 
 	//Update functions
 	virtual void ManageEvent() = 0;
+
 	virtual void GenerateUiFrame();
 
 	void EngineLoop();
@@ -115,12 +117,13 @@ protected:
 	JobSystem jobSystem_;
 	
 	bool isRunning_;
-    float dt_ = 0.0f;
-    Action<> initAction_;
-    Action<seconds> updateAction_;
+	std::atomic<float> dt_;
+	Action<> initAction_;
+	Action<seconds> updateAction_;
 	Action<> fixedUpdateAction_;
-    Action<> drawImGuiAction_;
-    Action<> destroyAction_;
+	Action<> drawImGuiAction_;
+	Action<> destroyAction_;
+
 	float fixedUpdateAccumulator_ = 0.0f;
 };
 }

@@ -20,12 +20,6 @@ inline bool Equal(const float a, const float b, const float epsilon = 0.0000001f
 	return Abs(a - b) < epsilon;
 }
 
-template<typename T>
-float Clamp(T value, T lower, T upper)
-{
-	return value < lower ? lower : (value > upper ? upper : value);
-}
-
 float RandomRange(float start, float end);
 
 static float Lerp(const float v1, const float v2, const float t)
