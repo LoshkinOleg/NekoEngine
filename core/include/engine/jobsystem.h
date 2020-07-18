@@ -20,12 +20,11 @@
  */
 
 #include <functional>
-#ifndef NEKO_SAMETHREAD
 #include <thread>
-#include <future>
 #include <condition_variable>
-#endif
 #include <queue>
+#include <atomic>
+#include <future>
 #include "engine/system.h"
 
 namespace neko
@@ -60,14 +59,12 @@ public:
     Job& operator=(const Job&) = delete;
     Job(Job&& job) noexcept;;
     Job& operator=(Job&& job) noexcept;
-#ifndef NEKO_SAMETHREAD
     /**
      * \brief Wait for the Job to be done,
      * used when dependencies are not done
      * useful when dependencies are on other threads
      */
     void Join() const;
-#endif
     /**
      * \brief Execute is called by the JobSystem
      */
@@ -76,9 +73,8 @@ public:
 	 *  \brief Check if all dependencies started
 	 *  used when we want to start the job to know if we should join or wait for other dependencies
 	 */
-    [[nodiscard]] bool CheckDependenciesStarted() const;
-    [[nodiscard]] bool IsDone() const;
-    [[nodiscard]] bool HasStarted() const;
+    bool CheckDependenciesStarted();
+    bool IsDone() const;
     void AddDependency(const Job* dep);
 
     std::function<void()> GetTask() const { return task_; }
@@ -88,29 +84,22 @@ public:
 protected:
     std::vector<const Job*> dependencies_;
     std::function<void()> task_;
-#ifndef NEKO_SAMETHREAD
-    mutable std::promise<void> promise_;
-    mutable std::shared_future<void> taskDoneFuture_;
-    mutable std::mutex statusLock_;
-#endif
-    std::uint8_t status_;
-
+    std::promise<void> promise_;
+    std::shared_future<void> taskDoneFuture_;
+    std::atomic<std::uint8_t> status_;
 };
 
 struct JobQueue
 {
-#ifndef NEKO_SAMETHREAD
     std::mutex mutex_;
     std::condition_variable cv_;
-#endif
     std::queue<Job*> jobs_;
 };
 
 class JobSystem : SystemInterface
 {
     enum Status : uint8_t
-    {
-        NONE = 0u,
+    { // Q: Why declaring this as an enum CLASS makes status_ & Status::RUNNING an invalid operation?
         RUNNING = 1u
     };
 
@@ -125,25 +114,20 @@ public:
 
     void Destroy() override;
 
-#ifdef NEKO_SAMETHREAD
-    void KickJobs();
-#endif
 private:
 	void Work(JobQueue& jobQueue);
 
-    [[nodiscard]] bool IsRunning();
 
-    Status status_ = NONE;
+
+    const static std::uint8_t OCCUPIED_THREADS = 3; // Define number of threads used by engine.
+    std::uint8_t numberOfWorkers;
     JobQueue jobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
     JobQueue renderJobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
     JobQueue resourceJobs_; // Managed via mutex. // TODO: replace with custom queue when those are implemented.
-#ifndef NEKO_SAMETHREAD
-    std::uint8_t workersStarted_ = 0;
-    [[nodiscard]] std::uint8_t CountStartedWorkers();
-    std::uint8_t numberOfWorkers;
     std::vector<std::thread> workers_; // TODO: replace with fixed vector when those are implemented.
-    mutable std::mutex statusMutex_;
-#endif
+    
+    std::atomic<std::uint8_t> status_ = RUNNING;
+    std::atomic<std::uint8_t> initializedWorkers_ = 0;
 };
 
 }

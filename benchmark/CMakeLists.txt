@@ -13,7 +13,7 @@ foreach(bench_file ${BENCH_FILES} )
     string( REPLACE ".cpp" "" bench_name ${bench_relative_path} )
     add_executable(${bench_name} ${bench_file})
     # Make sure YourLib is linked to each app
-    target_link_libraries(${bench_name} PUBLIC benchmark benchmark_main Neko_Core minelib sdl_engine gles3_wrapper)
+    target_link_libraries(${bench_name} PUBLIC benchmark benchmark_main Neko_Core )
     neko_bin_config(${bench_name})
     IF(MSVC)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Oi /Ox /fp:fast /FAs /arch:AVX2")

@@ -20,7 +20,7 @@ struct Image
     void Destroy();
 };
 
-Image StbImageConvert(BufferFile imageFile, bool flipY=false, bool hdr = false);
+Image StbImageConvert(BufferFile imageFile, int requireComponents=3);
 
 /**
  * \brief Neko Texture contains an Image loaded async from disk, converted by stb_image
@@ -28,19 +28,6 @@ Image StbImageConvert(BufferFile imageFile, bool flipY=false, bool hdr = false);
 class Texture
 {
 public:
-    enum TextureFlags : unsigned
-    {
-        SMOOTH_TEXTURE = 1u << 0u,
-        MIPMAPS_TEXTURE = 1u << 1u,
-        CLAMP_WRAP = 1u << 2u,
-        REPEAT_WRAP = 1u << 3u,
-        MIRROR_REPEAT_WRAP = 1u << 4u,
-        GAMMA_CORRECTION = 1u << 5u,
-    	FLIP_Y = 1u << 6u,
-        HDR = 1u << 7u,
-    	DEFAULT = REPEAT_WRAP | SMOOTH_TEXTURE | MIPMAPS_TEXTURE,
-        
-    };
 	virtual ~Texture() = default;
 	Texture();
     Texture(Texture&& texture) noexcept :
@@ -48,8 +35,7 @@ public:
         convertImageJob_(std::move(texture.convertImageJob_)),
 		diskLoadJob_ (std::move(texture.diskLoadJob_)),
 		image_(texture.image_),
-		textureId_ (texture.textureId_),
-		flags_(texture.flags_)
+		textureId_ (texture.textureId_)
     {
     	if(!texture.IsLoaded())
     	{
@@ -58,7 +44,7 @@ public:
     	}
     }
     virtual void Destroy() = 0;
-    void SetTextureFlags(TextureFlags textureFlags) { flags_ = textureFlags; }
+	
     void SetPath(std::string_view path);
     /**
      * \brief This function schedules the resource load from disk and the image conversion
@@ -73,11 +59,8 @@ public:
 
     TextureId GetTextureId() const { return textureId_;};
 protected:
-	
     void Reset();
     virtual void CreateTexture() = 0;
-
-    TextureFlags flags_ = DEFAULT;
     Job uploadToGpuJob_;
     Job convertImageJob_;
     ResourceJob diskLoadJob_;

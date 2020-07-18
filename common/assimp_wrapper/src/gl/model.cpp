@@ -30,118 +30,101 @@ namespace neko::assimp
 	}
 
 	Model::Model() : processModelJob_([this]
-		{
-			ProcessModel();
-		})
+	{
+		ProcessModel();
+	})
 	{
 	}
 
-		void Model::LoadModel(std::string_view path)
+	void Model::LoadModel(std::string_view path)
+	{
+		path_ = path;
+		directory_ = path.substr(0, path.find_last_of('/'));
+		LogDebug("ASSIMP: Loading model: " + path_);
+		BasicEngine::GetInstance()->ScheduleJob(&processModelJob_, JobThreadType::OTHER_THREAD);
+	}
+
+	bool Model::IsLoaded() const
+	{
+		
+		if(!processModelJob_.IsDone())
 		{
-			path_ = path;
-			directory_ = path.substr(0, path.find_last_of('/'));
-			LogDebug("ASSIMP: Loading model: " + path_);
-#ifdef NEKO_SAMETHREAD
-			processModelJob_.Execute();
-#else
-			BasicEngine::GetInstance()->ScheduleJob(&processModelJob_, JobThreadType::OTHER_THREAD);
-#endif
+			return false;
 		}
-
-		bool Model::IsLoaded() const
+		for(auto& mesh : meshes_)
 		{
-
-			if (!processModelJob_.IsDone())
-			{
+			if (!mesh.IsLoaded())
 				return false;
-			}
-			for (auto& mesh : meshes_)
-			{
-				if (!mesh.IsLoaded())
-					return false;
-			}
-
-			return true;
 		}
+		
+		return true;
+	}
 
-		void Model::ProcessModel()
+	void Model::ProcessModel()
+	{
+#ifdef EASY_PROFILE_USE
+		EASY_BLOCK("Process 3d Model");
+		EASY_BLOCK("Load 3d Model");
+#endif
+		Assimp::Importer import;
+		const aiScene* scene = nullptr;
+		Job loadingModelJob = Job([this, &import, &scene]
 		{
 #ifdef EASY_PROFILE_USE
-			EASY_BLOCK("Process 3d Model");
-			EASY_BLOCK("Load 3d Model");
+		EASY_BLOCK("Model Disk Load");
 #endif
-			Assimp::Importer import;
-			const aiScene* scene = nullptr;
-#ifdef NEKO_SAMETHREAD
-			//assimp delete automatically the IO System
+				//assimp delete automatically the IO System
 			NekoIOSystem* ioSystem = new NekoIOSystem();
 			import.SetIOHandler(ioSystem);
 
 			scene = import.ReadFile(path_.data(),
-				aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals |
-				aiProcess_CalcTangentSpace);
-#else
-			Job loadingModelJob = Job([this, &import, &scene]
-				{
-		#ifdef EASY_PROFILE_USE
-				EASY_BLOCK("Model Disk Load");
-		#endif
-			//assimp delete automatically the IO System
-		NekoIOSystem * ioSystem = new NekoIOSystem();
-		import.SetIOHandler(ioSystem);
-
-		scene = import.ReadFile(path_.data(),
-		aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals |
-			aiProcess_CalcTangentSpace);
-				});
-			BasicEngine::GetInstance()->ScheduleJob(&loadingModelJob, JobThreadType::RESOURCE_THREAD);
-#endif
-#ifndef NEKO_SAMETHREAD
-			loadingModelJob.Join();
-#endif
+			aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+		});
+		BasicEngine::GetInstance()->ScheduleJob(&loadingModelJob, JobThreadType::RESOURCE_THREAD);
+		loadingModelJob.Join();
 #ifdef EASY_PROFILE_USE
-			EASY_END_BLOCK;
+		EASY_END_BLOCK;
 #endif
-			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-			{
-				std::ostringstream oss;
-				oss << "[ERROR] ASSIMP " << import.GetErrorString();
-				LogDebug(oss.str());
-				return;
-			}
-			meshes_.reserve(scene->mNumMeshes);
-#ifdef EASY_PROFILE_USE
-			EASY_BLOCK("Process Nodes");
-#endif
-			ProcessNode(scene->mRootNode, scene);
-#ifdef EASY_PROFILE_USE
-			EASY_END_BLOCK;
-#endif
-#ifdef EASY_PROFILE_USE
-			EASY_BLOCK("Schedule Mesh Job");
-#endif
-			for (auto& mesh : meshes_)
-			{
-				mesh.Init();
-			}
-		}
-
-		void Model::ProcessNode(aiNode* node, const aiScene* scene)
+		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
-			// process all the node's meshes (if any)
-			for (unsigned int i = 0; i < node->mNumMeshes; i++)
-			{
-				meshes_.emplace_back();
-				auto& mesh = meshes_.back();
-
-				aiMesh* assMesh = scene->mMeshes[node->mMeshes[i]];
-				mesh.ProcessMesh(assMesh, scene, directory_);
-			}
-			// then do the same for each of its children
-			for (unsigned int i = 0; i < node->mNumChildren; i++)
-			{
-				ProcessNode(node->mChildren[i], scene);
-			}
+			std::ostringstream oss;
+			oss << "[ERROR] ASSIMP " << import.GetErrorString();
+			LogDebug(oss.str());
+			return;
 		}
+		meshes_.reserve(scene->mNumMeshes);
+#ifdef EASY_PROFILE_USE
+		EASY_BLOCK("Process Nodes");
+#endif
+		ProcessNode(scene->mRootNode, scene);
+#ifdef EASY_PROFILE_USE
+		EASY_END_BLOCK;
+#endif
+#ifdef EASY_PROFILE_USE
+		EASY_BLOCK("Schedule Mesh Job");
+#endif
+		for(auto& mesh : meshes_)
+		{
+			mesh.Init();
+		}
+	}
+
+	void Model::ProcessNode(aiNode* node, const aiScene* scene)
+	{
+		// process all the node's meshes (if any)
+		for (unsigned int i = 0; i < node->mNumMeshes; i++)
+		{
+			meshes_.emplace_back();
+			auto& mesh = meshes_.back();
+
+			aiMesh* assMesh = scene->mMeshes[node->mMeshes[i]];
+			mesh.ProcessMesh(assMesh, scene, directory_);
+		}
+		// then do the same for each of its children
+		for (unsigned int i = 0; i < node->mNumChildren; i++)
+		{
+			ProcessNode(node->mChildren[i], scene);
+		}
+	}
 
 }
