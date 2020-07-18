@@ -90,22 +90,25 @@ void Transform3dViewer::DrawImGui()
 		return;
 	if(entityManager_.HasComponent(selectedEntity_, static_cast<EntityMask>(ComponentType::TRANSFORM3D)))
 	{
-		auto position = transform3dManager_.GetPosition(selectedEntity_);
-		if (ImGui::InputFloat3("Position", &position[0]))
+		if (ImGui::CollapsingHeader("Transform"))
 		{
-			transform3dManager_.SetPosition(selectedEntity_, position);
-		}
-		auto scale = transform3dManager_.GetScale(selectedEntity_);
-		if(ImGui::InputFloat3("Scale", &scale[0]))
-		{
-			transform3dManager_.SetScale(selectedEntity_, scale);
-		}
-		const auto eulerAngles = transform3dManager_.GetAngles(selectedEntity_);
-		float angles[3] = { eulerAngles.x.value(), eulerAngles.y.value(), eulerAngles.z.value() };
-		if(ImGui::InputFloat3("Euler Angles", &angles[0]))
-		{
-			const EulerAngles newEulerAngles = EulerAngles(degree_t(angles[0]), degree_t(angles[1]), degree_t(angles[2]));
-			transform3dManager_.SetRotation(selectedEntity_, newEulerAngles);
+			auto position = transform3dManager_.GetPosition(selectedEntity_);
+			if (ImGui::DragFloat3("Position", &position[0]))
+			{
+				transform3dManager_.SetPosition(selectedEntity_, position);
+			}
+			auto scale = transform3dManager_.GetScale(selectedEntity_);
+			if (ImGui::DragFloat3("Scale", &scale[0]))
+			{
+				transform3dManager_.SetScale(selectedEntity_, scale);
+			}
+			const auto eulerAngles = transform3dManager_.GetAngles(selectedEntity_);
+			float angles[3] = { eulerAngles.x.value(), eulerAngles.y.value(), eulerAngles.z.value() };
+			if (ImGui::DragFloat3("Euler Angles", &angles[0]))
+			{
+				const EulerAngles newEulerAngles = EulerAngles(degree_t(angles[0]), degree_t(angles[1]), degree_t(angles[2]));
+				transform3dManager_.SetRotation(selectedEntity_, newEulerAngles);
+			}
 		}
 	}
 }
