@@ -8,11 +8,21 @@ in vec2 SideTexCoord;
 in vec2 TopTexCoord;
 in vec2 BottomTexCoord;
 
-uniform sampler2D diffuse;
+struct Light{
+    float intensity;
+    vec3 color;
+    vec3 direction;
+};
+
+struct Material{
+    sampler2D diffuse;
+};
+uniform Light light;
+uniform Material material;
 uniform sampler2D shadowMap;
 uniform vec3 viewPos;
-uniform vec3 lightDirection;
 uniform float bias;
+uniform bool enableShadow;
 
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
@@ -27,7 +37,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         return 0.0;
     
     vec3 normal = normalize(Normal);
-    vec3 lightDir = -lightDirection;
+    vec3 lightDir = -light.direction;
     
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -53,33 +63,41 @@ void main()
 	if (TopTexCoord != vec2(0.0) || BottomTexCoord != vec2(0.0))
 	{
 		if (Normal.y > 0.1)
-			texColor = texture(diffuse, TopTexCoord);
+			texColor = texture(material.diffuse, TopTexCoord);
 		else if (Normal.y < -0.1)
-			texColor = texture(diffuse, BottomTexCoord);
+			texColor = texture(material.diffuse, BottomTexCoord);
 		else
-			texColor = texture(diffuse, SideTexCoord);
+			texColor = texture(material.diffuse, SideTexCoord);
 	}
 	else
-		texColor = texture(diffuse, SideTexCoord);
+		texColor = texture(material.diffuse, SideTexCoord);
 
     if (texColor.a < 0.1)
         discard;
 	
     vec3 normal = normalize(Normal);
-    vec3 lightColor = vec3(1.0);
+    //vec3 lightColor = vec3(1.0);
     // ambient
-    vec3 ambient = 0.15 * texColor.rgb;
+    vec3 ambient = 0.3 * texColor.rgb;
+
     // diffuse
-    vec3 lightDir = -lightDirection;
+    vec3 lightDir = -light.direction;
     float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = diff * lightColor;
+    vec3 diffuse = diff * light.color * texColor.rgb * light.intensity;
+
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);
-    vec3 specular = spec * lightColor;
+    vec3 specular = spec * light.color * light.intensity;
+
     // calculate shadow
-    float shadow = ShadowCalculation(FragPosLightSpace);       
+    float shadow;
+    if(enableShadow){
+        shadow = ShadowCalculation(FragPosLightSpace);   
+    }else{
+        shadow = 0.0;
+    }
     vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * texColor.rgb;    
     
     FragColor = vec4(lighting, 1.0);

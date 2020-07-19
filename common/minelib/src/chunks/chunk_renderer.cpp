@@ -42,7 +42,7 @@ void ChunkRenderer::Init()
 	directionalLight_.direction = -Vec3f::one;
 
 	//Set depthCamera values
-	depthCamera_.SetSize(Vec2f::one * 50.0f);
+	depthCamera_.SetSize(Vec2f::one * 20.0f);
 	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
 	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
@@ -58,17 +58,34 @@ void ChunkRenderer::DrawImGui()
 		depthCamera_.reverseDirection = -lightDirection;
 	}
 
-	Vec3f lightPosition = directionalLight_.position;
+	/*Vec3f lightPosition = directionalLight_.position;
 	if (ImGui::DragFloat3("Position", &lightPosition[0], 0.01f))
 	{
 		directionalLight_.position = lightPosition;
 		depthCamera_.position = lightPosition;
-	}
+	}*/
 
+	bool shadowToggle = enableShadow;
+	if(ImGui::Checkbox("Enable Shadows", &shadowToggle)) {
+		enableShadow = shadowToggle;
+	}
+	
 	auto size = depthCamera_.GetSize();
 	if (ImGui::DragFloat2("Size", &size[0], 0.01f))
 	{
 		depthCamera_.SetSize(size);
+	}
+
+	auto color = directionalLight_.color;
+	if (ImGui::DragFloat3("Light Color", &color[0], 0.1f))
+	{
+		directionalLight_.color = color;
+	}
+
+	float intensity = directionalLight_.intensity;
+	if (ImGui::DragFloat("Light Intensity", &intensity, 0.1f))
+	{
+		directionalLight_.intensity = intensity;
 	}
 
 	ImGui::End();
@@ -78,6 +95,7 @@ void ChunkRenderer::Update(seconds dt)
 {
 	directionalLight_.position = camera_.position - directionalLight_.direction * 50.0f;
 	depthCamera_.position = directionalLight_.position;
+	
 }
 
 void ChunkRenderer::Render()
@@ -92,15 +110,16 @@ void ChunkRenderer::Render()
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	
+	glCullFace(GL_FRONT);
+	SetLightParameters();
 	RenderScene(simpleDepthShader_);
-
+	
 	//Render normal
+	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, config.windowSize.x, config.windowSize.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	SetLightParameters();
 	RenderScene(shader_);
 	
 	GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
@@ -142,9 +161,9 @@ void ChunkRenderer::InitShadow() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
 	//Attatch depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap_, 0);
@@ -172,24 +191,22 @@ void ChunkRenderer::SetShadowParameters(gl::Shader& shader) const {
 	const auto lightSpaceMatrix = lightProjection * lightView;
 	
 	shader.SetMat4("lightSpaceMatrix", lightSpaceMatrix);
-	shader.SetTexture("diffuse", atlasTex_, 0);
+	shader.SetTexture("material.diffuse", atlasTex_, 0);
 	shader.SetTexture("shadowMap", depthMap_, 1);
-	shader.SetVec3("lightDirection", directionalLight_.direction.Normalized());
+	shader.SetVec3("light.direction", directionalLight_.direction.Normalized());
 	shader.SetFloat("bias", bias_);
+	shader.SetBool("enableShadow", enableShadow);
+
+	shader.SetVec3("light.color", directionalLight_.color);
+	shader.SetFloat("light.intensity", directionalLight_.intensity);
+
 }
 
 
 void ChunkRenderer::SetLightParameters() const
 {
-	shader_.SetVec3("light.color", directionalLight_.color);
-	shader_.SetVec3("light.direction", directionalLight_.direction.Normalized());
-	shader_.SetInt("objectMaterial.diffuse", 0);
-	shader_.SetInt("objectMaterial.specular", 1);
-	shader_.SetInt("objectMaterial.shininess", directionalLight_.specularPow);
 
-	shader_.SetFloat("ambientStrength", directionalLight_.ambientStrength);
-	shader_.SetFloat("diffuseStrength", directionalLight_.diffuseStrength);
-	shader_.SetFloat("specularStrength", directionalLight_.specularStrength);
+
 }
 
 void ChunkRenderer::Destroy()
