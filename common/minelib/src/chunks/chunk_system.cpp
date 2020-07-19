@@ -157,7 +157,7 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 	else
 		chunkManager_.chunkStatusManager.RemoveStatus(newChunkIndex, ChunkFlag::EMPTY);
 	chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, chunkMask);
-	chunkManager_.chunkContentManager.SetComponent(newChunkIndex, chunkContent);
+	chunkManager_.chunkContentManager.FillOfBlocks(newChunkIndex, chunkContent);
 
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledChunks_.emplace_back([this, newChunkIndex]
