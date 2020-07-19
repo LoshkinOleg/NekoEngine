@@ -49,12 +49,12 @@ public:
 
 	void Render() override;
 
-	void RegisterBlock(Block& block);
-	
-	std::shared_ptr<Block> GetBlock(const size_t blockIndex)
-	{ return std::make_shared<Block>(registeredBlocks_[blockIndex]); }
-	std::shared_ptr<Block> GetRandomBlock()
-	{ return std::make_shared<Block>(registeredBlocks_[RandomRange(1, registeredBlocks_.size())]); }
+	void RegisterBlock(Block block);
+
+	Block& GetBlock(const size_t blockIndex)
+	{ return registeredBlocks_[blockIndex]; }
+	Block& GetRandomBlock()
+	{ return registeredBlocks_[RandomRange(1, registeredBlocks_.size())]; }
 
 	void Destroy() override;
 

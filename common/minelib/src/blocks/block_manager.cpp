@@ -84,7 +84,7 @@ void BlockManager::Render()
 {
 }
 
-void BlockManager::RegisterBlock(Block& block)
+void BlockManager::RegisterBlock(Block block)
 {
 	registeredBlocks_.push_back(block);
 	block.id = registeredBlocks_.size() - 1;

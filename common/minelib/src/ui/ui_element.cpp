@@ -9,7 +9,7 @@ void UiElement::Init(const Vec2u& screenSize)
 	quad.Init();
 }
 
-void UiElement::Draw(const Vec2u& screenSize)
+void UiElement::Draw(const Vec2u& screenSize) const
 {
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	quad.Draw();

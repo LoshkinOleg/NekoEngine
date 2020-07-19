@@ -26,6 +26,7 @@ public:
 	EntityHierarchy entityHierarchy;
 	ComponentsManagerSystem componentsManagerSystem;
 	BlockManager blockManager;
+	UiManager uiManager;
 private :
 	DrawSystem drawSystem_;
 

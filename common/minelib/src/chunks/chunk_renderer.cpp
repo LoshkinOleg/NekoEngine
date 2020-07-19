@@ -13,7 +13,7 @@
 namespace neko
 {
 ChunkRenderer::ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera)
-	: camera_(camera),
+	: camera_(&camera),
 	  engine_(engine),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager)
 {
@@ -64,7 +64,7 @@ void ChunkRenderer::Render()
 	EASY_BLOCK("ChunkRenderer::Render");
 #endif
 	shader_.Bind();
-	SetCameraParameters(camera_);
+	SetCameraParameters(*camera_);
 	glBindTexture(GL_TEXTURE_2D, atlasTex_);
 	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
 	for (auto& chunk : visibleChunks)
@@ -101,6 +101,11 @@ void ChunkRenderer::SetLightParameters() const
 	shader_.SetFloat("ambientStrength", directionalLight_.ambientStrength_);
 	shader_.SetFloat("diffuseStrength", directionalLight_.diffuseStrength_);
 	shader_.SetFloat("specularStrength", directionalLight_.specularStrength_);
+}
+
+void ChunkRenderer::SetCamera(Camera& camera)
+{
+	camera_ = &camera;
 }
 
 void ChunkRenderer::Destroy()

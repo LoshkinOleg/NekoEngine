@@ -38,6 +38,7 @@ struct Camera
 				Vec4f(0, 0, 0, 1)
 		});
 	}
+	
 	void WorldLookAt(Vec3f target, Vec3f lookUp = Vec3f::down)
 	{
 		reverseDirection = (position - target).Normalized();
@@ -134,12 +135,12 @@ struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 	float mouseSpeed = 0.1f;
 
 	MovableCamera() :
-		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
+		inputManager_(sdl::InputLocator::get())
 	{
 	}
 protected:
 	Vec2f mouseMotion_;
-	sdl::InputManager& inputManager_;
+	sdl::IInputManager& inputManager_;
 };
 
 struct MoveableCamera2D final : Camera2D, MovableCamera

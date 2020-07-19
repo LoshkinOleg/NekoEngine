@@ -31,7 +31,7 @@ private:
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	Entity GenerateChunkArray(const Vec3i& pos);
+	Entity GenerateChunkArray(const Vec3i& pos) const;
 
 	void SetChunkOcclusionCulling(Entity chunkIndex) const;
 

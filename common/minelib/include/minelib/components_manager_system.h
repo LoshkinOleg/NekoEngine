@@ -2,11 +2,10 @@
 #include "minelib/aabb_manager.h"
 #include "minelib/chunks/chunk_manager.h"
 #include "minelib/chunks/chunk_system.h"
+#include "player/player_manager.h"
 
 namespace neko
 {
-class MinecraftLikeEngine;
-
 class ComponentsManagerSystem final : public SystemInterface
 {
 public:
@@ -21,7 +20,8 @@ public:
 	void Destroy() override;
 
 	AabbManager aabbManager;
-	ChunkManager chunkManager;
 	ChunkSystem chunkSystem;
+	ChunkManager chunkManager;
+	PlayerManager playerManager;
 };
 }

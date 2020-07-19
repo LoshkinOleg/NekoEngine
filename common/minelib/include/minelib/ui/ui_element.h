@@ -33,7 +33,7 @@ struct UiElement
 
 	void Init(const Vec2u& screenSize);
 	
-	void Draw(const Vec2u& screenSize);
+	void Draw(const Vec2u& screenSize) const;
 	void Update(const Vec2u& screenSize);
 
 	void Destroy();

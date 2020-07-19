@@ -17,17 +17,17 @@ Index ChunkContentManager::AddComponent(const Entity chunkIndex)
     return chunkIndex;
 }
 
-void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_ptr<Block> block, const Vec3i& pos)
+void ChunkContentManager::SetBlock(const Entity chunkIndex, const Block& block, const Vec3i& pos)
 {
-	SetBlock(chunkIndex, block, PosToBlockId(pos));
+	SetBlock(chunkIndex, PosToBlockId(pos), block);
 }
 
-void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_ptr<Block> block, BlockId blockId)
+void ChunkContentManager::SetBlock(const Entity chunkIndex, BlockId blockId, const Block& block)
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkContentManager::SetBlock");
 #endif
-	if (block->blockTex.sideTexId == 0) return;
+	if (block.blockTex.sideTexId == 0) return;
 	if (blockId > kChunkBlockCount - 1)
 	{
 		LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
@@ -39,26 +39,26 @@ void ChunkContentManager::SetBlock(const Entity chunkIndex, const std::shared_pt
 		{ return content.blockId == blockId; }); 
 	if (it != components_[chunkIndex].end())
 	{
-		components_[chunkIndex][it - components_[chunkIndex].begin()].texId = BlockTexToTexHash(block->blockTex);
+		components_[chunkIndex][it - components_[chunkIndex].begin()].texId = BlockTexToTexHash(block.blockTex);
 		return;
 	}
 
-	components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block->blockTex));
+	components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block.blockTex));
 }
 
 
-void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const std::shared_ptr<Block> block)
+void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const Block& block)
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkContentManager::FillOfBlock");
 #endif
-	if (block->blockTex.sideTexId == 0) return;
+	if (block.blockTex.sideTexId == 0) return;
 	components_[chunkIndex].clear();
 	components_[chunkIndex].reserve(kChunkBlockCount);
 	for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
 	{
-		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block->blockTex));
-		components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block->blockTex));
+		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block.blockTex));
+		components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block.blockTex));
 	}
 }
 
@@ -97,23 +97,23 @@ ChunkContentVector ChunkContentManager::GetBlocks(const Entity chunkIndex) const
 	return components_[chunkIndex];
 }
 
-std::shared_ptr<ChunkContent> ChunkContentManager::GetBlock(const Entity chunkIndex, const Vec3i& pos) const
+ChunkContent& ChunkContentManager::GetBlock(const Entity chunkIndex, const Vec3i& pos)
 {
 	return GetBlock(chunkIndex, PosToBlockId(pos));
 }
 
-std::shared_ptr<ChunkContent> ChunkContentManager::GetBlock(const Entity chunkIndex, BlockId blockId) const
+ChunkContent& ChunkContentManager::GetBlock(const Entity chunkIndex, BlockId blockId)
 {
 	const auto it = std::find_if(components_[chunkIndex].begin(), components_[chunkIndex].end(),
 		[blockId](const ChunkContent& content)
 		{ return content.blockId == blockId; }); 
 	if (it != components_[chunkIndex].end())
 	{
-		return std::make_shared<ChunkContent>(components_[chunkIndex][it - components_[chunkIndex].begin()]);
+		return components_[chunkIndex][it - components_[chunkIndex].begin()];
 	}
 	
 	LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
-	return nullptr;
+	return ChunkContent();
 }
 
 void ChunkContentManager::DestroyComponent(const Entity chunkIndex)
@@ -236,7 +236,6 @@ void ChunkRenderManager::Init(const Entity chunkIndex)
 {
 	components_[chunkIndex].cube.Init();
 	glGenBuffers(1, &components_[chunkIndex].vbo);
-
 }
 
 void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)

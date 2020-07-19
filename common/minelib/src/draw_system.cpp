@@ -9,27 +9,39 @@ namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	: engine_(engine),
-	  chunkRenderer_(engine, camera_),
+	  chunkRenderer_(engine, Camera3D()),
 	  chunkSystem_(engine.componentsManagerSystem.chunkSystem),
-	  gizmosRenderer_(camera_),
+	  gizmosRenderer_(Camera3D()),
+	  playerController_(engine),
+	  playerManager_(engine.componentsManagerSystem.playerManager),
 	  entityViewer_(engine.entityManager, engine.entityHierarchy),
 	  chunkViewer_(engine.entityManager, engine.componentsManagerSystem.chunkManager)
 {
-	engine.RegisterSystem(camera_);
-	engine.RegisterOnEvent(camera_);
 	engine.RegisterSystem(chunkRenderer_);
 	engine.RegisterSystem(gizmosRenderer_);
+	engine.RegisterSystem(playerController_);
+	engine.RegisterOnEvent(playerController_);
 }
 
 void DrawSystem::Init()
 {
-	camera_.Init();
 	chunkRenderer_.Init();
 	gizmosRenderer_.Init();
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
+	
+	const Entity newPlayer = engine_.entityManager.CreateEntity();
+	playerController_.SetCurrentPlayer(newPlayer);
+	playerManager_.AddComponent(newPlayer);
+	playerController_.SetCurrentPlayer(newPlayer);
 
-	camera_.position = Vec3f::up * 140;
+	Player& curPlayer = playerManager_.GetComponent(newPlayer);
+	gizmosRenderer_.SetCamera(curPlayer.camera);
+	chunkRenderer_.SetCamera(curPlayer.camera);
+
+	curPlayer.position = Vec3f::up * 140;
+	curPlayer.camera.position = curPlayer.position;
+	playerManager_.SetComponent(newPlayer, curPlayer);
 }
 
 void DrawSystem::Update(seconds dt)
@@ -39,9 +51,10 @@ void DrawSystem::Update(seconds dt)
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
 	{
 		Ray rayOut;
-		AabbLocator::get().RaycastBlock(rayOut, camera_.position, -camera_.reverseDirection);
-		savedCameraDir_ = -camera_.reverseDirection;
-		savedCameraPos_ = camera_.position;
+		Player& curPlayer = playerManager_.GetComponent(playerController_.GetCurrentPlayer());
+		AabbLocator::get().RaycastBlock(rayOut, curPlayer.camera.position, -curPlayer.camera.reverseDirection);
+		savedCameraDir_ = -curPlayer.camera.reverseDirection;
+		savedCameraPos_ = curPlayer.camera.position;
 		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
 	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);

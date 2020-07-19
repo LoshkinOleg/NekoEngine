@@ -38,10 +38,12 @@ public:
 	void SetCameraParameters(const Camera& camera) const;
 
 	void SetLightParameters() const;
+	
+	void SetCamera(Camera& camera);
+	Camera* GetCameraPos() const { return camera_; }
 
 private:
-	std::mutex mutex_;
-	Camera& camera_;
+	Camera* camera_;
 
 	MinecraftLikeEngine& engine_;
 	ChunkManager& chunkManager_;

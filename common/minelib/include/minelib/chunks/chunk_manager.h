@@ -25,18 +25,18 @@ class ChunkContentManager final : public ComponentManager<ChunkContentVector, Co
 public:
 	Index AddComponent(Entity chunkIndex) override;
 	
-	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, const Vec3i& pos);
-	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, BlockId blockId);
+	void SetBlock(Entity chunkIndex, const Block& block, const Vec3i& pos);
+	void SetBlock(Entity chunkIndex, BlockId blockId, const Block& block);
 
-	void FillOfBlock(Entity chunkIndex, std::shared_ptr<Block> block);
+	void FillOfBlock(Entity chunkIndex, const Block& block);
 
 	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
 	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
 	size_t GetChunkSize(Entity chunkIndex) const;
 	ChunkContentVector GetBlocks(Entity chunkIndex) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId) const;
+	ChunkContent& GetBlock(Entity chunkIndex, const Vec3i& pos);
+	ChunkContent& GetBlock(Entity chunkIndex, BlockId blockId);
 
 	void DestroyComponent(Entity chunkIndex) override;
 };

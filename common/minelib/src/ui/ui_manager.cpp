@@ -2,10 +2,15 @@
 
 namespace neko
 {
+UiManager::UiManager()
+{
+}
+
 void UiManager::Init()
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	const auto& config = BasicEngine::GetInstance()->config;
 	uiShader_.LoadFromFile(
 		config.dataRootPath + "shaders/base_ui.vert",
@@ -27,12 +32,12 @@ void UiManager::AddUiElement(UiElement* uiElement)
 
 void UiManager::Render()
 {
-	const auto& config = BasicEngine::GetInstance()->config;
-	
 	uiShader_.Bind();
 	uiShader_.SetInt("tex", 0);
 	glDisable(GL_DEPTH_TEST);
 	glCullFace(GL_FRONT);
+	
+	const auto& config = BasicEngine::GetInstance()->config;
 	for (auto& element : uiElements_)
 	{
 		if (element->flags & UiElement::RESIZE)

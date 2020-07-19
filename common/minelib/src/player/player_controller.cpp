@@ -7,7 +7,9 @@ namespace neko
 {
 PlayerController::PlayerController(MinecraftLikeEngine& engine)
 	: engine_(engine),
+	  entityManager_(engine.entityManager),
 	  blockManager_(engine.blockManager),
+	  playerManager_(engine.componentsManagerSystem.playerManager),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager),
 	  inputManager_(sdl::InputLocator::get()),
 	  gizmosRenderer_(GizmosLocator::get()),
@@ -18,224 +20,314 @@ PlayerController::PlayerController(MinecraftLikeEngine& engine)
 
 void PlayerController::Init()
 {
-	player_.aabb.SetFromCenter(player_.pos + Vec3f::up, player_.aabbSize);
-
-	//Init Ui
-	{
-		const Vec2f toolBarSize = Vec2f(toolBar_.size) / Vec2f(engine_.config.windowSize);
-		toolBar_.position.y = toolBarSize.y / 2 - 1.0;
-	
-		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(engine_.config.windowSize);
-	
-		blockSelect_.position.y = toolBar_.position.y;
-		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
-
-		crossHair_.texturePath = engine_.config.dataRootPath + "sprites/ui/crosshair.png";
-		toolBar_.texturePath = engine_.config.dataRootPath + "sprites/ui/toolbar.png";
-		blockSelect_.texturePath = engine_.config.dataRootPath + "sprites/ui/selection_sprite.png";
-		uiManager_.AddUiElement(&crossHair_);
-		uiManager_.AddUiElement(&toolBar_);
-		uiManager_.AddUiElement(&blockSelect_);
-
-		for (int i = 0; i < toolbarSize; ++i)
-		{
-			blockPreviews_[i].position.x = toolBar_.position.x + (i - 4) * tileSize.x;
-			blockPreviews_[i].position.y = toolBar_.position.y;
-			blockPreviews_[i].textureId = toolBarBlocks_[i]->previewTexture;
-			uiManager_.AddUiElement(&blockPreviews_[i]);
-		}
-	}
 }
 
-void PlayerController::Update(seconds dt)
+void PlayerController::Update(const seconds dt)
 {
-	camera_.Update(dt);
-
-	const auto scrollAmount = inputManager_.GetMouseScroll();
-	if (scrollAmount.y != 0)
+	const auto players = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::PLAYER));
+	for (auto& player : players)
 	{
-		selectIndex_ += -Sign(scrollAmount.y);
-		if (selectIndex_ > toolbarSize - 1) selectIndex_ = 0;
-		if (selectIndex_ < 0) selectIndex_ = toolbarSize - 1;
+		Player curPlayer = playerManager_.GetComponent(player);
+		curPlayer.camera.Update(dt);
 		
-		const auto& config = BasicEngine::GetInstance()->config;
-		const Vec2f tileSize = Vec2f(tileSize_) / Vec2f(config.windowSize);
-		blockSelect_.position.x = toolBar_.position.x + (selectIndex_ - 4) * tileSize.x;
-		blockSelect_.position.y = toolBar_.position.y;
-		blockSelect_.Update(config.windowSize);
-	}
-	
-	if (inputManager_.IsActionDown(sdl::InputAction::SPRINT) && inputManager_.IsActionHeld(sdl::InputAction::UP))
-	{
-		player_.speedMultiplier = player_.sprintMultiplier;
-		player_.state |= Player::SPRINTING;
+		const Vec3i currentChunkPos = Vec3i(
+			std::floor(curPlayer.position.x / kChunkSize),
+			std::floor(curPlayer.position.y / kChunkSize),
+			std::floor(curPlayer.position.z / kChunkSize)
+		);
+		if (curPlayer.currentChunk == INVALID_ENTITY || 
+			currentChunkPos != chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk))
+		{
+			const auto chunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+			for (auto& chunk : chunks)
+			{
+				if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED))
+					continue;
+
+				if (chunkManager_.chunkPosManager.GetAabb(chunk).IntersectAabb(Aabb3d(curPlayer.position, Vec3f(0.2f))))
+				{
+					curPlayer.currentChunk = chunk;
+					break;
+				}
+			}
+		}
+
+		playerManager_.SetComponent(player, curPlayer);
 	}
 
-	if (inputManager_.IsActionUp(sdl::InputAction::UP))
+	if (currentPlayer_ != INVALID_ENTITY)
 	{
-		player_.state &= ~Player::SPRINTING;
-		player_.speedMultiplier = 1.0f;
-	}
-	
-	if (player_.state & Player::CAN_JUMP && inputManager_.IsActionDown(sdl::InputAction::JUMP))
-	{
-		player_.velocity.y = player_.jumpPower;
-		player_.state &= ~Player::CAN_JUMP;
-	}
+		Player curPlayer = playerManager_.GetComponent(currentPlayer_);
+		if (curPlayer.currentChunk != INVALID_ENTITY)
+		{
+			//Gets the chunks in front
+			std::vector<Entity> chunksInFront{curPlayer.currentChunk};
+			const auto chunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+			for (auto& chunk : chunks)
+			{
+				if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
+					chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
+					continue;
 
-	if (Equal(Abs(player_.velocity.y), 0.0f)) HeadBobbing();
+				const auto& chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
+				if (curPlayer.camera.reverseDirection.x < 0)
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::right)
+						chunksInFront.push_back(chunk);
+					
+					if (curPlayer.camera.reverseDirection.y < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::right + Vec3i::up)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::right + Vec3i::down)
+							chunksInFront.push_back(chunk);
+					}
+					
+					if (curPlayer.camera.reverseDirection.z < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::right + Vec3i::forward)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::right + Vec3i::back)
+							chunksInFront.push_back(chunk);
+					}
+				}
+				else
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::left)
+						chunksInFront.push_back(chunk);
+					
+					if (curPlayer.camera.reverseDirection.y < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::left + Vec3i::up)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::left + Vec3i::down)
+							chunksInFront.push_back(chunk);
+					}
+					
+					if (curPlayer.camera.reverseDirection.z < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::left + Vec3i::forward)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::left + Vec3i::back)
+							chunksInFront.push_back(chunk);
+					}
+				}
+				
+				if (curPlayer.camera.reverseDirection.y < 0)
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::up)
+						chunksInFront.push_back(chunk);
+				}
+				else
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::down)
+						chunksInFront.push_back(chunk);
+				}
+				
+				if (curPlayer.camera.reverseDirection.z < 0)
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward)
+						chunksInFront.push_back(chunk);
+					
+					if (curPlayer.camera.reverseDirection.x < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::right)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::left)
+							chunksInFront.push_back(chunk);
+					}
+					
+					if (curPlayer.camera.reverseDirection.y < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::up)
+							chunksInFront.push_back(chunk);
+					
+						if (curPlayer.camera.reverseDirection.x < 0)
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::up + Vec3i::right)
+								chunksInFront.push_back(chunk);
+						}
+						else
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::up + Vec3i::left)
+								chunksInFront.push_back(chunk);
+						}
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::down)
+							chunksInFront.push_back(chunk);
+					
+						if (curPlayer.camera.reverseDirection.x < 0)
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::down + Vec3i::right)
+								chunksInFront.push_back(chunk);
+						}
+						else
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::forward + Vec3i::down + Vec3i::left)
+								chunksInFront.push_back(chunk);
+						}
+					}
+				}
+				else
+				{
+					if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back)
+						chunksInFront.push_back(chunk);
+					
+					if (curPlayer.camera.reverseDirection.x < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::right)
+							chunksInFront.push_back(chunk);
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::left)
+							chunksInFront.push_back(chunk);
+					}
+					
+					if (curPlayer.camera.reverseDirection.y < 0)
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::up)
+							chunksInFront.push_back(chunk);
+					
+						if (curPlayer.camera.reverseDirection.x < 0)
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::up + Vec3i::right)
+								chunksInFront.push_back(chunk);
+						}
+						else
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::up + Vec3i::left)
+								chunksInFront.push_back(chunk);
+						}
+					}
+					else
+					{
+						if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::down)
+							chunksInFront.push_back(chunk);
+					
+						if (curPlayer.camera.reverseDirection.x < 0)
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::down + Vec3i::right)
+								chunksInFront.push_back(chunk);
+						}
+						else
+						{
+							if (chunkPos == chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk) + Vec3i::back + Vec3i::down + Vec3i::left)
+								chunksInFront.push_back(chunk);
+						}
+					}
+				}
+			}
+
+			//Sorts the chunks in front by proximity
+			for (size_t i = 1; i < chunksInFront.size(); ++i)
+			{
+				const auto& chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[i]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
+				for (size_t j = 1; j < chunksInFront.size(); ++j)
+				{
+					if (chunksInFront[j] == chunksInFront[i]) continue;
+					
+					const auto& otherChunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[j]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
+					if ((chunkPos - curPlayer.position).SquareMagnitude() < (otherChunkPos - curPlayer.position).SquareMagnitude())
+						std::swap(chunksInFront[i], chunksInFront[j]);
+				}
+			}
+			
+			Ray rayOut;
+			const Vec3f direction = curPlayer.camera.reverseDirection.Normalized() * -1;
+			for (auto& chunkInFront : chunksInFront)
+			{
+				if (aabbManager_.RaycastBlockInChunk(rayOut, curPlayer.position, direction, chunkInFront))
+				{
+					if (rayOut.hitDist > curPlayer.maxReach) break;
+					
+					glLineWidth(3.0f);
+					gizmosRenderer_.DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f(kCubeHalfSize + 0.01f) * 2, Color::black);
+
+					if (Time::time > curPlayer.placeTimeStamp)
+					{
+						if (inputManager_.IsMouseButtonDown(sdl::MouseButtonCode::LEFT))
+						{
+							curPlayer.placeTimeStamp = Time::time + curPlayer.placeCoolDown;
+							BreakBlock(chunkInFront, rayOut.hitId);
+						}
+						
+						if (inputManager_.IsMouseButtonDown(sdl::MouseButtonCode::RIGHT))
+						{
+							curPlayer.placeTimeStamp = Time::time + curPlayer.placeCoolDown;
+							PlaceBlock(chunkInFront, rayOut.hitId, blockManager_.GetRandomBlock());
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		LogError("Current Player not set!");
+	}
 }
 
 void PlayerController::FixedUpdate()
 {
-	camera_.FixedUpdate();
-	MovePlayer();
+	const auto players = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::PLAYER));
+	for (auto& player : players)
+	{
+		Player curPlayer = playerManager_.GetComponent(player);
+		curPlayer.camera.FixedUpdate();
+	}
+}
+
+void PlayerController::OnEvent(const SDL_Event& event)
+{
+	const auto players = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::PLAYER));
+	for (auto& player : players)
+	{
+		Player curPlayer = playerManager_.GetComponent(player);
+		curPlayer.camera.OnEvent(event);
+	}
 }
 
 void PlayerController::Destroy()
 {
 }
 
-void PlayerController::PlaceCube(const size_t chunkId, const size_t blockId) const
+void PlayerController::PlaceBlock(const Entity chunk, const BlockId blockId, const Block& block) const
 {
-	chunkManager_.chunkContentManager.SetBlock(chunkId, blockManager_.GetBlock(0), blockId);
+	chunkManager_.chunkContentManager.SetBlock(chunk, blockId, block);
+	chunkManager_.chunkRenderManager.SetChunkValues(chunk);
 }
 
-void PlayerController::DeleteCube(const size_t chunkId, const size_t blockId) const
+void PlayerController::BreakBlock(const Entity chunk, const BlockId blockId) const
 {
-	chunkManager_.chunkContentManager.RemoveBlock(chunkId, blockId);
+	chunkManager_.chunkContentManager.RemoveBlock(chunk, blockId);
 }
 
-void PlayerController::MovePlayer()
+void PlayerController::SetCurrentPlayer(const Entity player)
 {
-	if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
-		player_.velocity.x += Time::fixedDeltaTime * player_.speedMultiplier;
-	if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
-		player_.velocity.x -= Time::fixedDeltaTime * player_.speedMultiplier;
-
-	if (inputManager_.IsActionHeld(sdl::InputAction::UP))
-		player_.velocity.z += Time::fixedDeltaTime * player_.speedMultiplier;
-	if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
-		player_.velocity.z -= Time::fixedDeltaTime * player_.speedMultiplier;
-	
-	player_.velocity.x = Lerp(player_.velocity.x, 0.0f, player_.decelerationSpeed * Time::fixedDeltaTime);
-	player_.velocity.z = Lerp(player_.velocity.z, 0.0f, player_.decelerationSpeed * Time::fixedDeltaTime);
-	
-	player_.velocity.y -= gravity_ * Time::fixedDeltaTime;
-	
-	ResolvePhysics();
-
-	player_.pos += camera_.rightDirection * player_.velocity.x +
-		Vec3f::up * player_.velocity.y * Time::fixedDeltaTime - 
-		Vec3f::Cross(camera_.rightDirection, Vec3f::up) * player_.velocity.z;
-	player_.aabb.SetFromCenter(player_.pos + Vec3f::up, player_.aabbSize);
-	
-	camera_.position = player_.pos + player_.cameraOffset;
+	currentPlayer_ = player;
 }
 
-void PlayerController::ResolvePhysics()
+Entity PlayerController::GetCurrentPlayer() const
 {
-	Ray rayOut;
-	if (aabbManager_.RaycastBlockInChunk(rayOut, player_.pos + Vec3f::up * 0.01f, Vec3f::down, 0))
-	{
-		if (Equal(rayOut.hitDist, 0.01f, 0.001f)) 
-			player_.state |= Player::CAN_JUMP;
-		else
-			player_.state &= ~Player::CAN_JUMP;
-	}
-	
-	for (uint16_t i = 0; i < uint16_t(kChunkSize * kChunkSize * kChunkSize); i++)
-	{
-		const uint16_t z = std::floor(i / (kChunkSize * kChunkSize));
-		const uint16_t y = std::floor((i - z * kChunkSize * kChunkSize) / kChunkSize);
-		const uint16_t x = i % kChunkSize;
-		const Vec3f cubePos = Vec3f(x, y, z);
-		const Aabb3d aabb = Aabb3d(cubePos, Vec3f(kCubeHalfSize));
-		
-		const Vec3f fromCenter = cubePos - Vec3f(player_.pos.x, cubePos.y - kCubeHalfSize, player_.pos.z);
-		if (aabb.IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, kCubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
-			Abs(fromCenter.x) > Abs(fromCenter.y) && 
-			Abs(fromCenter.x) > Abs(fromCenter.z))
-		{
-			const float sideSign = Sign(cubePos.x - player_.pos.x);
-			player_.pos.x = cubePos.x - (kCubeHalfSize + player_.aabbSize.x + 0.01f) * sideSign;
-		}
-		else if (aabb.ContainsPoint(player_.pos + Vec3f(0, player_.velocity.y * Time::fixedDeltaTime, 0)) &&
-			Abs(fromCenter.y) > Abs(fromCenter.x) && 
-			Abs(fromCenter.y) > Abs(fromCenter.z))
-		{
-			const float sideSign = Sign(cubePos.y - player_.pos.y);
-			player_.pos.y = cubePos.y - kCubeHalfSize * sideSign;
-
-			if (player_.velocity.y <= 0.0f) player_.velocity.y = 0.0f;
-		}
-		else if (aabb.IntersectAabb(Aabb3d(player_.pos + Vec3f(player_.velocity.x, kCubeHalfSize * 2, player_.velocity.z), player_.aabbSize)) &&
-			Abs(fromCenter.z) > Abs(fromCenter.y) && 
-			Abs(fromCenter.z) > Abs(fromCenter.x))
-		{
-			const float sideSign = Sign(cubePos.z - player_.pos.z);
-			player_.pos.z = cubePos.z - (kCubeHalfSize + player_.aabbSize.z + 0.01f) * sideSign;
-		}
-	}
-}
-
-void PlayerController::HeadBobbing()
-{
-	if (IsMoving())
-    {
-        player_.cameraOffset = camera_.rightDirection * std::sin(player_.bobbingTimer / 2) * player_.bobbingAmount;
-        player_.cameraOffset.y = player_.defaultPosY + std::sin(player_.bobbingTimer) * player_.bobbingAmount;
-        player_.bobbingTimer += player_.bobbingSpeed * player_.speedMultiplier * Time::deltaTime;
-    }
-    else
-    {
-        player_.bobbingTimer = 0;
-        player_.cameraOffset.x = Lerp(player_.cameraOffset.x, 0.0f, player_.bobbingSpeed * player_.speedMultiplier * Time::deltaTime);
-        player_.cameraOffset.y = Lerp(player_.cameraOffset.y, player_.defaultPosY, player_.bobbingSpeed * player_.speedMultiplier * Time::deltaTime);
-        player_.cameraOffset.z = Lerp(player_.cameraOffset.z, 0.0f, player_.bobbingSpeed * player_.speedMultiplier * Time::deltaTime);
-
-    	if (Equal(player_.cameraOffset.x, 0.0f, 0.0001f)) player_.cameraOffset.x = 0.0f;
-    	if (Equal(player_.cameraOffset.z, 0.0f, 0.0001f)) player_.cameraOffset.z = 0.0f;
-    }
-}
-
-void PlayerController::CheckBlock(const uint16_t blockId, const Vec3f& blockPos) const
-{
-	glLineWidth(3.0f);
-	gizmosRenderer_.DrawCube(blockPos, Vec3f::one, Color::black);
-	
-	if (Time::time < player_.placeTimeStamp) return;
-	if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::LEFT))
-	{
-		DeleteCube(0, blockId);
-	}
-	if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT) && toolBarBlocks_[selectIndex_] != nullptr)
-	{
-		const Vec3f toPoint = camera_.reverseDirection * -1 * blockId;
-		const Vec3f cubePoint = camera_.position + toPoint;
-		const Vec3f fromCenter = cubePoint - blockPos;
-		
-		Vec3i offset;
-		if (Abs(fromCenter.x) > Abs(fromCenter.y) && 
-			Abs(fromCenter.x) > Abs(fromCenter.z)) 
-			offset.x = -Sign(fromCenter.x);
-		else if (Abs(fromCenter.y) > Abs(fromCenter.x) && 
-			Abs(fromCenter.y) > Abs(fromCenter.z)) 
-			offset.y = -Sign(fromCenter.y);
-		else if (Abs(fromCenter.z) > Abs(fromCenter.y) && 
-			Abs(fromCenter.z) > Abs(fromCenter.x)) 
-			offset.z = -Sign(fromCenter.z);
-
-		const uint16_t offSetId = blockId - PosToBlockId(offset);
-		PlaceCube(0, offSetId);
-	}
-}
-
-bool PlayerController::IsMoving() const
-{
-	return inputManager_.IsActionHeld(sdl::InputAction::RIGHT) ||
-		inputManager_.IsActionHeld(sdl::InputAction::LEFT) ||
-		inputManager_.IsActionHeld(sdl::InputAction::UP) ||
-		inputManager_.IsActionHeld(sdl::InputAction::DOWN);
+	return currentPlayer_;
 }
 }

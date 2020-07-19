@@ -12,6 +12,8 @@ public:
 
 	void Update(seconds dt) override;
 
+	void FixedUpdate() override {}
+
 	void Destroy() override;
 
 	void Render() override;

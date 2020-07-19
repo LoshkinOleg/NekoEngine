@@ -6,6 +6,7 @@
 #include "minelib/chunks/chunk_manager.h"
 
 #include "gizmos_renderer.h"
+#include "player/player_controller.h"
 
 namespace neko
 {
@@ -30,11 +31,12 @@ protected:
     ChunkRenderer chunkRenderer_;
     ChunkSystem& chunkSystem_;
     GizmosRenderer gizmosRenderer_;
+	PlayerController playerController_;
+	PlayerManager& playerManager_;
 	
     //ImGui Viewer
     EntityViewer entityViewer_;
     ChunkViewer chunkViewer_;
-    MoveableCamera3D camera_;
 
 	//test
     Vec3f savedCameraPos_;

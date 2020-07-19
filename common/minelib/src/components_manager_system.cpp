@@ -6,8 +6,9 @@ namespace neko
 {
 ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	: aabbManager(engine),
+	  chunkSystem(engine),
 	  chunkManager(engine.entityManager),
-	  chunkSystem(engine)
+	  playerManager(engine.entityManager, engine.uiManager)
 {
 	engine.RegisterSystem(chunkSystem);
 }
