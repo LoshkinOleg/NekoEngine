@@ -29,6 +29,8 @@ public:
 	void Destroy() override;
 
 private:
+
+	bool CalculateOcclusionStatus(ChunkContentVector chunkContent, ChunkFlag occludeDir) const;
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */

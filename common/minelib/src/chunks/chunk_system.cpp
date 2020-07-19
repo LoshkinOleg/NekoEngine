@@ -21,13 +21,100 @@ ChunkSystem::ChunkSystem(MinecraftLikeEngine& engine)
 {
 }
 
+bool ChunkSystem::CalculateOcclusionStatus(ChunkContentVector chunkContent, ChunkFlag occludeDir) const
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkSystem::CalculateOcclusionStatus", profiler::colors::Blue900);
+#endif
+	if (chunkContent.blocks.size() == kChunkBlockCount)
+	{
+		return true;
+	}
+	switch (static_cast<ChunkFlag>(occludeDir))
+	{
+	case ChunkFlag::OCCLUDE_DOWN:
+		for (int x = 0; x < kChunkSize; x++)
+		{
+			for (int z = 0; z < kChunkSize; z++)
+			{
+				if (chunkContent.GetBlock(Vec3i(x, 0, z)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	case ChunkFlag::OCCLUDE_UP:
+		for (int x = 0; x < kChunkSize; x++)
+		{
+			for (int z = 0; z < kChunkSize; z++)
+			{
+				if (chunkContent.GetBlock(Vec3i(x, kChunkSize-1, z)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	case ChunkFlag::OCCLUDE_RIGHT:
+		for (int x = 0; x < kChunkSize; x++)
+		{
+			for (int y = 0; y < kChunkSize; y++)
+			{
+				if (chunkContent.GetBlock(Vec3i(x, y, kChunkSize-1)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	case ChunkFlag::OCCLUDE_LEFT:
+		for (int x = 0; x < kChunkSize; x++)
+		{
+			for (int y = 0; y < kChunkSize; y++)
+			{
+				if (chunkContent.GetBlock(Vec3i(x, y, 0)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	case ChunkFlag::OCCLUDE_FRONT:
+		for (int z = 0; z < kChunkSize; z++)
+		{
+			for (int y = 0; y < kChunkSize; y++)
+			{
+				if (chunkContent.GetBlock(Vec3i(0, y, z)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	case ChunkFlag::OCCLUDE_BACK:
+		for (int z = 0; z < kChunkSize; z++)
+		{
+			for (int y = 0; y < kChunkSize; y++)
+			{
+				if (chunkContent.GetBlock(Vec3i(kChunkSize-1, y, z)))
+				{
+					return false;
+				}
+			}
+		}
+		break;
+	default:;
+	}
+	return true;
+}
+
 Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 {
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("ChunkSystem::GenerateChunk", profiler::colors::Blue);
 #endif
 	ChunkContentVector chunkContent;
-	chunkContent.reserve(kChunkBlockCount);
 	ChunkMask chunkMask = 0;
 	//const auto randBlock = blockManager_.GetRandomBlock();
 	const auto randBlock = blockManager_.GetBlock(RandomRange(1, 6));
@@ -37,19 +124,13 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 	else if (pos.y < kHeightChunkLimit / 2)
 	{
 		const auto stoneBlock = blockManager_.GetBlock(RandomRange(1, 6));
-
-		for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
-		{
-			const ChunkContent content = ChunkContent(blockId,
-			                                          BlockTexToTexHash(stoneBlock->blockTex));
-			chunkContent.emplace_back(blockId, BlockTexToTexHash(stoneBlock->blockTex));
-		}
+		chunkContent.FillOfBlock(stoneBlock);
 		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
-		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_UP);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_BACK);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_FRONT);
 		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_LEFT);
 		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_RIGHT);
-		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_FRONT);
-		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_BACK);
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_UP);
 	}
 	else
 	{
@@ -57,18 +138,26 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				chunkContent.emplace_back(PosToBlockId(Vec3i(x, 0, z)),
-				                          BlockTexToTexHash(randBlock->blockTex));
-				chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
+				chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, 0, z)));
 			}
 		}
-		if (randBlock->name != "Glass")
-		{
-		}
+		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
 	}
+	/*for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
+		static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+	{
+		if (CalculateOcclusionStatus(chunkContent, static_cast<ChunkFlag>(occlude)))
+		{
+			chunkMask |= ChunkMask(occlude);
+		}
+	}*/
 
+	if (chunkContent.blocks.size() == 0)
+		chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::EMPTY);
+	else
+		chunkManager_.chunkStatusManager.RemoveStatus(newChunkIndex, ChunkFlag::EMPTY);
 	chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, chunkMask);
-	chunkManager_.chunkContentManager.FillOfBlocks(newChunkIndex, chunkContent);
+	chunkManager_.chunkContentManager.SetComponent(newChunkIndex, chunkContent);
 
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledChunks_.emplace_back([this, newChunkIndex]
@@ -147,7 +236,6 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 	}
 	if (!visible)
 	{
-		//chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::VISIBLE);
 		chunkManager_.chunkStatusManager.AddStatus(chunkIndex, ChunkFlag::OCCLUDED);
 	}
 }
@@ -167,7 +255,7 @@ void ChunkSystem::UpdateVisibleChunks()
 	                                    std::floor(viewerPos.z / kChunkSize));
 
 	Frustum frustum(GizmosLocator::get().GetCamera());
-	const int drawSize = kMaxViewDist / kChunkSize;
+	const int drawSize = kChunkMaxViewDist;
 	std::vector<Entity> dirtyChunks;
 	dirtyChunks.reserve(kHeightChunkLimit * drawSize);
 	for (auto chunk : chunks)

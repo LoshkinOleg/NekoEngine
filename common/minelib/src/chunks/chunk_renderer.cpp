@@ -66,18 +66,9 @@ void ChunkRenderer::Render()
 	shader_.Bind();
 	SetCameraParameters(camera_);
 	glBindTexture(GL_TEXTURE_2D, atlasTex_);
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
-	for (auto& chunk : visibleChunks)
-	{
-		if (chunkManager_.chunkContentManager.GetChunkSize(chunk) == 0)
-			chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::EMPTY);
-		else
-			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
-		if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
-			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY) ||
-			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::OCCLUDED))
-			continue;
-		
+	const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
+	for (auto& chunk : renderedChunks)
+	{		
 		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
 		chunkManager_.chunkRenderManager.Draw(chunk);
 	}

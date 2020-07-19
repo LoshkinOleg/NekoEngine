@@ -5,9 +5,12 @@
 #include "chunk.h"
 #include "chunk_renderer.h"
 
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
+
 namespace neko
 {
-using ChunkContentVector = std::vector<ChunkContent>;
 
 static BlockId PosToBlockId(const Vec3i& pos)
 {
@@ -19,13 +22,38 @@ static Vec3i BlockIdToPos(const BlockId pos)
 	return {pos % kChunkSize, pos / kChunkSize % kChunkSize, pos / (kChunkSize * kChunkSize)};
 }
 
-class ChunkContentManager final : public ComponentManager<ChunkContentVector, ComponentType::CHUNK_CONTENT>
+struct ChunkContentVector
+{
+	std::vector<ChunkContent> blocks;
+
+	ChunkContentVector();
+
+	void SetBlock(const std::shared_ptr<Block> block, const Vec3i& pos);
+
+	void SetBlock(const std::shared_ptr<Block> block, BlockId blockId);
+
+	void FillOfBlock(const std::shared_ptr<Block> block);
+
+	void RemoveBlock(const Vec3i& pos);
+
+	void RemoveBlock(const BlockId blockId);
+
+	std::vector<ChunkContent> GetBlocks();
+
+	std::shared_ptr<ChunkContent> GetBlock(const Vec3i& pos);
+
+	std::shared_ptr<ChunkContent> GetBlock(BlockId blockId);
+};
+
+class ChunkContentManager final : public ComponentManager<
+		ChunkContentVector, ComponentType::CHUNK_CONTENT>
 {
 	using ComponentManager::ComponentManager;
 public:
 	Index AddComponent(Entity chunkIndex) override;
-	
+
 	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, const Vec3i& pos);
+
 	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, BlockId blockId);
 
 	void FillOfBlock(Entity chunkIndex, std::shared_ptr<Block> block);
@@ -33,19 +61,25 @@ public:
 	void FillOfBlocks(Entity chunkIndex, const ChunkContentVector& chunkContentVector);
 
 	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
+
 	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
 	size_t GetChunkSize(Entity chunkIndex);
-	ChunkContentVector GetBlocks(Entity chunkIndex);
+
+	std::vector<ChunkContent> GetBlocks(Entity chunkIndex);
+
 	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos);
+
 	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId);
 
 	void DestroyComponent(Entity chunkIndex) override;
+
 private:
 	std::mutex mutex_;
 };
 
 using ChunkMask = std::uint16_t;
+
 enum class ChunkFlag : std::uint16_t
 {
 	EMPTY = 1u << 0u,
@@ -66,7 +100,7 @@ class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentTyp
 	using ComponentManager::ComponentManager;
 public:
 	ChunkStatusManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager);
-	
+
 	Index AddComponent(Entity chunkIndex) override;
 
 	void AddStatus(Entity entity, ChunkFlag chunkFlag);
@@ -74,12 +108,15 @@ public:
 	void AddStatus(Entity entity, ChunkMask chunkMask);
 
 	void RemoveStatus(Entity entity, ChunkFlag chunkFlag);
+
 	bool HasStatus(Entity entity, ChunkFlag chunkFlag);
 
 	std::vector<Index> GetAccessibleChunks();
-	std::vector<Index> GetVisibleChunks();
+
+	std::vector<Index> GetRenderedChunks();
+
 	std::vector<Index> GetLoadedChunks();
-	
+
 private:
 	ChunkContentManager& chunkContentManager_;
 	std::mutex mutex_;
@@ -103,10 +140,11 @@ public:
 	void Init(Entity chunkIndex);
 
 	void Draw(Entity chunkIndex);
+
 	void SetChunkValues(Entity chunkIndex);
 
 	void DestroyComponent(Entity chunkIndex) override;
-	
+
 private:
 	ChunkContentManager& chunkContentManager_;
 	std::mutex mutex_;
@@ -116,8 +154,9 @@ class ChunkManager
 {
 public:
 	explicit ChunkManager(EntityManager& entityManager);
-	
+
 	void AddComponent(Entity chunkIndex);
+
 	void DestroyComponent(Entity chunkIndex);
 
 	ChunkContentManager chunkContentManager;
@@ -129,7 +168,8 @@ public:
 class ChunkViewer
 {
 public:
-	explicit ChunkViewer(EntityManager& entityManager,
+	explicit ChunkViewer(
+		EntityManager& entityManager,
 		ChunkManager& chunkManager);
 
 	void DrawImGui(Entity selectedEntity) const;
