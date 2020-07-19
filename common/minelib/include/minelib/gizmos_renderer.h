@@ -60,7 +60,7 @@ public:
 		const Color4& color = Color::red) = 0;
 	
 	virtual Vec3f GetCameraPos() const = 0;
-	virtual Camera3D GetCamera() const = 0;
+	virtual MoveableCamera3D GetCamera() const = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ class NullGizmosRenderer final : public IGizmosRenderer
 
 	Vec3f GetCameraPos() const override { return {}; }
 	
-	Camera3D GetCamera() const override { return MoveableCamera3D(); }
+	MoveableCamera3D GetCamera() const override { return MoveableCamera3D(); }
 };
 
 //-----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera3D& camera);
+	explicit GizmosRenderer(MoveableCamera3D& camera);
 
 	void Init() override;
 
@@ -123,12 +123,12 @@ public:
 		const Color4& color = Color::red) override;
 
 	Vec3f GetCameraPos() const override { return camera_.position; }
-	Camera3D GetCamera() const override { return camera_; }
+	MoveableCamera3D GetCamera() const override { return camera_; }
 	
 private:
 	std::mutex updateMutex_;
 
-	Camera3D& camera_;
+	MoveableCamera3D& camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};

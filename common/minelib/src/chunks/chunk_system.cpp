@@ -6,6 +6,8 @@
 #include "engine/transform.h"
 
 #include <minelib/chunks/chunk_manager.h>
+
+#include "minelib/frustum.h"
 #include "minelib/gizmos_renderer.h"
 #include "minelib/minecraft_like_engine.h"
 
@@ -102,7 +104,6 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 		if (!entityManager_.HasComponent(chunk,
 		                                 static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 			continue;
-
 		const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
 		for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
 		     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
@@ -132,7 +133,7 @@ void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const
 			}
 			if (chunkPos == pos + offset)
 			{
-				if (chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::VISIBLE) && !
+				if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::OCCLUDED) && !
 					chunkManager_.chunkStatusManager.HasStatus(
 						chunk,
 						static_cast<ChunkFlag>(occlude)))
@@ -165,17 +166,20 @@ void ChunkSystem::UpdateVisibleChunks()
 	                                    0,
 	                                    std::floor(viewerPos.z / kChunkSize));
 
+	Frustum frustum(GizmosLocator::get().GetCamera());
 	const int drawSize = kMaxViewDist / kChunkSize;
 	std::vector<Entity> dirtyChunks;
 	dirtyChunks.reserve(kHeightChunkLimit * drawSize);
 	for (auto chunk : chunks)
 	{
 		const Vec3i chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
-		if (chunkPos.x > currentChunkPos.x + drawSize ||
+		if ((chunkPos.x > currentChunkPos.x + drawSize ||
 			chunkPos.z > currentChunkPos.z + drawSize ||
 			chunkPos.x < currentChunkPos.x - drawSize ||
-			chunkPos.z < currentChunkPos.z - drawSize)
+			chunkPos.z < currentChunkPos.z - drawSize))
+		{
 			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::VISIBLE);
+		}
 	}
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("Chunks_System::CheckVisiblesChunks", profiler::colors::Green100);
@@ -207,7 +211,7 @@ void ChunkSystem::UpdateVisibleChunks()
 				if (it == chunks.end())
 				{
 #ifdef EASY_PROFILE_USE
-						EASY_BLOCK("Chunks_System::CreateEntity", profiler::colors::Green100);
+					EASY_BLOCK("Chunks_System::CreateEntity", profiler::colors::Green100);
 #endif
 					const Entity newChunkIndex = entityManager_.CreateEntity();
 					chunkManager_.AddComponent(newChunkIndex);
@@ -220,19 +224,27 @@ void ChunkSystem::UpdateVisibleChunks()
 					engine_.ScheduleJob(generationJobs_.back().get(), JobThreadType::OTHER_THREAD);
 #ifdef EASY_PROFILE_USE
 					EASY_END_BLOCK
-						EASY_BLOCK("Chunks_System::ScheduleJob", profiler::colors::Green100);
+					EASY_BLOCK("Chunks_System::ScheduleJob", profiler::colors::Green100);
 #endif
 					dirtyChunks.push_back(newChunkIndex);
 				}
 				else
 				{
 #ifdef EASY_PROFILE_USE
-						EASY_BLOCK("Chunks_System::AddStatusVisible", profiler::colors::Green100);
+					EASY_BLOCK("Chunks_System::AddStatusVisible", profiler::colors::Green100);
 #endif
 					int index = std::distance(chunks.begin(), it);
-					chunkManager_.chunkStatusManager.AddStatus(chunks[index], ChunkFlag::VISIBLE);
+					if (frustum.Contains(chunkManager_.chunkPosManager.GetAabb(chunks[index])))
+					{
+						chunkManager_.chunkStatusManager.AddStatus(chunks[index], ChunkFlag::VISIBLE);
+					}
+					else
+					{
+						chunkManager_.chunkStatusManager.RemoveStatus(chunks[index], ChunkFlag::VISIBLE);
+					}
 					chunks.erase(chunks.begin() + index);
 				}
+
 			}
 		}
 	}
@@ -244,12 +256,11 @@ void ChunkSystem::UpdateVisibleChunks()
 		[this, dirtyChunks]
 		{
 			for (auto dirtyChunk : dirtyChunks)
-		{
-			SetChunkOcclusionCulling(dirtyChunk);
-		}
+			{
+				SetChunkOcclusionCulling(dirtyChunk);
+			}
 		}));
 	engine_.ScheduleJob(generationJobs_.back().get(), JobThreadType::OTHER_THREAD);
-	
 }
 
 void ChunkSystem::Update(seconds dt)
