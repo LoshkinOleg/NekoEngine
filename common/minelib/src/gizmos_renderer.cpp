@@ -4,7 +4,7 @@
 
 namespace neko
 {
-GizmosRenderer::GizmosRenderer(Camera& camera)
+GizmosRenderer::GizmosRenderer(Camera3D& camera)
 	: camera_(camera)
 {
 	GizmosLocator::provide(this);
