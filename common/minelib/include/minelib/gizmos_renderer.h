@@ -42,6 +42,7 @@ struct Gizmos
 class IGizmosRenderer
 {
 public:
+	
 	/**
 	 * \brief Generate a wire cube.
 	 */
@@ -59,6 +60,7 @@ public:
 		const Color4& color = Color::red) = 0;
 	
 	virtual Vec3f GetCameraPos() const = 0;
+	virtual MoveableCamera3D GetCamera() const = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -82,6 +84,8 @@ class NullGizmosRenderer final : public IGizmosRenderer
 	}
 
 	Vec3f GetCameraPos() const override { return {}; }
+	
+	MoveableCamera3D GetCamera() const override { return MoveableCamera3D(); }
 };
 
 //-----------------------------------------------------------------------------
@@ -93,7 +97,7 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera& camera);
+	explicit GizmosRenderer(MoveableCamera3D& camera);
 
 	void Init() override;
 
@@ -103,6 +107,10 @@ public:
 	void Render() override;
 
 	void Destroy() override;
+
+	void Start();
+	void Stop();
+	
 
 	void DrawCube(
 		const Vec3f& pos,
@@ -115,11 +123,12 @@ public:
 		const Color4& color = Color::red) override;
 
 	Vec3f GetCameraPos() const override { return camera_.position; }
+	MoveableCamera3D GetCamera() const override { return camera_; }
 	
 private:
 	std::mutex updateMutex_;
 
-	Camera& camera_;
+	MoveableCamera3D& camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
@@ -128,6 +137,7 @@ private:
 	gl::Shader shaderLine_;
 
 	std::vector<Gizmos> gizmosQueue_;
+	bool isRunning_ = false;
 };
 
 using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;

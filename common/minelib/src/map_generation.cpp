@@ -141,19 +141,19 @@ namespace neko
 		{
 			//Cut in x
 			int distance = parentZone.end.x - parentZone.start.x;
-			int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
+			//int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
 
-			childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x - random, parentZone.end.y));
-			childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x + random, parentZone.start.y), parentZone.end);
+			//childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x - random, parentZone.end.y));
+			//childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x + random, parentZone.start.y), parentZone.end);
 		}
 		else
 		{
 			//Cut in y
 			int distance = parentZone.end.y - parentZone.start.y;
-			int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
+			//int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
 
-			childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x, parentZone.end.y - random));
-			childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x, parentZone.start.y + random), parentZone.end);
+			//childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x, parentZone.end.y - random));
+			//childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x, parentZone.start.y + random), parentZone.end);
 		}
 		//TODO Generate Neighbours ?
 		allZones.push_back(childZone1);
@@ -169,7 +169,7 @@ namespace neko
 				!(childZone2.end.y >= mapSize - 1))
 			{
 				childZone1.canSpawnMountain = true;
-				mountainZonesIndexes.Add(childZone1.zoneID);
+				//mountainZonesIndexes.Add(childZone1.zoneID);
 			}
 			finalZones.push_back(childZone1);
 			finalZones.push_back(childZone2);
@@ -181,7 +181,7 @@ namespace neko
 		}
 	}
 
-	void MapGeneration::LerpBlock(int map[][], Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg)
+	void MapGeneration::LerpBlock(std::array<std::array<int, mapSize>, mapSize> map, Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg)
 	{
 		//TODO check if value is higher
 

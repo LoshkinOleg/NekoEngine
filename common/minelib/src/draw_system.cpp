@@ -5,6 +5,10 @@
 #include "minelib/aabb_manager.h"
 #include "minelib/minecraft_like_engine.h"
 
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
+
 namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
@@ -34,9 +38,12 @@ void DrawSystem::Init()
 
 void DrawSystem::Update(seconds dt)
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("DrawSystem::Update", profiler::colors::Green);
+#endif
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
-	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
+	if (raycastOn_)
 	{
 		Ray rayOut;
 		AabbLocator::get().RaycastBlock(rayOut, camera_.position, -camera_.reverseDirection);
@@ -44,7 +51,6 @@ void DrawSystem::Update(seconds dt)
 		savedCameraPos_ = camera_.position;
 		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
-	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);
 }
 
 void DrawSystem::Destroy()
@@ -55,10 +61,28 @@ void DrawSystem::Destroy()
 
 void DrawSystem::DrawImGui()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("DrawSystem::DrawImGui", profiler::colors::Blue);
+#endif
 	entityViewer_.DrawImGui();
 	
 	ImGui::Begin("Inspector");
 	chunkViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
+	ImGui::End();
+
+	ImGui::Begin("Testing");
+	ImGui::Checkbox("Raycast", &raycastOn_);
+	if (ImGui::Checkbox("Gizmos", &gizmosOn_))
+	{
+		if (gizmosOn_)
+		{
+			gizmosRenderer_.Start();
+		} else
+		{
+			gizmosRenderer_.Stop();
+		}
+	}
+	
 	ImGui::End();
 
 	chunkRenderer_.DrawImGui();

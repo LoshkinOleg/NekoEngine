@@ -37,7 +37,7 @@ namespace neko
 
 		void GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage);
 		void CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize);
-		void LerpBlock(int map[][], Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
+		void LerpBlock(std::array<std::array<int, mapSize>, mapSize> map, Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
 		bool CheckNeighbourhood(Zone zone1, Zone zone2);
 		
 	private:
