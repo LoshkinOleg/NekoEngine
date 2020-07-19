@@ -1,23 +1,11 @@
-#include "frustum.h"
-
-float Plane::Distance(const neko::Vec3f & point) const
-{
-	return neko::Vec3f::Dot(point - point_, normal_);
-}
-
-neko::Vec3f Plane::CalculateNormalFrom(const neko::Vec3f & pointA, const neko::Vec3f & pointB, const neko::Vec3f & pointC)
-{
-	neko::Vec3f vecA = pointA - pointB;
-	neko::Vec3f vecB = pointC - pointB;
-	return neko::Vec3f::Cross(vecA, vecB).Normalized();
-}
+#include "minelib/frustum.h"
 
 Frustum::Frustum(const neko::MoveableCamera3D & camera)
 {
 	neko::Vec3f direction = -camera.reverseDirection;
 	neko::Vec3f position = camera.position - direction * cameraRecoil;
-	neko::Vec3f right = camera.GetRight();
-	neko::Vec3f up = camera.GetUp();
+	neko::Vec3f right = camera.rightDirection;
+	neko::Vec3f up = camera.upDirection;
 	float nearPlaneDistance = camera.nearPlane;
 	float farPlaneDistance = camera.farPlane;
 	neko::degree_t fovY = camera.fovY;

@@ -37,6 +37,8 @@ public:
 	
 	explicit Frustum(const neko::MoveableCamera3D & camera);
 
+	bool Contains(const neko::Vec3f& point);
+
 	bool Contains(const neko::Aabb3d & aabb);
 
 	float cameraRecoil = 0.0f;

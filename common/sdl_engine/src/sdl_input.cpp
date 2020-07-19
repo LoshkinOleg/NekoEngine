@@ -134,10 +134,6 @@ void InputManager::ProcessInputs(SDL_Event event)
 {
 	switch (event.type)
 	{
-		case SDL_QUIT:
-			engine_.Destroy();
-			break;
-
 #pragma region keyboard
 		case SDL_TEXTINPUT:
 			{
