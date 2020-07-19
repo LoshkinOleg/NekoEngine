@@ -2,16 +2,15 @@
 #include <array>
 #include <mathematics/vector.h>
 #include <vector>
+#include "PerlinNoise.hpp"
 
 namespace neko
 {
 	const int mapSize = 1024;
 	const int mapHeight = 128;
-	const int seed = 0;
-	const float frequency = 1;
-	const int octaves = 2;
+	const uint32_t seed = 0;
 	const int undergroundHeight = 16;
-	const int blocksNBeforeStone = 4;
+	const int blocksNrBeforeStone = 4;
 	
 	struct Zone
 	{
@@ -24,7 +23,7 @@ namespace neko
 		Vec2i end;
 		std::vector<int> neighboursIndexes;
 		bool canSpawnMountain;
-
+		Zone();
 		Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end);
 		Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end, bool canSpawnMountain);
 	};
@@ -33,8 +32,10 @@ namespace neko
 	{
 	public:
 
-		const std::array<std::array<int, mapSize>, mapSize> GenerateMapSurface(Vec2i offset);
+		const std::array<std::array<int, mapSize>, mapSize> GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone);
 		std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> GenerateMap3D(std::array<std::array<int, mapSize>, mapSize> heightMap);
+
+		void GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage);
 		void CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize);
 		void LerpBlock(int map[][], Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
 		bool CheckNeighbourhood(Zone zone1, Zone zone2);
@@ -43,6 +44,8 @@ namespace neko
 
 	std::vector<Zone> allZones;
 	std::vector<Zone> finalZones;
+	siv::PerlinNoise perlinNoise;
+	
 		
 	int index = 0;
 		
