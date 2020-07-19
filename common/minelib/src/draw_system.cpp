@@ -64,12 +64,23 @@ void DrawSystem::DrawImGui()
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("DrawSystem::DrawImGui", profiler::colors::Blue);
 #endif
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("DrawSystem::DrawImGui::entityViewer_", profiler::colors::Blue);
+#endif
 	entityViewer_.DrawImGui();
-	
+
+#ifdef EASY_PROFILE_USE
+	EASY_END_BLOCK
+	EASY_BLOCK("DrawSystem::DrawImGui::Inspector", profiler::colors::Blue);
+#endif
 	ImGui::Begin("Inspector");
 	chunkViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
 	ImGui::End();
 
+#ifdef EASY_PROFILE_USE
+	EASY_END_BLOCK
+		EASY_BLOCK("DrawSystem::DrawImGui::Testing", profiler::colors::Blue);
+#endif
 	ImGui::Begin("Testing");
 	ImGui::Checkbox("Raycast", &raycastOn_);
 	if (ImGui::Checkbox("Gizmos", &gizmosOn_))
@@ -85,6 +96,10 @@ void DrawSystem::DrawImGui()
 	
 	ImGui::End();
 
+#ifdef EASY_PROFILE_USE
+	EASY_END_BLOCK
+		EASY_BLOCK("DrawSystem::DrawImGui::chunkRenderer_", profiler::colors::Blue);
+#endif
 	chunkRenderer_.DrawImGui();
 }
 

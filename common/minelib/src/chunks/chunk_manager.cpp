@@ -22,7 +22,7 @@ void ChunkContentVector::SetBlock(
 	BlockId blockId)
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkContentVector::SetBlock");
+	EASY_BLOCK("ChunkContentVector::SetBlock", profiler::colors::Blue300);
 #endif
 	if (block->blockTex.sideTexId == 0) return;
 	if (blockId > kChunkBlockCount - 1)
@@ -49,7 +49,7 @@ void ChunkContentVector::SetBlock(
 void ChunkContentVector::FillOfBlock(const std::shared_ptr<Block> block)
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkContentManager::FillOfBlock");
+	EASY_BLOCK("ChunkContentManager::FillOfBlock", profiler::colors::Blue200);
 #endif
 	if (block->blockTex.sideTexId == 0) return;
 	blocks.clear();
@@ -88,7 +88,7 @@ void ChunkContentVector::RemoveBlock(const BlockId blockId)
 	LogError("Block ID is invalid!");
 }
 
-std::vector<ChunkContent> ChunkContentVector::GetBlocks()
+std::vector<ChunkContent> ChunkContentVector::GetBlocks() const
 {
 	return blocks;
 }
@@ -118,7 +118,27 @@ std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
 		return std::make_shared<ChunkContent>(
 			blocks[it - blocks.begin()]);
 	}
-	return nullptr;
+}
+
+bool ChunkContentVector::HasBlockAt(const Vec3i& pos) const
+{
+	BlockId blockId = PosToBlockId(pos);
+	if (blockId < 0 || blockId > kChunkBlockCount - 1)
+	{
+		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
+		return nullptr;
+	}
+	const auto it = std::find_if(blocks.begin(),
+		blocks.end(),
+		[blockId](const ChunkContent& content)
+		{
+			return content.blockId == blockId;
+		});
+	if (it != blocks.end())
+	{
+		return true;
+	}
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -324,7 +344,6 @@ void ChunkStatusManager::RemoveStatus(const Entity entity, ChunkFlag chunkFlag)
 
 bool ChunkStatusManager::HasStatus(const Entity entity, ChunkFlag chunkFlag)
 {
-	std::lock_guard<std::mutex> lock(mutex_);
 	if (entity >= components_.size())
 	{
 		std::ostringstream oss;
@@ -338,6 +357,7 @@ bool ChunkStatusManager::HasStatus(const Entity entity, ChunkFlag chunkFlag)
 
 std::vector<Index> ChunkStatusManager::GetAccessibleChunks()
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> accessibleChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
@@ -351,6 +371,7 @@ std::vector<Index> ChunkStatusManager::GetAccessibleChunks()
 
 std::vector<Index> ChunkStatusManager::GetRenderedChunks()
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> renderedChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
@@ -367,6 +388,10 @@ std::vector<Index> ChunkStatusManager::GetRenderedChunks()
 
 std::vector<Index> ChunkStatusManager::GetLoadedChunks()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling::GetLoadedChunks", profiler::colors::Pink700);
+#endif
+	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> loadedChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
@@ -417,9 +442,9 @@ void ChunkRenderManager::Init(const Entity chunkIndex)
 	glGenBuffers(1, &components_[chunkIndex].vbo);
 }
 
-void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)
+void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, ChunkContentVector chunkContentVector)
 {
-	const auto blocks = chunkContentManager_.GetBlocks(chunkIndex);
+	const auto blocks = chunkContentVector.blocks;
 	glCheckError();
 	if (blocks.empty()) return;
 
@@ -440,6 +465,33 @@ void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)
 	                       GL_UNSIGNED_INT,
 	                       sizeof(ChunkContent),
 	                       (void*)offsetof(ChunkContent, texId));
+	glVertexAttribDivisor(6, 1);
+	glEnableVertexAttribArray(6);
+}
+
+void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, std::vector<ChunkContent> chunkContentVector)
+{
+	const auto blocks = chunkContentVector;
+	glCheckError();
+	if (blocks.empty()) return;
+
+	std::lock_guard<std::mutex> lock(mutex_);
+	glBindVertexArray(components_[chunkIndex].cube.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, components_[chunkIndex].vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkContent) * blocks.size(), &blocks[0], GL_STATIC_DRAW);
+	glCheckError();
+	glVertexAttribIPointer(5,
+		1,
+		GL_SHORT,
+		sizeof(ChunkContent),
+		(void*)offsetof(ChunkContent, blockId));
+	glVertexAttribDivisor(5, 1);
+	glEnableVertexAttribArray(5);
+	glVertexAttribIPointer(6,
+		1,
+		GL_UNSIGNED_INT,
+		sizeof(ChunkContent),
+		(void*)offsetof(ChunkContent, texId));
 	glVertexAttribDivisor(6, 1);
 	glEnableVertexAttribArray(6);
 }

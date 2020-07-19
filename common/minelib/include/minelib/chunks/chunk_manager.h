@@ -38,11 +38,13 @@ struct ChunkContentVector
 
 	void RemoveBlock(const BlockId blockId);
 
-	std::vector<ChunkContent> GetBlocks();
+	std::vector<ChunkContent> GetBlocks() const;
 
 	std::shared_ptr<ChunkContent> GetBlock(const Vec3i& pos);
 
 	std::shared_ptr<ChunkContent> GetBlock(BlockId blockId);
+
+	bool HasBlockAt(const Vec3i& pos) const;
 };
 
 class ChunkContentManager final : public ComponentManager<
@@ -141,7 +143,9 @@ public:
 
 	void Draw(Entity chunkIndex);
 
-	void SetChunkValues(Entity chunkIndex);
+	void SetChunkValues(const Entity chunkIndex, ChunkContentVector chunkContentVector);
+
+	void SetChunkValues(Entity chunkIndex, std::vector<ChunkContent> chunkContentVector);
 
 	void DestroyComponent(Entity chunkIndex) override;
 
