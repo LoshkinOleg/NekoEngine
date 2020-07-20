@@ -389,10 +389,13 @@ std::vector<Index> ChunkStatusManager::GetAccessibleChunks()
 	std::vector<Index> accessibleChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
-		if (HasStatus(index, ChunkFlag::ACCESSIBLE))
-		{
+		if (!HasStatus(index, ChunkFlag::LOADED) ||
+			!HasStatus(index, ChunkFlag::ACCESSIBLE) ||
+			HasStatus(index, ChunkFlag::EMPTY) ||
+			HasStatus(index, ChunkFlag::OCCLUDED))
+			continue;
 			accessibleChunks.push_back(index);
-		}
+		
 	}
 	return accessibleChunks;
 }

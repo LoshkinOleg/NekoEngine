@@ -147,7 +147,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				for (uint16_t y = 0; y < kChunkSize * Sin(radian_t(x * PI / kChunkSize)); y++)
+				for (uint16_t y = 0; y < kChunkSize * Sin(radian_t(x * PI / kChunkSize)) * 0.5f + 1; y++)
 				{
 					chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, y, z)));
 				}
@@ -269,7 +269,7 @@ void ChunkSystem::UpdateVisibleChunks()
 	//TODO (@Luca) : Find another way to get Camera
 	const Vec3f viewerPos = GizmosLocator::get().GetCameraPos();
 	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize),
-	                                    0,
+										0,
 	                                    std::floor(viewerPos.z / kChunkSize));
 	Frustum frustum(GizmosLocator::get().GetCamera());
 	//Remove last visible chunks and accessible chunks
@@ -282,6 +282,12 @@ void ChunkSystem::UpdateVisibleChunks()
 			chunkPos.z < currentChunkPos.z - kChunkMaxViewDist))
 		{
 			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::VISIBLE);
+		}
+		if ((chunkPos.x > currentChunkPos.x + kChunkAccessibleDist ||
+			chunkPos.z > currentChunkPos.z + kChunkAccessibleDist ||
+			chunkPos.x < currentChunkPos.x - kChunkAccessibleDist ||
+			chunkPos.z < currentChunkPos.z - kChunkAccessibleDist))
+		{
 			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::ACCESSIBLE);
 		}
 	}
@@ -309,7 +315,6 @@ void ChunkSystem::UpdateVisibleChunks()
 					                                                    GetComponent(chunk);
 					                             return (chunkPos == viewedChunkPos);
 				                             });
-
 				//If chunk has not been generated, generate one
 				if (it == chunks.end())
 				{
@@ -319,6 +324,10 @@ void ChunkSystem::UpdateVisibleChunks()
 					const Entity newChunkIndex = entityManager_.CreateEntity();
 					chunkManager_.AddComponent(newChunkIndex);
 					chunkManager_.chunkPosManager.SetComponent(newChunkIndex, viewedChunkPos);
+					if (Abs(xOffset) < kChunkAccessibleDist && Abs(zOffset) < kChunkAccessibleDist)
+					{
+						chunkManager_.chunkStatusManager.AddStatus(newChunkIndex, ChunkFlag::ACCESSIBLE);
+					}
 					scheduledGenerationJobs_.push_back(std::make_unique<Job>(
 						[this, newChunkIndex, viewedChunkPos]
 						{
@@ -340,12 +349,10 @@ void ChunkSystem::UpdateVisibleChunks()
 						chunkManager_.chunkStatusManager.AddStatus(
 							chunks[index],
 							ChunkFlag::VISIBLE);
-					}
-					else
-					{
-						chunkManager_.chunkStatusManager.RemoveStatus(
-							chunks[index],
-							ChunkFlag::VISIBLE);
+						if (Abs(xOffset) < kChunkAccessibleDist && Abs(zOffset) < kChunkAccessibleDist)
+						{
+							chunkManager_.chunkStatusManager.AddStatus(chunks[index], ChunkFlag::ACCESSIBLE);
+						}
 					}
 					chunks.erase(chunks.begin() + index);
 				}
@@ -401,13 +408,32 @@ void ChunkSystem::Update(seconds dt)
 		if (entityManager_.HasComponent(loadedChunk,
 		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
-			GizmosLocator::get().DrawCube(
-				Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
-					(kChunkSize - 1) / 2.0f),
-				Vec3f::one * kChunkSize,
-				chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE)
-					? Color::blue
-					: Color::red);
+			if (chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE))
+			{
+				if (chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::ACCESSIBLE))
+				{
+					GizmosLocator::get().DrawCube(
+						Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
+							(kChunkSize - 1) / 2.0f),
+						Vec3f::one * kChunkSize,
+						Color::green);
+				} else
+				{
+					GizmosLocator::get().DrawCube(
+						Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
+							(kChunkSize - 1) / 2.0f),
+						Vec3f::one * kChunkSize,
+						Color::red);
+				}
+			} else
+			{
+				GizmosLocator::get().DrawCube(
+					Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) + Vec3f(
+						(kChunkSize - 1) / 2.0f),
+					Vec3f::one * kChunkSize,
+					Color::blue);
+			}
+			
 		}
 	}
 }

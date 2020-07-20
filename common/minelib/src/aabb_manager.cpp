@@ -22,13 +22,13 @@ bool AabbManager::RaycastChunk(Ray& ray,
                                const Vec3f& dir) const
 {
 	float rayDist;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto accessibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
+	for (auto accessibleChunk : accessibleChunks)
 	{
-		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(visibleChunk);
+		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(accessibleChunk);
 		if (aabb.IntersectRay(origin, dir, rayDist))
 		{
-			ray.hitChunk = visibleChunk;
+			ray.hitChunk = accessibleChunk;
 			ray.hitDist = rayDist;
 			ray.hitAabb = aabb;
 			return true;
@@ -41,13 +41,13 @@ std::vector<Index> AabbManager::RaycastChunks(const Vec3f& origin, const Vec3f& 
 {
 	float rayDist;
 	std::vector<Index> indices;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto accessibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
+	for (auto accessibleChunk : accessibleChunks)
 	{
-		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(visibleChunk);
+		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(accessibleChunk);
 		if (aabb.IntersectRay(origin, dir, rayDist))
 		{
-			indices.push_back(visibleChunk);
+			indices.push_back(accessibleChunk);
 		}
 	}
 	return indices;
@@ -58,12 +58,12 @@ bool AabbManager::RaycastBlock(Ray& ray,
                                const Vec3f& dir) const
 {
 	float rayDist;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
-	for (auto visibleChunk : visibleChunks)
+	const auto raycatsedChunks = RaycastChunks(origin, dir);
+	for (auto raycastedChunk : raycatsedChunks)
 	{
-		const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(visibleChunk));
+		const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(raycastedChunk));
 
-		const auto chunkContent = chunkManager_.chunkContentManager.GetBlocks(visibleChunk);
+		const auto chunkContent = chunkManager_.chunkContentManager.GetBlocks(raycastedChunk);
 		for (auto& block : chunkContent)
 		{
 			const Vec3f blockPos = Vec3f(BlockIdToPos(block.blockId)) + chunkPos * kChunkSize;
@@ -73,7 +73,7 @@ bool AabbManager::RaycastBlock(Ray& ray,
 			if (aabb.IntersectRay(dir, origin, rayDist) && rayDist > 0 && rayDist < ray.hitDist)
 			{
 				ray.hitId = block.blockId;
-				ray.hitChunk = visibleChunk;
+				ray.hitChunk = raycastedChunk;
 				ray.hitDist = rayDist;
 				ray.hitAabb = aabb;
 			}
