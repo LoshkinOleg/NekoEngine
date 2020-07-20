@@ -62,7 +62,7 @@ private:
 	const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 	unsigned int depthMapFBO = 0;
 	unsigned int depthMap_ = 0;
-	const float bias_ = 0.00001f;
+	const float bias_ = 0.00002f;
 	bool enableShadow = true;
 };
 }
