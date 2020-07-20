@@ -1,9 +1,6 @@
 #pragma once
 #include <engine/system.h>
 #include <engine/entity.h>
-#include <mathematics/vector.h>
-#include <thread>
-#include <mutex>
 
 namespace neko
 {
@@ -23,8 +20,6 @@ public:
 
 	void Init() override;
 
-	void SetChunkOcclusionCulling(Entity chunkIndex) const;
-
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
 	 */
@@ -40,16 +35,12 @@ public:
 	void Destroy() override;
 
 private:
-
-	std::mutex mutex_;
-	
-	const float kMaxViewDist_ = 32;
-	const float kHeighChunkLimit_ = 8;
+	const float kMaxViewDist_ = 100;
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	Transform3dManager& transform3dManager_;
 	EntityManager& entityManager_;
 
-	std::vector<std::function<void()>> scheduledChunks_;
+	std::vector<Job> scheduledChunks_;
 };
 }

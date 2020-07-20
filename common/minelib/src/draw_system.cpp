@@ -24,13 +24,10 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 
 void DrawSystem::Init()
 {
-	camera_.Init();
-	chunkRenderer_.Init();
-	gizmosRenderer_.Init();
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 
-	camera_.position = Vec3f::up * 140;
+	camera_.position = Vec3f::up;
 }
 
 void DrawSystem::Update(seconds dt)
@@ -39,11 +36,10 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
 	{
-		Ray rayOut;
-		AabbLocator::get().RaycastBlock(rayOut, camera_.position, -camera_.reverseDirection);
+		/*viewBlock_ = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
+		GizmosLocator::get().DrawCube(viewBlock_.blockPos, Vec3f::one, Color4(1, 1, 1, 1));*/
 	}
 	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);
 }
