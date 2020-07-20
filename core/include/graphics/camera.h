@@ -18,6 +18,20 @@ struct Camera
 	float nearPlane = 0.1f;
 	float farPlane = 10'000.0f;
 
+
+	[[nodiscard]] Vec3f GetRight() const
+	{
+		if (reverseDirection.x == 0.0f && reverseDirection.z == 0.0f)
+			return Vec3f::Cross(Vec3f::forward, reverseDirection).Normalized();
+		return Vec3f::Cross(Vec3f::up, reverseDirection).Normalized();
+	}
+
+	[[nodiscard]] Vec3f GetUp() const
+	{
+		const Vec3f right = GetRight();
+		return Vec3f::Cross(reverseDirection, right).Normalized();
+	}
+
 	EulerAngles GetRotation() const
 	{
 		const auto inverseView = GenerateViewMatrix().Inverse();
@@ -31,8 +45,8 @@ struct Camera
 
 	Mat4f GetRotationMat() const
 	{
-		const Vec3f right = rightDirection;
-		const Vec3f up = upDirection;
+		const Vec3f right = GetRight();
+		const Vec3f up = GetUp();
 		return Mat4f(std::array<Vec4f, 4>{
 			Vec4f(right.x, up.x, reverseDirection.x, 0),
 			Vec4f(right.y, up.y, reverseDirection.y, 0),
@@ -44,7 +58,9 @@ struct Camera
 	void WorldLookAt(Vec3f target, Vec3f lookUp = Vec3f::down)
 	{
 		reverseDirection = (position - target).Normalized();
-		rightDirection = Vec3f::Cross(reverseDirection, lookUp).Normalized();
+		if (reverseDirection.x == 0.0f && reverseDirection.z == 0.0f)
+			rightDirection = Vec3f::Cross(Vec3f::forward, reverseDirection).Normalized();
+		rightDirection = Vec3f::Cross(Vec3f::up, reverseDirection).Normalized();
 		upDirection = Vec3f::Cross(reverseDirection, rightDirection).Normalized();
 	}
 
@@ -146,7 +162,7 @@ struct Camera3D : Camera
 struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 {
 	float moveSpeed = 2.5f;
-	float mouseSpeed = 0.1f;
+	float mouseSpeed = 1.0f;
 
 	MovableCamera()
 		: inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
@@ -308,80 +324,80 @@ struct FpsCamera final : public MoveableCamera3D
 		return *this;
 	}
 
-	//void Init() override
-	//{
-	//	SDL_SetRelativeMouseMode(SDL_TRUE);
-	//}
+	void Init() override
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
 
-	//void Update(const seconds dt) override
-	//{
-	//	//Check if left click is pressed
-	//	if (!freezeCam)
-	//	{
-	//		Rotate(EulerAngles(
-	//				degree_t(mouseMotion_.y),
-	//				degree_t(mouseMotion_.x),
-	//				degree_t(0.0f)
-	//		));
-	//		mouseMotion_ = Vec2f::zero;
-	//	}
-	//}
+	void Update(const seconds dt) override
+	{
+		//Check if left click is pressed
+		if (!freezeCam)
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
+		}
+	}
 
-	//void FixedUpdate() override
-	//{
-	//	if (!freezeCam)
-	//	{	
-	//		//Checking if keys are down
-	//		Vec3f cameraMove = Vec3f();
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
-	//			cameraMove.x += Time::fixedDeltaTime;
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
-	//			cameraMove.x -= Time::fixedDeltaTime;
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::JUMP))
-	//			cameraMove.y += Time::fixedDeltaTime;
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::CROUCH))
-	//			cameraMove.y -= Time::fixedDeltaTime;
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::UP))
-	//			cameraMove.z += Time::fixedDeltaTime;
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
-	//			cameraMove.z -= Time::fixedDeltaTime;
+	void FixedUpdate() override
+	{
+		if (!freezeCam)
+		{	
+			//Movement keys tests
+			Vec3f cameraMove = Vec3f();
+			if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
+				cameraMove.x += Time::fixedDeltaTime;
+			if (inputManager_.IsActionHeld(sdl::InputAction::LEFT))
+				cameraMove.x -= Time::fixedDeltaTime;
+			if (inputManager_.IsActionHeld(sdl::InputAction::JUMP))
+				cameraMove.y += Time::fixedDeltaTime;
+			if (inputManager_.IsActionHeld(sdl::InputAction::CROUCH))
+				cameraMove.y -= Time::fixedDeltaTime;
+			if (inputManager_.IsActionHeld(sdl::InputAction::UP))
+				cameraMove.z += Time::fixedDeltaTime;
+			if (inputManager_.IsActionHeld(sdl::InputAction::DOWN))
+				cameraMove.z -= Time::fixedDeltaTime;
 
-	//		//Boost key test
-	//		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
-	//			cameraMove *= 3.0f;
-	//		
-	//		//Apply camera movement
-	//		position += (rightDirection * cameraMove.x +
-	//			Vec3f::up * cameraMove.y - 
-	//			Vec3f::Cross(rightDirection, Vec3f::up) * cameraMove.z) * moveSpeed;
-	//	}
-	//}
+			//Boost key test
+			if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
+				cameraMove *= 25.0f;
 
-	//void OnEvent(const SDL_Event& event) override
-	//{
-	//	if (inputManager_.IsActionDown(sdl::InputAction::MENU))
-	//	{
-	//		freezeCam = !freezeCam;
-	//		SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
-	//	}
-	//	
-	//	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-	//	{
-	//		SetAspect(event.window.data1, event.window.data2);
-	//	}
-	//	
-	//	if (!freezeCam)
-	//	{
-	//		if (event.type == SDL_MOUSEMOTION)
-	//			mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
-	//		
-	//		SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
-	//	}
-	//}
+			//Apply camera movement
+			position += (rightDirection * cameraMove.x +
+				Vec3f::up * cameraMove.y -
+				reverseDirection * cameraMove.z) * moveSpeed;
+		}
+	}
 
-	//void Destroy() override
-	//{
-	//}
+	void OnEvent(const SDL_Event& event) override
+	{
+		if (inputManager_.IsActionDown(sdl::InputAction::MENU))
+		{
+			freezeCam = !freezeCam;
+			SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
+		}
+		
+		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+		{
+			SetAspect(event.window.data1, event.window.data2);
+		}
+		
+		if (!freezeCam)
+		{
+			if (event.type == SDL_MOUSEMOTION)
+				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+			
+			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
+		}
+	}
+
+	void Destroy() override
+	{
+	}
 };
 
 struct PlayerCamera final : public MoveableCamera3D

@@ -4,8 +4,8 @@ Frustum::Frustum(const neko::FpsCamera & camera)
 {
 	neko::Vec3f direction = -camera.reverseDirection;
 	neko::Vec3f position = camera.position - direction * cameraRecoil;
-	neko::Vec3f right = camera.rightDirection;
-	neko::Vec3f up = camera.upDirection;
+	neko::Vec3f right = camera.GetRight();
+	neko::Vec3f up = camera.GetUp();
 	float nearPlaneDistance = camera.nearPlane;
 	float farPlaneDistance = camera.farPlane;
 	neko::degree_t fovY = camera.fovY;
