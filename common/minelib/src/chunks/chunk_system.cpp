@@ -147,10 +147,10 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				for (uint16_t y = 0; y < kChunkSize * Sin(radian_t(x * PI / kChunkSize)); y++)
-				{
-					chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, y, z)));
-				}
+				//for (uint16_t y = 0; y < kChunkSize * Sin(radian_t(x * PI / kChunkSize)); y++)
+				//{
+					chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, 0, z)));
+				//}
 			}
 		}
 		chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(8, 1, 8)));

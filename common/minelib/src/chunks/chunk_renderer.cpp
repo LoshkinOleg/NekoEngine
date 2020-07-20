@@ -42,7 +42,7 @@ void ChunkRenderer::Init()
 	directionalLight_.direction = -Vec3f::one;
 
 	//Set depthCamera values
-	depthCamera_.SetSize(Vec2f::one * 20.0f);
+	depthCamera_.SetSize(Vec2f::one * 50.0f);
 	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
 	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
@@ -63,7 +63,13 @@ void ChunkRenderer::DrawImGui()
 	if (ImGui::DragFloat3("Position", &lightPosition[0], 0.01f))
 	{
 		directionalLight_.position = lightPosition;
-		depthCamera_.position = lightPosition;
+		//depthCamera_.position = lightPosition;
+	}
+
+	Vec3f depthPosition = depthCamera_.position;
+	if (ImGui::DragFloat3("Depth Position", &depthPosition[0], 0.01f))
+	{
+		depthCamera_.position = depthPosition;
 	}
 
 	bool shadowToggle = enableShadow;
@@ -94,6 +100,7 @@ void ChunkRenderer::DrawImGui()
 
 void ChunkRenderer::Update(seconds dt)
 {
+	depthCamera_.WorldLookAt(-depthCamera_.reverseDirection + depthCamera_.position);
 	directionalLight_.position = camera_.position - directionalLight_.direction * 50.0f;
 	depthCamera_.position = directionalLight_.position;
 		
@@ -138,7 +145,7 @@ void ChunkRenderer::RenderScene(gl::Shader& shader) const
 	
 	SetShadowParameters(shader);
 
-	glBindTexture(GL_TEXTURE_2D, atlasTex_);
+//	glBindTexture(GL_TEXTURE_2D, atlasTex_);
 	const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
 	for (auto& chunk : renderedChunks)
 	{		
