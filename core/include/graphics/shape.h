@@ -49,14 +49,13 @@ class RenderCuboid : public RenderShape
 {
 public:
     RenderCuboid()=delete;
-    explicit RenderCuboid(const Vec3f& offset, const Vec3f& size) : RenderShape(offset), size_(size){}
+    explicit RenderCuboid(Vec3f offset, Vec3f size) : RenderShape(offset), size_(size) {}
 
-    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
+    [[nodiscard]] Sphere GenerateBoundingSphere() const
     {
-        Sphere3D s;
-        s.center = offset_;
-        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
-        return s;
+        Sphere s;
+        s.center_ = offset_;
+        s.radius_ = std::max(std::max(size_.x, size_.y), size_.z);
     }
 
 protected:
@@ -69,10 +68,10 @@ public:
 	RenderCubeMap() = delete;
     explicit RenderCubeMap(const Vec3f& offset) : RenderShape(offset) {}
 
-    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
+    [[nodiscard]] Sphere GenerateBoundingSphere() const
     {
-        Sphere3D s;
-        s.center = offset_;
+        Sphere s;
+        s.center_ = offset_;
         return s;
     }
 };
@@ -83,11 +82,11 @@ public:
     RenderWireFrameCuboid()=delete;
     explicit RenderWireFrameCuboid(const Vec3f& offset, const Vec3f& size) : RenderShape(offset), size_(size){}
 
-    [[nodiscard]] Sphere3D GenerateBoundingSphere() const
+    [[nodiscard]] Sphere GenerateBoundingSphere() const
     {
-        Sphere3D s;
-        s.center = offset_;
-        s.radius = std::max(std::max(size_.x, size_.y), size_.z);
+        Sphere s;
+        s.center_ = offset_;
+        s.radius_ = std::max(std::max(size_.x, size_.y), size_.z);
         return s;
     }
 

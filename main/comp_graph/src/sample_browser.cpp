@@ -28,14 +28,24 @@
 #include "20_hello_bloom/bloom_program.h"
 #include "21_hello_shadow/shadow_program.h"
 #include "22_hello_blinn/blinn_program.h"
+#include "23_hello_point_shadow/point_shadow_program.h"
+#include "24_hello_cascaded_shadow/cascaded_shadow_program.h"
+#include "25_hello_deferred/deferred_progam.h"
+#include "26_hello_ssao/ssao_program.h"
+#include "27_hello_cutoff/cutoff_program.h"
+#include "28_hello_blending/blending_program.h"
+#include "29_hello_toon/toon_program.h"
+#include "30_hello_pbr/pbr_program.h"
+#include "31_hello_pbr_texture/pbr_texture_program.h"
+#include "32_hello_ibl/ibl_program.h"
+
+#include "97_hello_water/water_program.h"
+#include "98_hello_line/line_program.h"
+#include "99_hello_scene/scene_program.h"
 
 #include "xx_chunk_renderer/chunk_program.h"
 #include "xx_hello_logger/logger_program.h"
 #include "xx_hello_moveable_camera/moveable_camera_program.h"
-
-#include "98_hello_line/line_program.h"
-#include "99_hello_scene/scene_program.h"
-
 namespace neko
 {
 
@@ -63,10 +73,21 @@ void SampleBrowser::Init()
     RegisterRenderProgram("20 Hello Bloom", std::make_unique<HelloBloomProgram>());
     RegisterRenderProgram("21 Hello Shadow", std::make_unique<HelloShadowProgram>());
     RegisterRenderProgram("22 Hello Blinn", std::make_unique<HelloBlinnProgram>());
-
-    RegisterRenderProgram("98 Hello Line", std::make_unique<HelloLineProgram>());
-	RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+    RegisterRenderProgram("23 Hello Point Shadow", std::make_unique<HelloPointShadowProgram>());
+    RegisterRenderProgram("24 Hello Cascade Shadow", std::make_unique<HelloCascadedShadowProgram>());
+    RegisterRenderProgram("25 Hello Deferred Shading", std::make_unique<HelloDeferredProgram>());
+    RegisterRenderProgram("26 Hello SSAO", std::make_unique<HelloSsaoProgram>());
+    RegisterRenderProgram("27 Hello Cutoff", std::make_unique<HelloCutoffProgram>());
+    RegisterRenderProgram("28 Hello Blending", std::make_unique<HelloBlendingProgram>());
+    RegisterRenderProgram("29 Hello Toon", std::make_unique<HelloToonShadingProgram>());
+    RegisterRenderProgram("30 Hello Pbr", std::make_unique<HelloPbrProgram>());
+    RegisterRenderProgram("31 Hello Texture Pbr", std::make_unique<HelloPbrTextureProgram>());
+    RegisterRenderProgram("32 Hello IBL", std::make_unique<HelloIblProgram>());
 	
+    RegisterRenderProgram("97 Hello Water", std::make_unique<HelloWaterProgram>());
+    RegisterRenderProgram("98 Hello Line", std::make_unique<HelloLineProgram>());
+    RegisterRenderProgram("99 Hello Scene", std::make_unique<HelloSceneProgram>());
+
     RegisterRenderProgram("XX Chunk Renderer", std::make_unique<HelloChunkRenderer>());
     RegisterRenderProgram("XX Hello Logger", std::make_unique<HelloLoggerProgram>());
     RegisterRenderProgram("XX Moveable Camera", std::make_unique<MoveableCameraProgram>());

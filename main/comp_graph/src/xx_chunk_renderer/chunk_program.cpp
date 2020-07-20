@@ -47,8 +47,8 @@ void HelloChunkRenderer::Init()
 		chunkManager_.chunkPosManager.SetComponent(chunk, 
 			Vec3i(chunk % kChunkNumDiam, chunk / kChunkNumDiam % kChunkNumDiam, chunk / (kChunkNumDiam * kChunkNumDiam)));
 		chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::LOADED);
+		chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
 	}
-	
 	for (uint16_t x = 0; x < kChunkNumDiam; ++x)
 	{
 		for (uint16_t z = 0; z < kChunkNumDiam; ++z)
@@ -58,8 +58,8 @@ void HelloChunkRenderer::Init()
 			{
 				chunkManager_.chunkContentManager.SetBlock(chunk, blockManager_.GetRandomBlock(), id);
 			}
-			chunkManager_.chunkRenderManager.Init(chunk);
-			chunkManager_.chunkRenderManager.SetChunkValues(chunk);
+			chunkManager_.chunkRenderManager.Init(chunks_[x + z * kChunkNumDiam * kChunkNumDiam]);
+			chunkManager_.chunkRenderManager.SetChunkValues(chunks_[x + z * kChunkNumDiam * kChunkNumDiam], chunkManager_.chunkContentManager.GetBlocks(chunks_[x + z * kChunkNumDiam * kChunkNumDiam]));
 		}
 	}
 

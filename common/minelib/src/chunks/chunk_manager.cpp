@@ -1,20 +1,183 @@
 #include "minelib/chunks/chunk_manager.h"
 
-#ifdef EASY_PROFILE_USE
-#include <easy/profiler.h>
-#endif
+#include "mathematics/aabb.h"
+#include "minelib/frustum.h"
+#include "minelib/gizmos_renderer.h"
 
 namespace neko
 {
+//-----------------------------------------------------------------------------
+// ChunkContentVector
+//-----------------------------------------------------------------------------
+ChunkContentVector::ChunkContentVector()
+{
+	blocks.reserve(kChunkBlockCount);
+}
+
+void ChunkContentVector::SetBlock(const Block& block,
+	const Vec3i& pos)
+{
+	SetBlock(block, PosToBlockId(pos));
+}
+
+void ChunkContentVector::SetBlock(const Block& block,
+	BlockId blockId)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkContentVector::SetBlock", profiler::colors::Blue300);
+#endif
+	if (block.blockTex.sideTexId == 0) return;
+	if (blockId > kChunkBlockCount - 1)
+	{
+		LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
+		return;
+	}
+
+	const auto it = std::find_if(blocks.begin(),
+	                             blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != blocks.end())
+	{
+		blocks[it - blocks.begin()].texId = BlockTexToTexHash(block.blockTex);
+		return;
+	}
+
+	blocks.emplace_back(blockId, BlockTexToTexHash(block.blockTex));
+}
+
+void ChunkContentVector::FillOfBlock(const Block& block)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkContentManager::FillOfBlock", profiler::colors::Blue200);
+#endif
+	if (block.blockTex.sideTexId == 0) return;
+	blocks.clear();
+	blocks.reserve(kChunkBlockCount);
+	for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
+	{
+		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block.blockTex));
+		blocks.emplace_back(blockId, BlockTexToTexHash(block.blockTex));
+	}
+}
+
+void ChunkContentVector::RemoveBlock(const Vec3i& pos)
+{
+	RemoveBlock(PosToBlockId(pos));
+}
+
+void ChunkContentVector::RemoveBlock(const BlockId blockId)
+{
+	if (blockId < 0 || blockId > kChunkBlockCount - 1)
+	{
+		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
+		return;
+	}
+
+	const auto it = std::find_if(blocks.begin(),
+	                             blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != blocks.end())
+	{
+		blocks.erase(it);
+	}
+
+	LogError("Block ID is invalid!");
+}
+
+std::vector<ChunkContent> ChunkContentVector::GetBlocks() const
+{
+	return blocks;
+}
+
+std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
+	const Vec3i& pos)
+{
+	return GetBlock(PosToBlockId(pos));
+}
+
+std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
+	BlockId blockId)
+{
+	if (blockId < 0 || blockId > kChunkBlockCount - 1)
+	{
+		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
+		return nullptr;
+	}
+	const auto it = std::find_if(blocks.begin(),
+	                             blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != blocks.end())
+	{
+		return std::make_shared<ChunkContent>(
+			blocks[it - blocks.begin()]);
+	}
+}
+
+bool ChunkContentVector::HasBlockAt(const Vec3i& pos) const
+{
+	if (pos.x < 0 || pos.x >= kChunkSize || pos.y < 0 || pos.y >= kChunkSize || pos.z < 0 || pos.z
+		>= kChunkSize)
+	{
+		return false;
+	}
+	BlockId blockId = PosToBlockId(pos);
+	if (blockId < 0 || blockId > kChunkBlockCount - 1)
+	{
+		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
+		return false;
+	}
+	const auto it = std::find_if(blocks.begin(),
+	                             blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != blocks.end())
+	{
+		return true;
+	}
+	return false;
+}
+
+void ChunkContentVector::CalculateBlockOcclusion()
+{
+	std::vector<ChunkContent> visibleBlocks;
+	for (auto block : blocks)
+	{
+		Vec3i blockPos = BlockIdToPos(block.blockId);
+		if (!HasBlockAt(blockPos + Vec3i::up) ||
+			!HasBlockAt(blockPos + Vec3i::down) ||
+			!HasBlockAt(blockPos + Vec3i::right) ||
+			!HasBlockAt(blockPos + Vec3i::left) ||
+			!HasBlockAt(blockPos + Vec3i::forward) ||
+			!HasBlockAt(blockPos + Vec3i::back))
+		{
+			visibleBlocks.push_back(block);
+		}
+	}
+	blocks = visibleBlocks;
+}
+
 //-----------------------------------------------------------------------------
 // ChunkContentManager
 //-----------------------------------------------------------------------------
 Index ChunkContentManager::AddComponent(const Entity chunkIndex)
 {
-    ResizeIfNecessary(components_, chunkIndex, ChunkContentVector{});
-    entityManager_.AddComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
-	components_[chunkIndex].reserve(kChunkBlockCount);
-    return chunkIndex;
+	std::lock_guard<std::mutex> lock(mutex_);
+	ResizeIfNecessary(components_, chunkIndex, ChunkContentVector{});
+	entityManager_.AddComponentType(chunkIndex,
+	                                static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
+	components_[chunkIndex].blocks.reserve(kChunkBlockCount);
+	return chunkIndex;
 }
 
 void ChunkContentManager::SetBlock(const Entity chunkIndex, const Block& block, const Vec3i& pos)
@@ -33,19 +196,23 @@ void ChunkContentManager::SetBlock(const Entity chunkIndex, const Block& block, 
 		LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
 		return;
 	}
-	
-	const auto it = std::find_if(components_[chunkIndex].begin(), components_[chunkIndex].end(),
-		[blockId](const ChunkContent& content)
-		{ return content.blockId == blockId; }); 
-	if (it != components_[chunkIndex].end())
+
+	std::lock_guard<std::mutex> lock(mutex_);
+	const auto it = std::find_if(components_[chunkIndex].blocks.begin(),
+	                             components_[chunkIndex].blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != components_[chunkIndex].blocks.end())
 	{
-		components_[chunkIndex][it - components_[chunkIndex].begin()].texId = BlockTexToTexHash(block.blockTex);
+		components_[chunkIndex].blocks[it - components_[chunkIndex].blocks.begin()].texId =
+			BlockTexToTexHash(block.blockTex);
 		return;
 	}
 
-	components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block.blockTex));
+	components_[chunkIndex].blocks.emplace_back(blockId, BlockTexToTexHash(block.blockTex));
 }
-
 
 void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const Block& block)
 {
@@ -53,15 +220,28 @@ void ChunkContentManager::FillOfBlock(const Entity chunkIndex, const Block& bloc
 	EASY_BLOCK("ChunkContentManager::FillOfBlock");
 #endif
 	if (block.blockTex.sideTexId == 0) return;
-	components_[chunkIndex].clear();
-	components_[chunkIndex].reserve(kChunkBlockCount);
+	std::lock_guard<std::mutex> lock(mutex_);
+	components_[chunkIndex].blocks.clear();
+	components_[chunkIndex].blocks.reserve(kChunkBlockCount);
 	for (BlockId blockId = 0; blockId < kChunkBlockCount; blockId++)
 	{
 		const ChunkContent content = ChunkContent(blockId, BlockTexToTexHash(block.blockTex));
-		components_[chunkIndex].emplace_back(blockId, BlockTexToTexHash(block.blockTex));
+		components_[chunkIndex].blocks.emplace_back(blockId, BlockTexToTexHash(block.blockTex));
 	}
 }
 
+void ChunkContentManager::FillOfBlocks(
+	const Entity chunkIndex,
+	const ChunkContentVector& chunkContentVector)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkContentManager::FillOfBlocks");
+#endif
+	std::lock_guard<std::mutex> lock(mutex_);
+	components_[chunkIndex].blocks.clear();
+	components_[chunkIndex].blocks.reserve(kChunkBlockCount);
+	components_[chunkIndex] = chunkContentVector;
+}
 
 void ChunkContentManager::RemoveBlock(const Entity chunkIndex, const Vec3i& pos)
 {
@@ -75,27 +255,33 @@ void ChunkContentManager::RemoveBlock(const Entity chunkIndex, const BlockId blo
 		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
 		return;
 	}
-	
-	const auto it = std::find_if(components_[chunkIndex].begin(), components_[chunkIndex].end(),
-		[blockId](const ChunkContent& content)
-		{ return content.blockId == blockId; }); 
-	if (it != components_[chunkIndex].end())
+
+	std::lock_guard<std::mutex> lock(mutex_);
+	const auto it = std::find_if(components_[chunkIndex].blocks.begin(),
+	                             components_[chunkIndex].blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != components_[chunkIndex].blocks.end())
 	{
-		components_[chunkIndex].erase(it);
+		components_[chunkIndex].blocks.erase(it);
 		return;
 	}
 
 	LogError("Block ID is invalid!");
 }
 
-size_t ChunkContentManager::GetChunkSize(const Entity chunkIndex) const
+size_t ChunkContentManager::GetChunkSize(const Entity chunkIndex)
 {
-	return components_[chunkIndex].size();
+	std::lock_guard<std::mutex> lock(mutex_);
+	return components_[chunkIndex].blocks.size();
 }
 
-ChunkContentVector ChunkContentManager::GetBlocks(const Entity chunkIndex) const
+std::vector<ChunkContent> ChunkContentManager::GetBlocks(const Entity chunkIndex)
 {
-	return components_[chunkIndex];
+	std::lock_guard<std::mutex> lock(mutex_);
+	return components_[chunkIndex].blocks;
 }
 
 ChunkContent& ChunkContentManager::GetBlock(const Entity chunkIndex, const Vec3i& pos)
@@ -105,28 +291,35 @@ ChunkContent& ChunkContentManager::GetBlock(const Entity chunkIndex, const Vec3i
 
 ChunkContent& ChunkContentManager::GetBlock(const Entity chunkIndex, BlockId blockId)
 {
-	const auto it = std::find_if(components_[chunkIndex].begin(), components_[chunkIndex].end(),
-		[blockId](const ChunkContent& content)
-		{ return content.blockId == blockId; }); 
-	if (it != components_[chunkIndex].end())
+	std::lock_guard<std::mutex> lock(mutex_);
+	const auto it = std::find_if(components_[chunkIndex].blocks.begin(),
+	                             components_[chunkIndex].blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
+	if (it != components_[chunkIndex].blocks.end())
 	{
-		return components_[chunkIndex][it - components_[chunkIndex].begin()];
+		return components_[chunkIndex].blocks[it - components_[chunkIndex].blocks.begin()];
 	}
-	
+
 	LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
 	return ChunkContent();
 }
 
 void ChunkContentManager::DestroyComponent(const Entity chunkIndex)
 {
-	components_[chunkIndex].clear();
-    entityManager_.RemoveComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
+	components_[chunkIndex].blocks.clear();
+	entityManager_.RemoveComponentType(chunkIndex,
+	                                   static_cast<EntityMask>(ComponentType::CHUNK_CONTENT));
 }
 
 //-----------------------------------------------------------------------------
 // ChunkStatusManager
 //-----------------------------------------------------------------------------
-ChunkStatusManager::ChunkStatusManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager)
+ChunkStatusManager::ChunkStatusManager(
+	EntityManager& entityManager,
+	ChunkContentManager& chunkContentManager)
 	: ComponentManager<ChunkMask, ComponentType::CHUNK_STATUS>(entityManager),
 	  chunkContentManager_(chunkContentManager)
 {
@@ -134,40 +327,53 @@ ChunkStatusManager::ChunkStatusManager(EntityManager& entityManager, ChunkConten
 
 Index ChunkStatusManager::AddComponent(const Entity chunkIndex)
 {
-    ResizeIfNecessary(components_, chunkIndex, ChunkMask{});
-    entityManager_.AddComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_STATUS));
+	mutex_.lock();
+	ResizeIfNecessary(components_, chunkIndex, ChunkMask{});
+	mutex_.unlock();
+	entityManager_.AddComponentType(chunkIndex,
+	                                static_cast<EntityMask>(ComponentType::CHUNK_STATUS));
 	AddStatus(chunkIndex, ChunkFlag::VISIBLE);
 	AddStatus(chunkIndex, ChunkFlag::LOADED);
 	if (chunkContentManager_.GetChunkSize(chunkIndex) == 0)
 		AddStatus(chunkIndex, ChunkFlag::EMPTY);
-	
-    return chunkIndex;
+
+	return chunkIndex;
 }
 
 void ChunkStatusManager::AddStatus(const Entity entity, ChunkFlag chunkFlag)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	components_[entity] |= ChunkMask(chunkFlag);
+}
+
+void ChunkStatusManager::AddStatus(const Entity entity, ChunkMask chunkMask)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	components_[entity] |= chunkMask;
 }
 
 void ChunkStatusManager::RemoveStatus(const Entity entity, ChunkFlag chunkFlag)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	components_[entity] &= ~ChunkMask(chunkFlag);
 }
 
-bool ChunkStatusManager::HasStatus(const Entity entity, ChunkFlag chunkFlag) const
+bool ChunkStatusManager::HasStatus(const Entity entity, ChunkFlag chunkFlag)
 {
 	if (entity >= components_.size())
 	{
 		std::ostringstream oss;
-		oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " << components_.size();
+		oss << "[Error] Accessing entity: " << entity << " while chunk array is of size: " <<
+			components_.size();
 		LogDebug(oss.str());
 		return false;
 	}
 	return (components_[entity] & ChunkMask(chunkFlag)) == ChunkMask(chunkFlag);
 }
 
-std::vector<Index> ChunkStatusManager::GetAccessibleChunks() const
+std::vector<Index> ChunkStatusManager::GetAccessibleChunks()
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> accessibleChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
@@ -179,21 +385,30 @@ std::vector<Index> ChunkStatusManager::GetAccessibleChunks() const
 	return accessibleChunks;
 }
 
-std::vector<Index> ChunkStatusManager::GetVisibleChunks() const
+std::vector<Index> ChunkStatusManager::GetRenderedChunks()
 {
-	std::vector<Index> visibleChunks;
+	std::lock_guard<std::mutex> lock(mutex_);
+	std::vector<Index> renderedChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
-		if (HasStatus(index, ChunkFlag::VISIBLE))
-		{
-			visibleChunks.push_back(index);
-		}
+		if (!HasStatus(index, ChunkFlag::LOADED) ||
+			!HasStatus(index, ChunkFlag::VISIBLE) ||
+			HasStatus(index, ChunkFlag::EMPTY) ||
+			HasStatus(index, ChunkFlag::OCCLUDED))
+			continue;
+		renderedChunks.push_back(index);
 	}
-	return visibleChunks;
+	return
+		renderedChunks;
 }
 
-std::vector<Index> ChunkStatusManager::GetLoadedChunks() const
+std::vector<Index> ChunkStatusManager::GetLoadedChunks()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling::GetLoadedChunks",
+	           profiler::colors::Pink700);
+#endif
+	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> loadedChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
@@ -217,54 +432,109 @@ Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
 //-----------------------------------------------------------------------------
 // ChunkRenderManager
 //-----------------------------------------------------------------------------
-ChunkRenderManager::ChunkRenderManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager)
+ChunkRenderManager::ChunkRenderManager(
+	EntityManager& entityManager,
+	ChunkContentManager& chunkContentManager)
 	: ComponentManager<ChunkRender, ComponentType::CHUNK_RENDER>(entityManager),
 	  chunkContentManager_(chunkContentManager)
 {
 	entityManager.RegisterComponentManager(*this);
-    ResizeIfNecessary(components_, INIT_ENTITY_NMB - 1, ChunkRender{});
+	ResizeIfNecessary(components_, INIT_ENTITY_NMB - 1, ChunkRender{});
 }
 
 Index ChunkRenderManager::AddComponent(const Entity chunkIndex)
 {
-    ResizeIfNecessary(components_, chunkIndex, ChunkRender{});
-    entityManager_.AddComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_RENDER));
-	
-    return chunkIndex;
+	std::lock_guard<std::mutex> lock(mutex_);
+	ResizeIfNecessary(components_, chunkIndex, ChunkRender{});
+	entityManager_.AddComponentType(chunkIndex,
+	                                static_cast<EntityMask>(ComponentType::CHUNK_RENDER));
+
+	return chunkIndex;
 }
 
 void ChunkRenderManager::Init(const Entity chunkIndex)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	components_[chunkIndex].cube.Init();
 	glGenBuffers(1, &components_[chunkIndex].vbo);
+	glCheckError();
 }
 
-void ChunkRenderManager::SetChunkValues(const Entity chunkIndex)
+void ChunkRenderManager::SetChunkValues(
+	const Entity chunkIndex,
+	ChunkContentVector chunkContentVector)
 {
-	const auto blocks = chunkContentManager_.GetBlocks(chunkIndex);
+	const auto blocks = chunkContentVector.blocks;
+	glCheckError();
 	if (blocks.empty()) return;
-	
+
+	std::lock_guard<std::mutex> lock(mutex_);
 	glBindVertexArray(components_[chunkIndex].cube.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, components_[chunkIndex].vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkContent) * blocks.size(), &blocks[0], GL_STATIC_DRAW);
-	glVertexAttribIPointer(5, 1, GL_SHORT, sizeof(ChunkContent), (void*) offsetof(ChunkContent, blockId));
+	glCheckError();
+	glVertexAttribIPointer(5,
+	                       1,
+	                       GL_SHORT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, blockId));
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);
-	glVertexAttribIPointer(6, 1, GL_UNSIGNED_INT, sizeof(ChunkContent), (void*) offsetof(ChunkContent, texId));
+	glCheckError();
+	glVertexAttribIPointer(6,
+	                       1,
+	                       GL_UNSIGNED_INT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, texId));
 	glVertexAttribDivisor(6, 1);
 	glEnableVertexAttribArray(6);
+	glCheckError();
 }
 
-void ChunkRenderManager::Draw(const Entity chunkIndex) const
+void ChunkRenderManager::SetChunkValues(
+	const Entity chunkIndex,
+	std::vector<ChunkContent> chunkContentVector)
 {
+	const auto blocks = chunkContentVector;
+	glCheckError();
+	if (blocks.empty()) return;
+
+	std::lock_guard<std::mutex> lock(mutex_);
+	glBindVertexArray(components_[chunkIndex].cube.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, components_[chunkIndex].vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkContent) * blocks.size(), &blocks[0], GL_STATIC_DRAW);
+	glCheckError();
+	glVertexAttribIPointer(5,
+	                       1,
+	                       GL_SHORT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, blockId));
+	glVertexAttribDivisor(5, 1);
+	glEnableVertexAttribArray(5);
+	glCheckError();
+	glVertexAttribIPointer(6,
+	                       1,
+	                       GL_UNSIGNED_INT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, texId));
+	glVertexAttribDivisor(6, 1);
+	glEnableVertexAttribArray(6);
+	glCheckError();
+}
+
+void ChunkRenderManager::Draw(const Entity chunkIndex)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
 	components_[chunkIndex].cube.DrawInstanced(chunkContentManager_.GetChunkSize(chunkIndex));
 }
 
 void ChunkRenderManager::DestroyComponent(const Entity chunkIndex)
 {
+	std::lock_guard<std::mutex> lock(mutex_);
 	components_[chunkIndex].cube.Destroy();
 	glDeleteBuffers(1, &components_[chunkIndex].vbo);
-    entityManager_.RemoveComponentType(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_RENDER));
+	entityManager_.RemoveComponentType(chunkIndex,
+	                                   static_cast<EntityMask>(ComponentType::CHUNK_RENDER));
 }
 
 //-----------------------------------------------------------------------------
@@ -298,8 +568,8 @@ void ChunkManager::DestroyComponent(const Entity chunkIndex)
 // ChunksViewer
 //-----------------------------------------------------------------------------
 ChunkViewer::ChunkViewer(
-		EntityManager& entityManager,
-		ChunkManager& chunkManager)
+	EntityManager& entityManager,
+	ChunkManager& chunkManager)
 	: entityManager_(entityManager),
 	  chunkManager_(chunkManager)
 {
@@ -310,15 +580,17 @@ void ChunkViewer::DrawImGui(const Entity selectedEntity) const
 	using namespace ImGui;
 	if (selectedEntity == INVALID_ENTITY)
 		return;
-	
+
 	if (TreeNode("Chunk"))
 	{
-		if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_POS)))
+		if (entityManager_.HasComponent(selectedEntity,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
 			auto chunkPos = Vec3i(chunkManager_.chunkPosManager.GetComponent(selectedEntity));
 			DragInt3("Chunk Index", &chunkPos[0]);
 		}
-		if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_STATUS)))
+		if (entityManager_.HasComponent(selectedEntity,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_STATUS)))
 		{
 			std::string status = "";
 			if (chunkManager_.chunkStatusManager.HasStatus(selectedEntity, ChunkFlag::EMPTY))
@@ -332,7 +604,8 @@ void ChunkViewer::DrawImGui(const Entity selectedEntity) const
 
 			Text("Status: %s", status.c_str());
 		}
-		if (entityManager_.HasComponent(selectedEntity, static_cast<EntityMask>(ComponentType::CHUNK_CONTENT)))
+		if (entityManager_.HasComponent(selectedEntity,
+		                                static_cast<EntityMask>(ComponentType::CHUNK_CONTENT)))
 		{
 			if (TreeNode("Chunk Content"))
 			{
@@ -355,4 +628,3 @@ void ChunkViewer::DrawImGui(const Entity selectedEntity) const
 	}
 }
 }
-

@@ -43,6 +43,7 @@ struct Gizmos
 class IGizmosRenderer
 {
 public:
+	
 	/**
 	 * \brief Generate a wire cube.
 	 */
@@ -61,8 +62,9 @@ public:
 		const Color4& color = Color::red,
 		float lineThickness = 1.0f) = 0;
 	
-	virtual void SetCamera(Camera* camera) = 0;
-	virtual Camera* GetCamera() const = 0;
+	virtual void SetCamera(FpsCamera* camera) = 0;
+	virtual FpsCamera* GetCamera() const = 0;
+	virtual Vec3f GetCameraPos() const = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -87,8 +89,10 @@ class NullGizmosRenderer final : public IGizmosRenderer
 	{
 	}
 	
-	void SetCamera([[maybe_unused]] Camera* camera) override {}
-	Camera* GetCamera() const override { return nullptr; }
+	void SetCamera([[maybe_unused]] FpsCamera* camera) override {}
+	FpsCamera* GetCamera() const override { return nullptr; }
+
+	Vec3f GetCameraPos() const override { return {}; }
 };
 
 //-----------------------------------------------------------------------------
@@ -100,7 +104,7 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera* camera);
+	explicit GizmosRenderer(FpsCamera* camera);
 
 	void Init() override;
 
@@ -110,6 +114,10 @@ public:
 	void Render() override;
 
 	void Destroy() override;
+
+	void Start();
+	void Stop();
+	
 
 	void DrawCube(
 		const Vec3f& pos,
@@ -123,12 +131,14 @@ public:
 		const Color4& color = Color::red,
 		float lineThickness = 1.0f) override;
 
-	void SetCamera(Camera* camera) override;
-	Camera* GetCamera() const override { return camera_; }
-	
+	void SetCamera(FpsCamera* camera) override;
+	FpsCamera* GetCamera() const override { return camera_; }
+	Vec3f GetCameraPos() const override { return camera_->position; }
+		
 private:
-	Camera* camera_;
+	std::mutex updateMutex_;
 
+	FpsCamera* camera_;
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};
 
@@ -136,6 +146,7 @@ private:
 	gl::Shader shaderLine_;
 
 	std::vector<Gizmos> gizmosQueue_;
+	bool isRunning_ = false;
 };
 
 using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;

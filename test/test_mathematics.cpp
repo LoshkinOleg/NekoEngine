@@ -741,21 +741,3 @@ TEST(Engine, TestMatrix4)
 	EXPECT_LT(neko::Mat4f::MatrixDifference(mInvCalculus, mInv), 0.01f);
 	EXPECT_GT(neko::Mat4f::MatrixDifference(mInvCalculus, neko::Mat4f::Identity), 0.01f);
 }
-
-TEST(Engine, TestCircleContact)
-{
-	
-    neko::Circle2D circleA(neko::Vec2f(2,2), 2);
-    neko::Circle2D circleB(neko::Vec2f(3, 3), 3);
-
-    neko::Sphere3D sphere1(neko::Vec3f(2, 2, 2), 2);
-    neko::Sphere3D sphere2(neko::Vec3f(5, 5, 5), 2);
-
-    neko::Rect2f rect(neko::Vec2f(3, 3), neko::Vec2f(2, 2));
-    neko::Circle2D circleC(neko::Vec2f(0, 3), 3);
-    std::cout << circleA.CirclesIntersect(circleB) << "\n";
-    std::cout << sphere1.CirclesIntersect(sphere2) << "\n";
-    std::cout << circleC.SquareCircleIntersect(rect) << "\n";
-
-    std::cout << neko::Sphere3D::IsPlanCircleContact(sphere1, neko::Vec3f(0, 1, 0), neko::Vec3f(1, 100, 1)) << "\n";
-}

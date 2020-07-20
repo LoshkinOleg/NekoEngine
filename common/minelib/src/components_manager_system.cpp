@@ -11,6 +11,7 @@ ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	  playerManager(engine.entityManager, engine.uiManager)
 {
 	engine.RegisterSystem(chunkSystem);
+	engine.RegisterOnDrawUi(chunkSystem);
 }
 
 void ComponentsManagerSystem::Init()

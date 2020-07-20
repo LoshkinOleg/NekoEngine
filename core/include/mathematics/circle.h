@@ -22,67 +22,20 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-#include "mathematics/vector.h"
-#include "rect.h"
+#include "vector.h"
 
 namespace neko
 {
-template<class T = Vec2f>
+
 struct Circle
 {
-    explicit Circle()
-		: center()
-    {
-
-    }
-	
-    explicit Circle(const T& center, const float radius)
-		: center(center), radius(radius)
-    {
-
-    }
-
-	float GetRadius() const
-    {
-        return radius;
-    }
-
-	bool CirclesIntersect(Circle<T> circle) const
-    {
-        const T distanceVector = circle.center - center;
-    	
-        return distanceVector.Magnitude() <= circle.radius + radius;
-    }
-
-    bool SquareCircleIntersect(Rect2f rect) const
-    {
-		const T distanceVector = rect.center - center;
-
-		if (distanceVector.Magnitude() <= rect.halfSize.x + radius)
-		{
-            return true;
-		}
-
-		if (distanceVector.Magnitude() <= rect.halfSize.y + radius)
-		{
-            return true;
-		}
-    	
-        return false;
-    }
-
-	static bool IsPlanCircleContact(const Circle<Vec3f> sphere, const Vec3f normal, const Vec3f pos)
-    {
-        const float p = Vec3f::Dot(sphere.center - pos, normal) / normal.Magnitude();
-    	
-        return p < sphere.radius && p > -sphere.radius;
-    }
-	
-	T center;
-    float radius = 0.0f;
+	Vec2f center_;
+	float radius_;
 };
 
-using Circle2D = Circle<Vec2f>;
-using Sphere3D = Circle<Vec3f>;
+struct Sphere
+{
+	Vec3f center_;
+	float radius_;
+};
 }

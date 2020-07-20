@@ -15,7 +15,7 @@ public:
 	
 	Index AddComponent(Entity playerIndex) override;
 	
-	Camera* GetCamera(const Entity playerIndex)
+	FpsCamera* GetCamera(const Entity playerIndex)
 	{ return &components_[playerIndex].camera; }
 	
 	Entity GetCurrentChunk(Entity playerIndex);

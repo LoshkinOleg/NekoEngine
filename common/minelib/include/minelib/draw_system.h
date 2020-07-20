@@ -25,6 +25,7 @@ public:
     void OnEvent(const SDL_Event& event) override;
 	
 protected:
+    FpsCamera* camera_;
     MinecraftLikeEngine& engine_;
 	
     ChunkRenderer chunkRenderer_;
@@ -40,5 +41,7 @@ protected:
 	//test
     Vec3f savedCameraPos_;
     Vec3f savedCameraDir_;
+    bool raycastOn_ = false;
+    bool gizmosOn_ = false;
 };
 }

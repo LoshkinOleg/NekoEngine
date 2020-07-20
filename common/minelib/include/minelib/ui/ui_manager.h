@@ -1,5 +1,7 @@
 #pragma once
+#include "graphics/graphics.h"
 #include "minelib/ui/ui_element.h"
+#include "sdl_engine/sdl_engine.h"
 
 namespace neko
 {

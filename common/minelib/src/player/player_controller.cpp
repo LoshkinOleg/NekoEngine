@@ -2,6 +2,8 @@
 
 #include "minelib/blocks/block.h"
 #include "minelib/chunks/chunk.h"
+#include "minelib/gizmos_renderer.h"
+#include "minelib/aabb_manager.h"
 
 namespace neko
 {
@@ -39,12 +41,9 @@ void PlayerController::Update(const seconds dt)
 		if (curPlayer.currentChunk == INVALID_ENTITY || 
 			currentChunkPos != chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk))
 		{
-			const auto chunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+			const auto chunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
 			for (auto& chunk : chunks)
 			{
-				if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED))
-					continue;
-
 				if (chunkManager_.chunkPosManager.GetAabb(chunk).IntersectAabb(Aabb3d(curPlayer.position, Vec3f(0.2f))))
 				{
 					curPlayer.currentChunk = chunk;
@@ -63,13 +62,9 @@ void PlayerController::Update(const seconds dt)
 		{
 			//Gets the chunks in front
 			std::vector<Entity> chunksInFront{curPlayer.currentChunk};
-			const auto chunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+			const auto chunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
 			for (auto& chunk : chunks)
 			{
-				if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
-					chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
-					continue;
-
 				auto& chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
 				auto& curChunkPos = chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk);
 				if (curPlayer.camera.reverseDirection.x < 0)
