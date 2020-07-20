@@ -33,7 +33,7 @@ void DrawSystem::Init()
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 
-	camera_.position = Vec3f::up * 140;
+	camera_.position = Vec3f(mapSize / 2, mapHeight, mapSize/2); 
 }
 
 void DrawSystem::Update(seconds dt)

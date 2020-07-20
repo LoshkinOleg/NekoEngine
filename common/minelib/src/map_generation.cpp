@@ -33,16 +33,17 @@ namespace neko
 
 	//Class MapGeneration
 
-	const std::array<std::array<int, mapSize>, mapSize> MapGeneration::GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone)
+	void MapGeneration::GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone)
 	{
-		perlinNoise = siv::PerlinNoise(seed);
-		if (octaves <=0)
+		if (octaves <= 0)
 		{
 			octaves = 1;
 		}
+		perlinNoise = siv::PerlinNoise(seed);
+		
 
 		//int map[mapSize][mapSize];
-		std::array<std::array<int, mapSize>, mapSize> map;
+		//std::array<std::array<int, mapSize>, mapSize> heightMap;
 
 		for (int y = 0; y < mapSize; y++)
 		{
@@ -58,48 +59,67 @@ namespace neko
 					//ny += octaveOffsets[i].y;
 					result += ((float)1 / (float)(i + 1) * ((perlinNoise.noise(nx,ny) + 1)/ 2));
 				}
-				map[y][x] = (int)(result * mapHeight);
+				heightMap[y][x] = (int)(result * mapHeight);
 			}
 		}
-		return map;
+		//return map;
 	}
 
-	std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> MapGeneration::GenerateMap3D(std::array<std::array<int, mapSize>, mapSize> heightMap)
+	std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> MapGeneration::GenerateMap3D(int posX, int posY)
 	{
-		std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> map;
-		for (int x = 0; x < mapSize; x++)
+		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> map;
+		if(posX < 0 || posY < 0 || posX >= mapSize|| posY >= mapSize)
 		{
-			for (int z = 0; z < mapSize; z++)
+			for (int x = 0; x < kChunkSize; x++)
 			{
-				for (int y = mapHeight - 1; y >= 0; y--)
+				for (int z = 0; z < kChunkSize; z++)
 				{
-					//TODO CheckBiome
-					// 0 = air
-					// 1 = dirt
-					// 2 = stone
-					// 3 = grass
-					// 4 = snow
-					// 5 = sand
-					int biomeSurfaceBlockID = 5;
-					int blockBeforeStoneID = 5;
-					if (heightMap[x][z] + undergroundHeight > y)
+					for (int y = kChunkSize - 1; y >= 0; y--)
 					{
 						map[x][y][z] = 0;
-					}
-					else if (heightMap[x][z] + undergroundHeight == y)
-					{
-						map[x][y][z] = biomeSurfaceBlockID;
-					}
-					else if (heightMap[x][z] + undergroundHeight > y - blocksNrBeforeStone)
-					{
-						map[x][y][z] = blockBeforeStoneID;
-					}
-					else
-					{
-						map[x][y][z] = 2;
-					}
 
 
+					}
+				}
+			}
+			
+		}
+		else
+		{
+			for (int x = 0; x < kChunkSize; x++)
+			{
+				for (int z = 0; z < kChunkSize; z++)
+				{
+					for (int y = kChunkSize - 1; y >= 0; y--)
+					{
+						//TODO CheckBiome
+						// 0 = air
+						// 1 = dirt
+						// 2 = stone
+						// 3 = grass
+						// 4 = snow
+						// 5 = sand
+						int biomeSurfaceBlockID = 5;
+						int blockBeforeStoneID = 5;
+						if (heightMap[x + posX][z + posY] + undergroundHeight > y)
+						{
+							map[x][y][z] = 0;
+						}
+						else if (heightMap[x + posX][z + posY] + undergroundHeight == y)
+						{
+							map[x][y][z] = biomeSurfaceBlockID;
+						}
+						else if (heightMap[x + posX][z + posY] + undergroundHeight > y - blocksNrBeforeStone)
+						{
+							map[x][y][z] = blockBeforeStoneID;
+						}
+						else
+						{
+							map[x][y][z] = 2;
+						}
+
+
+					}
 				}
 			}
 		}

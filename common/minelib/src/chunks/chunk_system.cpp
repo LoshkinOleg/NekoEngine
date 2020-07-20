@@ -11,6 +11,7 @@
 #include "minelib/gizmos_renderer.h"
 #include "minelib/minecraft_like_engine.h"
 #include <PerlinNoise.hpp>
+#include <minelib/map_generation.h>
 
 namespace neko
 {
@@ -136,11 +137,34 @@ Entity ChunkSystem::GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos)
 	}
 	else
 	{
+		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> map = mapGeneration.GenerateMap3D(pos.x * kChunkSize, pos.z * kChunkSize);
 		for (uint16_t x = 0; x < kChunkSize; x++)
 		{
-			for (uint16_t z = 0; z < kChunkSize; z++)
+			for (uint16_t y = 0; y < kChunkSize; y++)
 			{
-				chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, 0, z)));
+				for (uint16_t z = 0; z < kChunkSize; z++)
+				{
+					switch (map[x][y][z])
+					{
+					case 0:
+						break;
+					case 1:
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						break;
+					case 2:
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						break;
+					case 3:
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						break;
+					case 4:
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						break;
+					case 5:
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						break;
+					}
+				}
 			}
 		}
 		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
@@ -179,6 +203,12 @@ void ChunkSystem::Init()
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledChunks_.reserve(16);
 	RendererLocator::get().Render(this);
+
+	//Generate Map
+
+	std::array<std::array<int, mapSize>, mapSize> heightMap;
+	mapGeneration = MapGeneration();
+	mapGeneration.GenerateZoneSurface(Vec2i(0, 0), 1, 1, Zone(0, -1,0, 0, Vec2i(0, 0), Vec2i(mapSize, mapSize)));
 }
 
 void ChunkSystem::SetChunkOcclusionCulling(const Entity chunkIndex) const

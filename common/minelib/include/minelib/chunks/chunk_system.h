@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <minelib/chunks/chunk.h>
+#include <minelib/map_generation.h>
 
 namespace neko
 {
@@ -25,7 +26,7 @@ public:
 	 *  \brief Generates a 2d noise map
 	 */
 	//TODO:: Change name of the function
-	static std::array<std::array<int, kChunkSize>, kChunkSize> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
+	//static std::array<std::array<int, kChunkSize>, kChunkSize> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
 
 	void FixedUpdate() override
 	{
@@ -58,5 +59,8 @@ private:
 
 	std::vector<std::function<void()>> scheduledChunks_;
 	std::vector<std::unique_ptr<Job>> generationJobs_;
+
+	//std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> map;
+	MapGeneration mapGeneration;
 };
 }

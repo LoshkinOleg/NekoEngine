@@ -3,13 +3,14 @@
 #include <mathematics/vector.h>
 #include <vector>
 #include "PerlinNoise.hpp"
+#include <minelib/chunks/chunk.h>
 
 namespace neko
 {
-	const int mapSize = 1024;
-	const int mapHeight = 128;
+	const static int mapSize = 256;
+	const static int mapHeight = 16;
 	const uint32_t seed = 0;
-	const int undergroundHeight = 16;
+	const int undergroundHeight = 0;
 	const int blocksNrBeforeStone = 4;
 	
 	struct Zone
@@ -32,13 +33,15 @@ namespace neko
 	{
 	public:
 
-		const std::array<std::array<int, mapSize>, mapSize> GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone);
-		std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> GenerateMap3D(std::array<std::array<int, mapSize>, mapSize> heightMap);
+		void GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone);
+		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> MapGeneration::GenerateMap3D(int posX, int posY);
 
 		void GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage);
 		void CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize);
 		void LerpBlock(std::array<std::array<int, mapSize>, mapSize> map, Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
 		bool CheckNeighbourhood(Zone zone1, Zone zone2);
+
+		std::array<std::array<int, mapSize>, mapSize> heightMap;
 		
 	private:
 
@@ -46,8 +49,7 @@ namespace neko
 	std::vector<Zone> finalZones;
 	siv::PerlinNoise perlinNoise;
 	
-		
 	int index = 0;
-		
+	//std::array<std::array<char, mapSize>, mapSize> map;
 	};
 }
