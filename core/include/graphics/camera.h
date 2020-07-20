@@ -389,7 +389,7 @@ struct FpsCamera final : public MoveableCamera3D
 		if (!freezeCam)
 		{
 			if (event.type == SDL_MOUSEMOTION)
-				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+				mouseMotion_ = Vec2f(-event.motion.xrel, event.motion.yrel) * mouseSpeed;
 			
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}

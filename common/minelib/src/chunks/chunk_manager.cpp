@@ -377,10 +377,13 @@ std::vector<Index> ChunkStatusManager::GetAccessibleChunks()
 	std::vector<Index> accessibleChunks;
 	for (size_t index = 0; index < components_.size(); index++)
 	{
-		if (HasStatus(index, ChunkFlag::ACCESSIBLE))
-		{
+		if (!HasStatus(index, ChunkFlag::LOADED) ||
+			!HasStatus(index, ChunkFlag::ACCESSIBLE) ||
+			HasStatus(index, ChunkFlag::EMPTY) ||
+			HasStatus(index, ChunkFlag::OCCLUDED))
+			continue;
 			accessibleChunks.push_back(index);
-		}
+		
 	}
 	return accessibleChunks;
 }
@@ -400,6 +403,24 @@ std::vector<Index> ChunkStatusManager::GetRenderedChunks()
 	}
 	return
 		renderedChunks;
+}
+
+std::vector<Index> ChunkStatusManager::GetDirtyChunks()
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling::GetLoadedChunks",
+		profiler::colors::Pink700);
+#endif
+	std::lock_guard<std::mutex> lock(mutex_);
+	std::vector<Index> dirtyChunks;
+	for (size_t index = 0; index < components_.size(); index++)
+	{
+		if (HasStatus(index, ChunkFlag::DIRTY))
+		{
+			dirtyChunks.push_back(index);
+		}
+	}
+	return dirtyChunks;
 }
 
 std::vector<Index> ChunkStatusManager::GetLoadedChunks()

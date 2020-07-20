@@ -53,12 +53,15 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	if (raycastOn_)
 	{
-		Ray rayOut;
-		AabbLocator::get().RaycastBlock(rayOut, GizmosLocator::get().GetCamera()->position, -GizmosLocator::get().GetCamera()->reverseDirection);
+		rayOut_ = Ray();
+		AabbLocator::get().RaycastBlock(rayOut_, GizmosLocator::get().GetCamera()->position, -GizmosLocator::get().GetCamera()->reverseDirection);
 		savedCameraDir_ = -GizmosLocator::get().GetCamera()->reverseDirection;
 		savedCameraPos_ = GizmosLocator::get().GetCamera()->position;
-		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
+	GizmosLocator::get().DrawCube(savedCameraPos_, Vec3f::one, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawCube(rayOut_.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_+savedCameraDir_*10, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawLine(savedCameraPos_, rayOut_.hitAabb.CalculateCenter(), Color4(1, 1, 1, 1));
 }
 
 void DrawSystem::Destroy()
@@ -103,7 +106,19 @@ void DrawSystem::DrawImGui()
 	}
 	
 	ImGui::End();
-
+	if (raycastOn_)
+	{
+		ImGui::Begin("Testing");
+		Vec3f aabbPos = rayOut_.hitAabb.CalculateCenter();
+		float hitChunk = rayOut_.hitChunk;
+		float hitDist = rayOut_.hitDist;
+		float hitId = rayOut_.hitId;
+		ImGui::InputFloat3("AabbPos", &aabbPos[0]);
+		ImGui::InputFloat("hitChunk", &hitChunk);
+		ImGui::InputFloat("hitDist", &hitDist);
+		ImGui::InputFloat("hitId", &hitId);
+		ImGui::End();
+	}
 #ifdef EASY_PROFILE_USE
 	EASY_END_BLOCK
 		EASY_BLOCK("DrawSystem::DrawImGui::chunkRenderer_", profiler::colors::Blue);

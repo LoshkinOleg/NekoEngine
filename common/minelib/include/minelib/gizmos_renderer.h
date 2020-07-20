@@ -136,7 +136,7 @@ public:
 	Vec3f GetCameraPos() const override { return camera_->position; }
 		
 private:
-	std::mutex updateMutex_;
+	std::mutex renderMutex_;
 
 	FpsCamera* camera_;
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};

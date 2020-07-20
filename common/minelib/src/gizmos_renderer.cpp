@@ -36,17 +36,15 @@ void GizmosRenderer::Render()
 		{
 			if (shaderCube_.GetProgram() == 0) continue;
 
-			std::lock_guard<std::mutex> lock(updateMutex_);
-
-			shaderCube_.Bind();
-			shaderCube_.SetMat4("view", camera_->GenerateViewMatrix());
-			shaderCube_.SetMat4("projection", camera_->GenerateProjectionMatrix());
-			shaderCube_.SetVec4("color", gizmo.color);
-
+			std::lock_guard<std::mutex> lock(renderMutex_);
 			switch (gizmo.shape)
 			{
 			case GizmoShape::CUBE:
 			{
+				shaderCube_.Bind();
+				shaderCube_.SetMat4("view", camera_->GenerateViewMatrix());
+				shaderCube_.SetMat4("projection", camera_->GenerateProjectionMatrix());
+				shaderCube_.SetVec4("color", gizmo.color);
 				Mat4f model = Mat4f::Identity;
 				model = Transform3d::Scale(model, gizmo.cubeSize);
 				model = Transform3d::Translate(model, gizmo.pos);
@@ -58,6 +56,10 @@ void GizmosRenderer::Render()
 			break;
 			case GizmoShape::LINE:
 			{
+				shaderLine_.Bind();
+				shaderLine_.SetMat4("view", camera_->GenerateViewMatrix());
+				shaderLine_.SetMat4("projection", camera_->GenerateProjectionMatrix());
+				shaderCube_.SetVec4("color", gizmo.color);
 				Mat4f model = Transform3d::Translate(Mat4f::Identity, gizmo.pos);
 				shaderLine_.SetMat4("model", model);
 				shaderLine_.SetVec3("endPos", gizmo.lineEndPos - gizmo.pos);
@@ -100,6 +102,7 @@ void GizmosRenderer::DrawCube(
 {
 	if (isRunning_)
 	{
+		std::lock_guard<std::mutex> lock(renderMutex_);
 		Gizmos gizmo;
 		gizmo.pos = pos;
 		gizmo.cubeSize = size;
@@ -117,6 +120,7 @@ void GizmosRenderer::DrawLine(
 {
 	if (isRunning_)
 	{
+		std::lock_guard<std::mutex> lock(renderMutex_);
 		Gizmos gizmo;
 		gizmo.pos = startPos;
 		gizmo.lineEndPos = endPos;

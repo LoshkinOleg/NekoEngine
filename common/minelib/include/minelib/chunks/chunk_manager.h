@@ -118,7 +118,9 @@ public:
 	std::vector<Index> GetAccessibleChunks();
 
 	std::vector<Index> GetRenderedChunks();
-
+	
+	std::vector<Index> GetDirtyChunks();
+	
 	std::vector<Index> GetLoadedChunks();
 
 private:
