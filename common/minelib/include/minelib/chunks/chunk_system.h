@@ -6,6 +6,7 @@
 #include <mutex>
 #include <minelib/chunks/chunk.h>
 #include <minelib/chunks/chunk_manager.h>
+#include <minelib/map_generation.h>
 
 namespace neko
 {
@@ -17,11 +18,16 @@ class ChunkSystem final : public RenderCommandInterface, public SystemInterface,
 {
 public:
 	explicit ChunkSystem(MinecraftLikeEngine& engine);
-
 	void Init() override;
 
 	void Update(seconds dt) override;
 	void Render() override;
+
+	/**
+	 *  \brief Generates a 2d noise map
+	 */
+	//TODO:: Change name of the function
+	//static std::array<std::array<int, kChunkSize>, kChunkSize> MapGeneration(Vec2<int> offset, int chunkSize, int chunkHeight, int seed, float frequency, int octaves);
 
 	void FixedUpdate() override
 	{
@@ -59,9 +65,11 @@ private:
 	EntityManager& entityManager_;
 	MinecraftLikeEngine& engine_;
 
+
 	std::vector<std::function<void()>> scheduledRenderValues_;
 	std::vector<std::unique_ptr<Job>> scheduledGenerationJobs_;
 	std::vector<Entity> dirtyChunks_;
-	
+	//std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> map;
+	MapGeneration mapGeneration;
 };
 }
