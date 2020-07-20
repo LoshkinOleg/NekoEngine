@@ -47,10 +47,10 @@ void UiManager::Render()
 	const auto& config = BasicEngine::GetInstance()->config;
 	for (auto& element : uiElements_)
 	{
-		if (element->flags & UiElement::RESIZE)
+		if (element->flags & UiElement::DIRTY)
 		{
 			element->Update(config.windowSize);
-			element->flags &= ~UiElement::RESIZE;
+			element->flags &= ~UiElement::DIRTY;
 		}
 		element->Draw(config.windowSize);
 	}
@@ -64,7 +64,7 @@ void UiManager::OnEvent(const SDL_Event& event)
 	{
 		for (auto& element : uiElements_)
 		{
-			element->flags |= UiElement::RESIZE;
+			element->flags |= UiElement::DIRTY;
 		}
 	}
 }

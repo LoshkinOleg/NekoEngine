@@ -11,13 +11,13 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	  componentsManagerSystem(*this),
 	  drawSystem_(*this)
 {
+	RegisterSystem(uiManager);
+	RegisterOnEvent(uiManager);
+	RegisterSystem(componentsManagerSystem);
+	RegisterSystem(blockManager);
 	RegisterSystem(drawSystem_);
 	RegisterOnEvent(drawSystem_);
 	RegisterOnDrawUi(drawSystem_);
-	RegisterSystem(componentsManagerSystem);
-	RegisterSystem(blockManager);/*
-	RegisterSystem(uiManager);
-	RegisterOnEvent(uiManager);*/
 #ifdef EASY_PROFILE_USE
 	EASY_PROFILER_ENABLE;
 #endif

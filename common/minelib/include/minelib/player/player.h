@@ -5,25 +5,22 @@
 
 namespace neko
 {
-const static short kHotBarSize = 9;
-
-struct HotBarTile
-{
-	Block* block;
-	UiElement blockPreview;
-};
+const static uint8_t kHotBarSize = 9;
+const static Vec2u kTileSize = Vec2u(80u);
 
 struct PlayerUi
 {
-	PlayerUi();
+	void Update();
+	
 	PlayerUi& operator=(const PlayerUi& other);
 	
 	//Crosshair
 	UiElement crossHair{Vec3f::zero, Vec2u(64, 64)};
 	
-	//Crosshair
+	//HotBar
 	UiElement hotBar{Vec3f::zero, Vec2u(728, 88)};
-	std::array<HotBarTile, kHotBarSize> hotBarContent;
+	std::array<size_t, kHotBarSize> hotBarBlocks{};
+	std::array<UiElement, kHotBarSize> hotBarPreviews{};
 	
 	//Block Select
 	UiElement blockSelect{Vec3f::zero, Vec2u(96, 96)};
@@ -39,8 +36,6 @@ struct Player
 	Vec3f position = Vec3f::zero;
 	
 	Entity currentChunk = INVALID_ENTITY;
-
-	PlayerUi ui;
 	
 	//Player variables
     float maxReach = 8.0f;

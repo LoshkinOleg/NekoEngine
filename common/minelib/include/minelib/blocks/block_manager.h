@@ -49,10 +49,13 @@ public:
 
 	void Render() override;
 
-	void RegisterBlock(Block block);
+	void RegisterBlock(const Block& block);
 
 	Block& GetBlock(const size_t blockIndex)
 	{ return registeredBlocks_[blockIndex]; }
+	
+	Block& GetBlockByTexHash(TextureHash blockTex);
+	
 	Block& GetRandomBlock()
 	{ return registeredBlocks_[RandomRange(1, registeredBlocks_.size())]; }
 
