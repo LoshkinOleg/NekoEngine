@@ -200,7 +200,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 
 	//chunkContent.CalculateBlockOcclusion();
 	//Scheduled setting of render values
-	std::lock_guard<std::mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutexRenderer_);
 	scheduledRenderValues_.emplace_back([this, newChunkIndex, chunkContent]
 	{
 		chunkManager_.chunkRenderManager.Init(newChunkIndex);
@@ -212,7 +212,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 
 void ChunkSystem::Init()
 {
-	std::lock_guard<std::mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutexRenderer_);
 	scheduledRenderValues_.reserve(16);
 	dirtyChunks_.reserve(kHeightChunkLimit * kChunkMaxViewDist);
 	RendererLocator::get().Render(this);
@@ -347,6 +347,7 @@ void ChunkSystem::UpdateVisibleChunks()
 					const Entity newChunkIndex = entityManager_.CreateEntity();
 					chunkManager_.AddComponent(newChunkIndex);
 					chunkManager_.chunkPosManager.SetComponent(newChunkIndex, viewedChunkPos);
+					std::lock_guard<std::mutex> lock(mutexGeneration_);
 					scheduledGenerationJobs_.push_back(std::make_unique<Job>(
 						[this, newChunkIndex, viewedChunkPos]
 						{
@@ -381,6 +382,7 @@ void ChunkSystem::UpdateVisibleChunks()
 		}
 	}
 	bool allFinished = true;
+	std::lock_guard<std::mutex> lock(mutexGeneration_);
 	for (int i = 0; i < scheduledGenerationJobs_.size(); i++)
 	{
 		if (!scheduledGenerationJobs_[i]->IsDone())
@@ -443,7 +445,7 @@ void ChunkSystem::Update(seconds dt)
 
 void ChunkSystem::Render()
 {
-	std::lock_guard<std::mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutexRenderer_);
 	while (!scheduledRenderValues_.empty())
 	{
 		auto currentTask = scheduledRenderValues_.front();
@@ -462,7 +464,7 @@ void ChunkSystem::DrawImGui()
 {
 	ImGui::Begin("Chunk Generation");
 	float count = 0;
-	std::lock_guard<std::mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutexGeneration_);
 	for (int i = 0; i < scheduledGenerationJobs_.size(); i++)
 	{
 		if (scheduledGenerationJobs_[i]->IsDone())

@@ -58,7 +58,8 @@ private:
 	 */
 	void UpdateVisibleChunks();
 	
-	std::mutex mutex_;
+	std::mutex mutexRenderer_;
+	std::mutex mutexGeneration_;
 	
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
