@@ -13,8 +13,8 @@ PlayerController::PlayerController(MinecraftLikeEngine& engine)
 	  chunkManager_(engine.componentsManagerSystem.chunkManager),
 	  inputManager_(sdl::InputLocator::get()),
 	  gizmosRenderer_(GizmosLocator::get()),
-	  aabbManager_(AabbLocator::get()),
-	  uiManager_(UiManagerLocator::get())
+	  aabbManager_(AabbLocator::get())
+	  //uiManager_(UiManagerLocator::get())
 {
 }
 

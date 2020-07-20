@@ -1,5 +1,7 @@
 #pragma once
 #include "minelib/ui/ui_element.h"
+#include <minelib\blocks\block.h>
+#include <graphics\camera.h>
 
 namespace neko
 {
@@ -7,12 +9,13 @@ const static short kHotBarSize = 9;
 
 struct HotBarTile
 {
-	Block& block;
+	Block* block;
 	UiElement blockPreview;
 };
 
 struct PlayerUi
 {
+	PlayerUi();
 	PlayerUi& operator=(const PlayerUi& other);
 	
 	//Crosshair
@@ -20,7 +23,7 @@ struct PlayerUi
 	
 	//Crosshair
 	UiElement hotBar{Vec3f::zero, Vec2u(728, 88)};
-	std::array<HotBarTile, kHotBarSize> hotBarContent{};
+	std::array<HotBarTile, kHotBarSize> hotBarContent;
 	
 	//Block Select
 	UiElement blockSelect{Vec3f::zero, Vec2u(96, 96)};
@@ -29,6 +32,7 @@ struct PlayerUi
 
 struct Player
 {
+	Player();
 	Player& operator=(const Player& other);
 	
     FpsCamera camera;

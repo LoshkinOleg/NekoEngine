@@ -2,6 +2,7 @@
 #include <utility>
 
 #include "gl/texture.h"
+#include "gl/shape.h"
 
 namespace neko
 {

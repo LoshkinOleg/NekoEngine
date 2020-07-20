@@ -34,6 +34,6 @@ private:
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
 	IAabbManager& aabbManager_;
-	IUiManager& uiManager_;
+	//IUiManager& uiManager_;
 };
 }

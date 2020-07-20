@@ -1,7 +1,8 @@
 #pragma once
+#include <engine\entity.h>
 #include "engine/component.h"
-#include "minelib/ui/ui_manager.h"
 
+#include "minelib/ui/ui_manager.h"
 #include "player.h"
 
 namespace neko
