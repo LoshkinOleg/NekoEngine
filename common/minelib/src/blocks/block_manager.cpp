@@ -39,6 +39,8 @@ void BlockManager::Init()
 		EulerAngles(degree_t(25.0f), degree_t(45.0f), degree_t(0.0f)));
 	model = Transform3d::Scale(model, Vec3f(1, -1, 1));
 	previewShader_.SetMat4("model", model);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	for (auto& block : registeredBlocks_)
 	{
 		glGenTextures(1, &block.previewTexture);
@@ -58,7 +60,6 @@ void BlockManager::Init()
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, atlas_);
 		previewShader_.SetUInt("sideTexId", block.blockTex.sideTexId);
 		previewShader_.SetUInt("topTexId", block.blockTex.topTexId);
@@ -84,10 +85,23 @@ void BlockManager::Render()
 {
 }
 
-void BlockManager::RegisterBlock(Block block)
+void BlockManager::RegisterBlock(const Block& block)
 {
 	registeredBlocks_.push_back(block);
-	block.id = registeredBlocks_.size() - 1;
+	registeredBlocks_.back().id = registeredBlocks_.size() - 1;
+}
+
+Block& BlockManager::GetBlockByTexHash(const TextureHash blockTex)
+{
+	const auto it = std::find_if(registeredBlocks_.begin(), registeredBlocks_.end(),
+		[blockTex](const Block& content)
+		{ return BlockTexToTexHash(content.blockTex) == blockTex; });
+	if (it != registeredBlocks_.end())
+	{
+		return registeredBlocks_[it - registeredBlocks_.begin()];
+	}
+
+	return registeredBlocks_[0];
 }
 
 void BlockManager::Destroy()

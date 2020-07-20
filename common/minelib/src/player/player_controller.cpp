@@ -11,17 +11,45 @@ PlayerController::PlayerController(MinecraftLikeEngine& engine)
 	: engine_(engine),
 	  entityManager_(engine.entityManager),
 	  blockManager_(engine.blockManager),
+	  uiManager_(engine.uiManager),
 	  playerManager_(engine.componentsManagerSystem.playerManager),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager),
+	  aabbManager_(engine.componentsManagerSystem.aabbManager),
 	  inputManager_(sdl::InputLocator::get()),
-	  gizmosRenderer_(GizmosLocator::get()),
-	  aabbManager_(AabbLocator::get())
-	  //uiManager_(UiManagerLocator::get())
+	  gizmosRenderer_(GizmosLocator::get())
 {
 }
 
 void PlayerController::Init()
 {
+	const auto& config = BasicEngine::GetInstance()->config;
+	const Vec2f toolBarSize = Vec2f(ui_.hotBar.size) / Vec2f(config.windowSize);
+	ui_.hotBar.position.y = toolBarSize.y / 2 - 1.0;
+	
+	const Vec2f tileSize = Vec2f(kTileSize) / Vec2f(config.windowSize);
+	
+	ui_.blockSelect.position.y = ui_.hotBar.position.y;
+	ui_.blockSelect.position.x = ui_.hotBar.position.x + (ui_.selectIndex - 4) * tileSize.x;
+	
+	ui_.crossHair.texturePath = config.dataRootPath + "sprites/ui/crosshair.png";
+	ui_.hotBar.texturePath = config.dataRootPath + "sprites/ui/toolbar.png";
+	ui_.blockSelect.texturePath = config.dataRootPath + "sprites/ui/selection_sprite.png";
+	uiManager_.AddUiElement(ui_.crossHair);
+	uiManager_.AddUiElement(ui_.hotBar);
+	for (int i = 0; i < ui_.hotBarPreviews.size(); ++i)
+	{
+		ui_.hotBarPreviews[i].position.x = ui_.hotBar.position.x + (i - 4) * tileSize.x;
+		ui_.hotBarPreviews[i].position.y = ui_.hotBar.position.y;
+		ui_.hotBarPreviews[i].size = kTileSize;
+
+		if (ui_.hotBarBlocks[i] > 0)
+			ui_.hotBarPreviews[i].textureId = blockManager_.GetBlock(ui_.hotBarBlocks[i]).previewTexture;
+		else
+			ui_.hotBarPreviews[i].texturePath = config.dataRootPath + "sprites/empty.png";
+
+		uiManager_.AddUiElement(ui_.hotBarPreviews[i]);
+	}
+	uiManager_.AddUiElement(ui_.blockSelect);
 }
 
 void PlayerController::Update(const seconds dt)
@@ -267,6 +295,8 @@ void PlayerController::Update(const seconds dt)
 						
 						if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::RIGHT))
 						{
+							if (ui_.hotBarBlocks[ui_.selectIndex] <= 0) break;
+							
 							curPlayer.placeTimeStamp = Time::time + curPlayer.placeCoolDown;
 							
 							const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunkInFront));
@@ -287,7 +317,17 @@ void PlayerController::Update(const seconds dt)
 								Abs(fromCenter.z) > Abs(fromCenter.x)) 
 								offset.z = -Sign(fromCenter.z);
 							
-							PlaceBlock(chunkInFront, rayOut.hitId - PosToBlockId(offset), blockManager_.GetRandomBlock());
+							const Block& block = blockManager_.GetBlock(ui_.hotBarBlocks[ui_.selectIndex]);
+							PlaceBlock(chunkInFront, rayOut.hitId - PosToBlockId(offset), block);
+						}
+						
+						if (inputManager_.IsMouseButtonHeld(sdl::MouseButtonCode::MIDDLE))
+						{
+							const ChunkContent& chunkBlock = chunkManager_.chunkContentManager.GetBlock(chunkInFront, rayOut.hitId);
+							const Block& block = blockManager_.GetBlockByTexHash(chunkBlock.texId);
+							ui_.hotBarBlocks[ui_.selectIndex] = block.id;
+							ui_.hotBarPreviews[ui_.selectIndex].textureId = block.previewTexture;
+							ui_.hotBarPreviews[ui_.selectIndex].flags |= UiElement::DIRTY;
 						}
 					}
 					break;
@@ -300,6 +340,25 @@ void PlayerController::Update(const seconds dt)
 	else
 	{
 		LogError("Current Player not set!");
+	}
+
+	UpdateUi();
+}
+
+void PlayerController::UpdateUi()
+{
+	const auto scrollAmount = inputManager_.GetMouseScroll();
+	if (scrollAmount.y != 0)
+	{
+		ui_.selectIndex += -Sign(scrollAmount.y);
+		if (ui_.selectIndex > kHotBarSize - 1) ui_.selectIndex = 0;
+		if (ui_.selectIndex < 0) ui_.selectIndex = kHotBarSize - 1;
+		
+		const auto& config = BasicEngine::GetInstance()->config;
+		const Vec2f tileSize = Vec2f(kTileSize) / Vec2f(config.windowSize);
+		ui_.blockSelect.position.x = ui_.hotBar.position.x + (ui_.selectIndex - 4) * tileSize.x;
+		ui_.blockSelect.position.y = ui_.hotBar.position.y;
+		ui_.blockSelect.flags |= UiElement::DIRTY;
 	}
 }
 
@@ -324,6 +383,27 @@ void PlayerController::OnEvent(const SDL_Event& event)
 		curPlayer.camera.OnEvent(event);
 		curPlayer.position = curPlayer.camera.position;
 		playerManager_.SetComponent(player, curPlayer);
+	}
+	
+	if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+	{
+		const Vec2f newWindowSize = Vec2f(event.window.data1, event.window.data2);
+		{
+			const Vec2f normalSpaceSize = Vec2f(ui_.hotBar.size) / newWindowSize;
+			ui_.hotBar.position.y = normalSpaceSize.y / 2 - 1.0;
+		}
+		{
+			const Vec2f tileSize = Vec2f(kTileSize) / newWindowSize;
+			for (auto i = 0; i < kHotBarSize; ++i)
+			{
+				if (ui_.hotBarBlocks[i] <= 0) continue;
+				ui_.hotBarPreviews[i].position.x = ui_.hotBar.position.x + (i - 4) * tileSize.x;
+				ui_.hotBarPreviews[i].position.y = ui_.hotBar.position.y;
+			}
+			
+			ui_.blockSelect.position.y = ui_.hotBar.position.y;
+			ui_.blockSelect.position.x = ui_.hotBar.position.x + (ui_.selectIndex - 4) * tileSize.x;
+		}
 	}
 }
 

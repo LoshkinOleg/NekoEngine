@@ -12,6 +12,7 @@ public:
 	
     void Init() override;
     void Update(seconds dt) override;
+	void UpdateUi();
 	void FixedUpdate() override;
 	void OnEvent(const SDL_Event& event) override;
     void Destroy() override;
@@ -28,12 +29,15 @@ private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
 	BlockManager& blockManager_;
+	IUiManager& uiManager_;
+	
 	PlayerManager& playerManager_;
 	ChunkManager& chunkManager_;
+	IAabbManager& aabbManager_;
 	
 	sdl::IInputManager& inputManager_;
 	IGizmosRenderer& gizmosRenderer_;
-	IAabbManager& aabbManager_;
-	//IUiManager& uiManager_;
+	
+	PlayerUi ui_;
 };
 }

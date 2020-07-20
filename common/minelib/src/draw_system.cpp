@@ -23,8 +23,8 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 {
 	engine.RegisterSystem(playerController_);
 	engine.RegisterOnEvent(playerController_);
-	engine.RegisterSystem(gizmosRenderer_);
 	engine.RegisterSystem(chunkRenderer_);
+	engine.RegisterSystem(gizmosRenderer_);
 }
 
 void DrawSystem::Init()

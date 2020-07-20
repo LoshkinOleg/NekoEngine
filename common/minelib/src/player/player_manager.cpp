@@ -10,22 +10,10 @@ PlayerManager::PlayerManager(EntityManager& entityManager, UiManager& uiManager)
 
 Index PlayerManager::AddComponent(const Entity playerIndex)
 {
-    ResizeIfNecessary(components_, playerIndex, Player{});
+    ResizeIfNecessary(components_, playerIndex, Player());
 	entityManager_.AddComponentType(playerIndex, static_cast<EntityMask>(ComponentType::PLAYER));
 	
-	const auto& config = BasicEngine::GetInstance()->config;
 	components_[playerIndex].camera.Init();
-	components_[playerIndex].ui.crossHair.texturePath = config.dataRootPath + "sprites/ui/crosshair.png";
-	uiManager_.AddUiElement(&components_[playerIndex].ui.crossHair);
-	components_[playerIndex].ui.hotBar.texturePath = config.dataRootPath + "sprites/ui/toolbar.png";
-	uiManager_.AddUiElement(&components_[playerIndex].ui.hotBar);
-    for (auto& content : components_[playerIndex].ui.hotBarContent)
-    {
-		content.blockPreview.texturePath = config.dataRootPath + "sprites/ui/selection_sprite.png";
-		uiManager_.AddUiElement(&content.blockPreview);
-    }
-	components_[playerIndex].ui.crossHair.texturePath = config.dataRootPath + "sprites/ui/selection_sprite.png";
-	uiManager_.AddUiElement(&components_[playerIndex].ui.blockSelect);
 	
     return playerIndex;
 }
