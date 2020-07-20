@@ -61,6 +61,7 @@ private:
 
 	std::vector<std::function<void()>> scheduledRenderValues_;
 	std::vector<std::unique_ptr<Job>> scheduledGenerationJobs_;
+	std::vector<Entity> dirtyChunks_;
 	
 };
 }

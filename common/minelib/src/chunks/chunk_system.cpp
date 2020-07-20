@@ -147,7 +147,10 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 		{
 			for (uint16_t z = 0; z < kChunkSize; z++)
 			{
-				chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, 0, z)));
+				for (uint16_t y = 0; y < kChunkSize * Sin(radian_t(x * PI / kChunkSize)); y++)
+				{
+					chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, y, z)));
+				}
 			}
 		}
 		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
@@ -173,6 +176,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 	//Set chunkContent into component
 	chunkManager_.chunkContentManager.FillOfBlocks(newChunkIndex, chunkContent);
 
+	//chunkContent.CalculateBlockOcclusion();
 	//Scheduled setting of render values
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledRenderValues_.emplace_back([this, newChunkIndex, chunkContent]
@@ -188,13 +192,14 @@ void ChunkSystem::Init()
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	scheduledRenderValues_.reserve(16);
+	dirtyChunks_.reserve(kHeightChunkLimit * kChunkMaxViewDist);
 	RendererLocator::get().Render(this);
 }
 
 void ChunkSystem::CalculateVisibleStatus(const Entity chunkIndex) const
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling", profiler::colors::Pink100);
+	EASY_BLOCK("Chunks_System::CalculateVisibleStatus", profiler::colors::Pink100);
 #endif
 	const Vec3i currentChunkPos = chunkManager_.chunkPosManager.GetComponent(chunkIndex);
 	bool visible = false;
@@ -267,8 +272,6 @@ void ChunkSystem::UpdateVisibleChunks()
 	                                    0,
 	                                    std::floor(viewerPos.z / kChunkSize));
 	Frustum frustum(GizmosLocator::get().GetCamera());
-	std::vector<Entity> dirtyChunks;
-	dirtyChunks.reserve(kHeightChunkLimit * kChunkMaxViewDist);
 	//Remove last visible chunks and accessible chunks
 	for (auto chunk : chunks)
 	{
@@ -322,7 +325,7 @@ void ChunkSystem::UpdateVisibleChunks()
 							GenerateChunkContent(newChunkIndex, viewedChunkPos);
 						}));
 					engine_.ScheduleJob(scheduledGenerationJobs_.back().get(), JobThreadType::OTHER_THREAD);
-					dirtyChunks.push_back(newChunkIndex);
+					dirtyChunks_.push_back(newChunkIndex);
 				}
 				//If chunk has already been generated
 				else
@@ -349,18 +352,35 @@ void ChunkSystem::UpdateVisibleChunks()
 			}
 		}
 	}
-	//Calculate if all new chunk are visible
-	for (auto dirtyChunk : dirtyChunks)
+	bool allFinished = true;
+	for (int i = 0; i < scheduledGenerationJobs_.size(); i++)
 	{
-		if (!chunkManager_.chunkStatusManager.HasStatus(dirtyChunk, ChunkFlag::EMPTY))
+		if (!scheduledGenerationJobs_[i]->IsDone())
 		{
-			scheduledGenerationJobs_.push_back(std::make_unique<Job>(
-				[this, dirtyChunk]
-				{
-					CalculateVisibleStatus(dirtyChunk);
-				}));
-			engine_.ScheduleJob(scheduledGenerationJobs_.back().get(), JobThreadType::OTHER_THREAD);
+			allFinished = false;
+			break;
 		}
+	}
+	if (allFinished)
+	{
+		scheduledGenerationJobs_.clear();
+		//Calculate if all new chunk are visible
+		for (auto dirtyChunk : dirtyChunks_)
+		{
+			if (!chunkManager_.chunkStatusManager.HasStatus(dirtyChunk, ChunkFlag::EMPTY))
+			{
+#ifdef EASY_PROFILE_USE
+				EASY_BLOCK("Chunks_System::scheduledGenerationJobs_", profiler::colors::Green100);
+#endif
+				scheduledGenerationJobs_.push_back(std::make_unique<Job>(
+					[this, dirtyChunk]
+					{
+						CalculateVisibleStatus(dirtyChunk);
+					}));
+				engine_.ScheduleJob(scheduledGenerationJobs_.back().get(), JobThreadType::OTHER_THREAD);
+			}
+		}
+		dirtyChunks_.clear();
 	}
 }
 
@@ -413,6 +433,7 @@ void ChunkSystem::DrawImGui()
 {
 	ImGui::Begin("Chunk Generation");
 	float count = 0;
+	std::lock_guard<std::mutex> lock(mutex_);
 	for (int i = 0; i < scheduledGenerationJobs_.size(); i++)
 	{
 		if (scheduledGenerationJobs_[i]->IsDone())
@@ -420,8 +441,11 @@ void ChunkSystem::DrawImGui()
 			count++;
 		}
 	}
-	float loading = count / scheduledGenerationJobs_.size();
-	ImGui::Text("Loading : %f", loading);
+	if (scheduledGenerationJobs_.size() > 0)
+	{
+		int loading = (count / scheduledGenerationJobs_.size()) * 100;
+		ImGui::Text("Loading : %i / 100", loading);
+	}
 	ImGui::End();
 }
 }

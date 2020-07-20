@@ -45,6 +45,9 @@ struct ChunkContentVector
 	std::shared_ptr<ChunkContent> GetBlock(BlockId blockId);
 
 	bool HasBlockAt(const Vec3i& pos) const;
+
+	void CalculateBlockOcclusion();
+	
 };
 
 class ChunkContentManager final : public ComponentManager<

@@ -1,5 +1,9 @@
 #include "minelib/chunks/chunk_manager.h"
 
+#include "mathematics/aabb.h"
+#include "minelib/frustum.h"
+#include "minelib/gizmos_renderer.h"
+
 namespace neko
 {
 //-----------------------------------------------------------------------------
@@ -122,23 +126,47 @@ std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
 
 bool ChunkContentVector::HasBlockAt(const Vec3i& pos) const
 {
+	if (pos.x < 0 || pos.x >= kChunkSize || pos.y < 0 || pos.y >= kChunkSize || pos.z < 0 || pos.z
+		>= kChunkSize)
+	{
+		return false;
+	}
 	BlockId blockId = PosToBlockId(pos);
 	if (blockId < 0 || blockId > kChunkBlockCount - 1)
 	{
 		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
-		return nullptr;
+		return false;
 	}
 	const auto it = std::find_if(blocks.begin(),
-		blocks.end(),
-		[blockId](const ChunkContent& content)
-		{
-			return content.blockId == blockId;
-		});
+	                             blocks.end(),
+	                             [blockId](const ChunkContent& content)
+	                             {
+		                             return content.blockId == blockId;
+	                             });
 	if (it != blocks.end())
 	{
 		return true;
 	}
 	return false;
+}
+
+void ChunkContentVector::CalculateBlockOcclusion()
+{
+	std::vector<ChunkContent> visibleBlocks;
+	for (auto block : blocks)
+	{
+		Vec3i blockPos = BlockIdToPos(block.blockId);
+		if (!HasBlockAt(blockPos + Vec3i::up) ||
+			!HasBlockAt(blockPos + Vec3i::down) ||
+			!HasBlockAt(blockPos + Vec3i::right) ||
+			!HasBlockAt(blockPos + Vec3i::left) ||
+			!HasBlockAt(blockPos + Vec3i::forward) ||
+			!HasBlockAt(blockPos + Vec3i::back))
+		{
+			visibleBlocks.push_back(block);
+		}
+	}
+	blocks = visibleBlocks;
 }
 
 //-----------------------------------------------------------------------------
@@ -389,7 +417,8 @@ std::vector<Index> ChunkStatusManager::GetRenderedChunks()
 std::vector<Index> ChunkStatusManager::GetLoadedChunks()
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling::GetLoadedChunks", profiler::colors::Pink700);
+	EASY_BLOCK("Chunks_System::SetChunkOcclusionCulling::GetLoadedChunks",
+	           profiler::colors::Pink700);
 #endif
 	std::lock_guard<std::mutex> lock(mutex_);
 	std::vector<Index> loadedChunks;
@@ -442,7 +471,9 @@ void ChunkRenderManager::Init(const Entity chunkIndex)
 	glGenBuffers(1, &components_[chunkIndex].vbo);
 }
 
-void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, ChunkContentVector chunkContentVector)
+void ChunkRenderManager::SetChunkValues(
+	const Entity chunkIndex,
+	ChunkContentVector chunkContentVector)
 {
 	const auto blocks = chunkContentVector.blocks;
 	glCheckError();
@@ -469,7 +500,9 @@ void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, ChunkContentVec
 	glEnableVertexAttribArray(6);
 }
 
-void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, std::vector<ChunkContent> chunkContentVector)
+void ChunkRenderManager::SetChunkValues(
+	const Entity chunkIndex,
+	std::vector<ChunkContent> chunkContentVector)
 {
 	const auto blocks = chunkContentVector;
 	glCheckError();
@@ -481,17 +514,17 @@ void ChunkRenderManager::SetChunkValues(const Entity chunkIndex, std::vector<Chu
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkContent) * blocks.size(), &blocks[0], GL_STATIC_DRAW);
 	glCheckError();
 	glVertexAttribIPointer(5,
-		1,
-		GL_SHORT,
-		sizeof(ChunkContent),
-		(void*)offsetof(ChunkContent, blockId));
+	                       1,
+	                       GL_SHORT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, blockId));
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);
 	glVertexAttribIPointer(6,
-		1,
-		GL_UNSIGNED_INT,
-		sizeof(ChunkContent),
-		(void*)offsetof(ChunkContent, texId));
+	                       1,
+	                       GL_UNSIGNED_INT,
+	                       sizeof(ChunkContent),
+	                       (void*)offsetof(ChunkContent, texId));
 	glVertexAttribDivisor(6, 1);
 	glEnableVertexAttribArray(6);
 }
@@ -601,5 +634,4 @@ void ChunkViewer::DrawImGui(const Entity selectedEntity) const
 		TreePop();
 	}
 }
-
 }
