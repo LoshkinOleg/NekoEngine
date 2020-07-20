@@ -2,7 +2,6 @@
 #include "gl/shader.h"
 #include "gl/shape.h"
 
-#include "chunk_manager.h"
 #include "graphics/camera.h"
 #include "graphics/graphics.h"
 #include "graphics/texture.h"
@@ -43,6 +42,9 @@ private:
 	void SetShadowParameters(gl::Shader& shader) const;
 	void SetLightParameters() const;
 	
+
+	std::mutex mutex_;
+
 	Camera& camera_;
 	Camera2D depthCamera_;
 	

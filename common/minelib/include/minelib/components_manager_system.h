@@ -1,6 +1,4 @@
 #pragma once
-#include <engine/transform.h>
-
 #include "minelib/aabb_manager.h"
 #include "minelib/chunks/chunk_manager.h"
 #include "minelib/chunks/chunk_system.h"
@@ -22,7 +20,6 @@ public:
 
 	void Destroy() override;
 
-	Transform3dManager transform3dManager;
 	AabbManager aabbManager;
 	ChunkManager chunkManager;
 	ChunkSystem chunkSystem;

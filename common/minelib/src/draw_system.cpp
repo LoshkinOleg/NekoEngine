@@ -5,6 +5,10 @@
 #include "minelib/aabb_manager.h"
 #include "minelib/minecraft_like_engine.h"
 
+#ifdef EASY_PROFILE_USE
+#include <easy/profiler.h>
+#endif
+
 namespace neko
 {
 DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
@@ -13,7 +17,6 @@ DrawSystem::DrawSystem(MinecraftLikeEngine& engine)
 	  chunkSystem_(engine.componentsManagerSystem.chunkSystem),
 	  gizmosRenderer_(camera_),
 	  entityViewer_(engine.entityManager, engine.entityHierarchy),
-	  transformViewer_(engine.entityManager, engine.componentsManagerSystem.transform3dManager),
 	  chunkViewer_(engine.entityManager, engine.componentsManagerSystem.chunkManager)
 {
 	engine.RegisterSystem(camera_);
@@ -27,21 +30,24 @@ void DrawSystem::Init()
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 
-	camera_.position = Vec3f::up;
+	camera_.position = Vec3f::up * 140;
 }
 
 void DrawSystem::Update(seconds dt)
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("DrawSystem::Update", profiler::colors::Green);
+#endif
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
-	//if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
+	if (raycastOn_)
 	{
-		/*viewBlock_ = AabbLocator::get().RaycastBlock(camera_.position, -camera_.reverseDirection);
+		Ray rayOut;
+		AabbLocator::get().RaycastBlock(rayOut, camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		GizmosLocator::get().DrawCube(viewBlock_.blockPos, Vec3f::one, Color4(1, 1, 1, 1));*/
+		GizmosLocator::get().DrawCube(rayOut.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
-	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_ + savedCameraDir_ * 10);
 }
 
 void DrawSystem::Destroy()
@@ -52,12 +58,28 @@ void DrawSystem::Destroy()
 
 void DrawSystem::DrawImGui()
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("DrawSystem::DrawImGui", profiler::colors::Blue);
+#endif
 	entityViewer_.DrawImGui();
-	transformViewer_.SetSelectedEntity(entityViewer_.GetSelectedEntity());
 	
 	ImGui::Begin("Inspector");
-	transformViewer_.DrawImGui();
 	chunkViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
+	ImGui::End();
+
+	ImGui::Begin("Testing");
+	ImGui::Checkbox("Raycast", &raycastOn_);
+	if (ImGui::Checkbox("Gizmos", &gizmosOn_))
+	{
+		if (gizmosOn_)
+		{
+			gizmosRenderer_.Start();
+		} else
+		{
+			gizmosRenderer_.Stop();
+		}
+	}
+	
 	ImGui::End();
 
 	chunkRenderer_.DrawImGui();

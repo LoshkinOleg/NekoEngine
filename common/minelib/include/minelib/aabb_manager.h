@@ -95,7 +95,6 @@ private:
 	MinecraftLikeEngine& engine_;
 	EntityManager& entityManager_;
 	ChunkManager& chunkManager_;
-	Transform3dManager& transform3dManager_;
 };
 
 using AabbLocator = Locator<IAabbManager, NullAabbManager>;

@@ -12,8 +12,7 @@ namespace neko
 AabbManager::AabbManager(MinecraftLikeEngine& engine)
 	: engine_(engine),
 	  entityManager_(engine.entityManager),
-	  chunkManager_(engine.componentsManagerSystem.chunkManager),
-	  transform3dManager_(engine.componentsManagerSystem.transform3dManager)
+	  chunkManager_(engine.componentsManagerSystem.chunkManager)
 {
 	AabbLocator::provide(this);
 }
@@ -23,7 +22,7 @@ bool AabbManager::RaycastChunk(Ray& ray,
                                const Vec3f& dir) const
 {
 	float rayDist;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
 		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(visibleChunk);
@@ -42,7 +41,7 @@ std::vector<Index> AabbManager::RaycastChunks(const Vec3f& origin, const Vec3f& 
 {
 	float rayDist;
 	std::vector<Index> indices;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
 		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(visibleChunk);
@@ -59,7 +58,7 @@ bool AabbManager::RaycastBlock(Ray& ray,
                                const Vec3f& dir) const
 {
 	float rayDist;
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
+	const auto visibleChunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
 	for (auto visibleChunk : visibleChunks)
 	{
 		const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(visibleChunk));

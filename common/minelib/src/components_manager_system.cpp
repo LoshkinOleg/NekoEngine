@@ -5,8 +5,7 @@
 namespace neko
 {
 ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
-	: transform3dManager(engine.entityManager),
-	  aabbManager(engine),
+	: aabbManager(engine),
 	  chunkManager(engine.entityManager),
 	  chunkSystem(engine)
 {
@@ -15,12 +14,10 @@ ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 
 void ComponentsManagerSystem::Init()
 {
-	transform3dManager.Init();
 }
 
 void ComponentsManagerSystem::Update(seconds dt)
 {
-	transform3dManager.Update();
 }
 
 void ComponentsManagerSystem::Destroy()

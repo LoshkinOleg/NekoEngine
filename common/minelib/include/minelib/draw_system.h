@@ -1,5 +1,4 @@
 #pragma once
-#include <engine/transform.h>
 #include <sdl_engine/sdl_camera.h>
 
 #include "minelib/aabb_manager.h"
@@ -34,12 +33,13 @@ protected:
 	
     //ImGui Viewer
     EntityViewer entityViewer_;
-    Transform3dViewer transformViewer_;
     ChunkViewer chunkViewer_;
     MoveableCamera3D camera_;
 
 	//test
     Vec3f savedCameraPos_;
     Vec3f savedCameraDir_;
+    bool raycastOn_ = false;
+    bool gizmosOn_ = false;
 };
 }

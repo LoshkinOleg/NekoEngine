@@ -2,7 +2,7 @@
 
 namespace neko
 {
-PlayerDrawSystem::PlayerDrawSystem(PlayerEngine& engine)
+PlayerDrawSystem::PlayerDrawSystem(PlayerEngine& engine) : playerProgram_(engine)
 {
 	engine.RegisterSystem(playerProgram_);
 	engine.RegisterOnEvent(playerProgram_);

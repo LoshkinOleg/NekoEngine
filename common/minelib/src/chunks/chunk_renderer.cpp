@@ -33,7 +33,7 @@ void ChunkRenderer::Init()
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.frag");
 	
 	//Load Textures
-	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
+	atlasTex_ = gl::stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
 	
 	InitShadow();
 
@@ -46,6 +46,7 @@ void ChunkRenderer::Init()
 	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
 	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
+
 }
 
 void ChunkRenderer::DrawImGui()
@@ -58,12 +59,12 @@ void ChunkRenderer::DrawImGui()
 		depthCamera_.reverseDirection = -lightDirection;
 	}
 
-	/*Vec3f lightPosition = directionalLight_.position;
+	Vec3f lightPosition = directionalLight_.position;
 	if (ImGui::DragFloat3("Position", &lightPosition[0], 0.01f))
 	{
 		directionalLight_.position = lightPosition;
 		depthCamera_.position = lightPosition;
-	}*/
+	}
 
 	bool shadowToggle = enableShadow;
 	if(ImGui::Checkbox("Enable Shadows", &shadowToggle)) {
@@ -95,7 +96,12 @@ void ChunkRenderer::Update(seconds dt)
 {
 	directionalLight_.position = camera_.position - directionalLight_.direction * 50.0f;
 	depthCamera_.position = directionalLight_.position;
-	
+		
+
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::Update", profiler::colors::Green);
+#endif
+	GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
 void ChunkRenderer::Render()
@@ -122,7 +128,7 @@ void ChunkRenderer::Render()
 
 	RenderScene(shader_);
 	
-	GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
+	//GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
 }
 
 	
@@ -131,19 +137,12 @@ void ChunkRenderer::RenderScene(gl::Shader& shader) const
 	SetCameraParameters(camera_, shader);
 	
 	SetShadowParameters(shader);
-	
-	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
-	for (auto& chunk : visibleChunks)
-	{
-		if (chunkManager_.chunkContentManager.GetChunkSize(chunk) == 0)
-			chunkManager_.chunkStatusManager.AddStatus(chunk, ChunkFlag::EMPTY);
-		else
-			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
-		if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
-			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
-			continue;
 
-		shader.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
+	glBindTexture(GL_TEXTURE_2D, atlasTex_);
+	const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
+	for (auto& chunk : renderedChunks)
+	{		
+		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
 		chunkManager_.chunkRenderManager.Draw(chunk);
 	}
 }

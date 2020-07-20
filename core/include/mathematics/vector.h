@@ -379,11 +379,26 @@ struct Vec3
 	    : x(X), y(Y), z(Z)
     {
     }
+	
+	explicit Vec3(Vec2<T> v) : x(v.x), y(v.y),z(0)
+    {
+	    
+    }
+	explicit Vec3(Vec4<T> v) : x(v.x), y(v.y), z(v.z)
+    {
+	    
+    }
 
-    explicit Vec3(const T* ptr)
-	    : x(ptr[0]),
-	      y(ptr[1]),
-	      z(ptr[2])
+    /**
+     * \brief Adding explicit constructor for vector-like type
+     */
+    template <class U>
+    explicit Vec3(const U& u) :
+        x(u.x), y(u.y), z(u.z)
+    {
+    }
+
+	explicit Vec3(const T* ptr) : x(ptr[0]), y(ptr[1]), z(ptr[2])
     {
     }
 
@@ -412,14 +427,6 @@ struct Vec3
     {
     }
 	
-    /**
-     * \brief Adding explicit constructor for vector-like type
-     */
-    template <class U>
-    explicit Vec3(const U& u) :
-	    x(u.x), y(u.y), z(u.z)
-    {
-    }
 
     //-----------------------------------------------------------------------------
     // Operators
@@ -588,6 +595,20 @@ struct Vec3
         return inVec - normalized * 2 * Dot(inVec, normalized);
     }
 
+	static Vec3<T> Refract(const Vec3<T>& inVec, const Vec3<T>& normal, const T eta)
+    {
+        Vec3<T> N = normal.Normalized();
+    	const T k = 1 - eta * eta * (1.0 - Dot(N, inVec) * Dot(N, inVec));
+    	if(k < 0)
+    	{
+            return Vec3<T>::zero;
+    	}
+        else
+        {
+	        return eta * inVec - (eta * Dot(N, inVec) + std::sqrt(k)) * N;
+        }
+    }
+
     /// \brief Project v1 on v2 (doesn't need to be normalized).
     /// \param v1 the vector to project.
     /// \param v2 the vector to project on.
@@ -706,11 +727,20 @@ struct alignas(4 * sizeof(T)) Vec4
     }
 
     template<typename U>
-    explicit Vec4(const Vec4<U>& vec4)
-            : x(static_cast<T>(vec4.x)),
-              y(static_cast<T>(vec4.y)),
-              z(static_cast<T>(vec4.z)),
-              w(static_cast<T>(vec4.w))
+    explicit Vec4(const Vec3<U>& vec3, U w)
+            : x(static_cast<T>(vec3.x)),
+              y(static_cast<T>(vec3.y)),
+              z(static_cast<T>(vec3.z)),
+              w(static_cast<T>(w))
+    {
+    }
+
+    template<typename U>
+    explicit Vec4(const Vec4<U>& vector)
+            : x(static_cast<T>(vector.x)),
+              y(static_cast<T>(vector.y)),
+              z(static_cast<T>(vector.z)),
+              w(static_cast<T>(vector.w))
     {
     }
 

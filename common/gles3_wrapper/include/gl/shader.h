@@ -8,12 +8,10 @@
 
 namespace neko::gl
 {
-class Shader : neko::Shader
+class Shader : public neko::Shader
 {
 public:
-    void LoadFromFile(
-            std::string_view vertexShaderPath,
-            std::string_view fragmentShaderPath) override;
+    void LoadFromFile(const std::string_view vertexShaderPath, const std::string_view fragmentShaderPath) override;
 
     void Bind() const;
 
@@ -52,6 +50,9 @@ public:
 
     void SetTexture(const std::string& name, const neko::Texture& texture, unsigned int slot = 0) const ;
     void SetTexture(const std::string& name, TextureId texture, unsigned int slot = 0) const;
+	
+    void SetCubemap(const std::string& name, const neko::Texture& texture, unsigned int slot = 0);
+    void SetCubemap(const std::string& name, TextureId texture, unsigned int slot = 0);
 private:
     GLuint shaderProgram_ = 0;
 };

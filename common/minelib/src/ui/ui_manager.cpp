@@ -19,7 +19,7 @@ void UiManager::AddUiElement(UiElement* uiElement)
 	uiElements_.push_back(uiElement);
 
 	if (uiElement->textureId == INVALID_TEXTURE_ID)
-		uiElement->textureId = stbCreateTexture(uiElement->texturePath, gl::Texture::CLAMP_WRAP);
+		uiElement->textureId = gl::stbCreateTexture(uiElement->texturePath, gl::Texture::CLAMP_WRAP);
 	
 	const auto& config = BasicEngine::GetInstance()->config;
 	uiElement->Init(config.windowSize);
