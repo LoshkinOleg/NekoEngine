@@ -10,6 +10,7 @@ ComponentsManagerSystem::ComponentsManagerSystem(MinecraftLikeEngine& engine)
 	  chunkSystem(engine)
 {
 	engine.RegisterSystem(chunkSystem);
+	engine.RegisterOnDrawUi(chunkSystem);
 }
 
 void ComponentsManagerSystem::Init()

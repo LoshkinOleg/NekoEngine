@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <minelib/chunks/chunk.h>
+#include <minelib/chunks/chunk_manager.h>
 
 namespace neko
 {
@@ -12,7 +13,7 @@ class EntityManager;
 class Transform3dManager;
 class MinecraftLikeEngine;
 
-class ChunkSystem final : public RenderCommandInterface, public SystemInterface
+class ChunkSystem final : public RenderCommandInterface, public SystemInterface, public DrawImGuiInterface
 {
 public:
 	explicit ChunkSystem(MinecraftLikeEngine& engine);
@@ -28,15 +29,23 @@ public:
 
 	void Destroy() override;
 
+	void DrawImGui() override;
+	
 private:
 
-	bool CalculateOcclusionStatus(ChunkContentVector chunkContent, ChunkFlag occludeDir) const;
+	/**
+	 * \brief Calculate if a chunk occlude other chunks
+	 */
+	bool CalculateOcclusionStatus(const ChunkContentVector& chunkContent, ChunkFlag occludeDir) const;
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
-	Entity GenerateChunkArray(Entity newChunkIndex, const Vec3i& pos);
+	Entity GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos);
 
-	void SetChunkOcclusionCulling(Entity chunkIndex) const;
+	/**
+	 * \brief Calculate if a chunk is occluded
+	 */
+	void CalculateVisibleStatus(Entity chunkIndex) const;
 
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
@@ -50,7 +59,9 @@ private:
 	EntityManager& entityManager_;
 	MinecraftLikeEngine& engine_;
 
-	std::vector<std::function<void()>> scheduledChunks_;
-	std::vector<std::unique_ptr<Job>> generationJobs_;
+	std::vector<std::function<void()>> scheduledRenderValues_;
+	std::vector<std::unique_ptr<Job>> scheduledGenerationJobs_;
+	std::vector<Entity> dirtyChunks_;
+	
 };
 }
