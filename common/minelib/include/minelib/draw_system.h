@@ -37,6 +37,7 @@ protected:
     MoveableCamera3D camera_;
 
 	//test
+    Ray rayOut_;
     Vec3f savedCameraPos_;
     Vec3f savedCameraDir_;
     bool raycastOn_ = false;
