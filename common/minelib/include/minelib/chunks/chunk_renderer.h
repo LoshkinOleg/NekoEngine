@@ -35,21 +35,36 @@ public:
 
 	void DrawImGui();
 
-	void SetCameraParameters(const Camera& camera) const;
-
-	void SetLightParameters() const;
-
 private:
-	std::mutex mutex_;
-	Camera& camera_;
+	void InitShadow();
+	void RenderScene(gl::Shader& shader) const;
+	void SetCameraParameters(const Camera& camera, gl::Shader& shader) const;
+	void SetShadowParameters(gl::Shader& shader) const;
+	void SetLightParameters() const;
+	
 
+	std::mutex mutex_;
+
+	Camera& camera_;
+	Camera2D depthCamera_;
+	
 	MinecraftLikeEngine& engine_;
 	ChunkManager& chunkManager_;
 
 	DirectionalLight directionalLight_;
 
+	//Shaders
 	gl::Shader shader_;
+	gl::Shader simpleDepthShader_;
+
 	TextureId atlasTex_ = 0;
 	gl::RenderCuboid cube_{Vec3f::zero, Vec3f::one};
+
+	//Shadow
+	const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+	unsigned int depthMapFBO = 0;
+	unsigned int depthMap_ = 0;
+	const float bias_ = 0.00002f;
+	bool enableShadow = true;
 };
 }

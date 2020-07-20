@@ -16,6 +16,7 @@ struct Light
     vec3 color;
     vec3 direction;
 };
+
 uniform Light light;
 uniform vec3 viewPos;
 uniform float ambientStrength;
