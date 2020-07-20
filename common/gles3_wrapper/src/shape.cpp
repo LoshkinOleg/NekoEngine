@@ -295,6 +295,7 @@ void RenderCuboid::Init()
 		tangent[i + 1] = tangent[i];
 		tangent[i + 2] = tangent[i];
 	}
+	glCheckError();
 
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(4, &vbo[0]);
@@ -305,21 +306,25 @@ void RenderCuboid::Init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(position), position, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
+	glCheckError();
 	// texture coord attribute
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(1);
+	glCheckError();
 	// normal attribute
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(2);
+	glCheckError();
 	//tangent attribute
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(tangent), tangent, GL_STATIC_DRAW);
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(3);
+	glCheckError();
 }
 
 void RenderCuboid::InitInstanced(const Vec3f& positions, const int count)
@@ -347,7 +352,9 @@ void RenderCuboid::Draw() const
 void RenderCuboid::DrawInstanced(const unsigned count) const
 {
 	glBindVertexArray(vao);
+	glCheckError();
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, count);
+	glCheckError();
 }
 
 void RenderCuboid::Destroy()

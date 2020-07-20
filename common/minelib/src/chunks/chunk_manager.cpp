@@ -469,6 +469,7 @@ void ChunkRenderManager::Init(const Entity chunkIndex)
 	std::lock_guard<std::mutex> lock(mutex_);
 	components_[chunkIndex].cube.Init();
 	glGenBuffers(1, &components_[chunkIndex].vbo);
+	glCheckError();
 }
 
 void ChunkRenderManager::SetChunkValues(
@@ -491,6 +492,7 @@ void ChunkRenderManager::SetChunkValues(
 	                       (void*)offsetof(ChunkContent, blockId));
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);
+	glCheckError();
 	glVertexAttribIPointer(6,
 	                       1,
 	                       GL_UNSIGNED_INT,
@@ -498,6 +500,7 @@ void ChunkRenderManager::SetChunkValues(
 	                       (void*)offsetof(ChunkContent, texId));
 	glVertexAttribDivisor(6, 1);
 	glEnableVertexAttribArray(6);
+	glCheckError();
 }
 
 void ChunkRenderManager::SetChunkValues(
@@ -520,6 +523,7 @@ void ChunkRenderManager::SetChunkValues(
 	                       (void*)offsetof(ChunkContent, blockId));
 	glVertexAttribDivisor(5, 1);
 	glEnableVertexAttribArray(5);
+	glCheckError();
 	glVertexAttribIPointer(6,
 	                       1,
 	                       GL_UNSIGNED_INT,
@@ -527,6 +531,7 @@ void ChunkRenderManager::SetChunkValues(
 	                       (void*)offsetof(ChunkContent, texId));
 	glVertexAttribDivisor(6, 1);
 	glEnableVertexAttribArray(6);
+	glCheckError();
 }
 
 void ChunkRenderManager::Draw(const Entity chunkIndex)

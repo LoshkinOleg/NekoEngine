@@ -157,19 +157,19 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 					case 0:
 						break;
 					case 1:
-						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, kChunkSize - y, z)));
 						break;
 					case 2:
-						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, kChunkSize - y, z)));
 						break;
 					case 3:
-						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, kChunkSize - y, z)));
 						break;
 					case 4:
-						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, kChunkSize - y, z)));
 						break;
 					case 5:
-						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, -y, z)));
+						chunkContent.SetBlock(randBlock, PosToBlockId(Vec3i(x, kChunkSize - y, z)));
 						break;
 					}
 				}
