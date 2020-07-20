@@ -39,7 +39,7 @@ void HelloShadowProgram::Init()
 	depthCamera_.reverseDirection = -light_.lightDir;
 	
 	camera_.position = Vec3f(0, 3, 3);
-	camera_.LookAt(Vec3f::zero);
+	camera_.WorldLookAt(Vec3f::zero);
 
 	simpleDepthShader_.LoadFromFile(config.dataRootPath + "shaders/21_hello_shadow/simple_depth.vert",
 		config.dataRootPath + "shaders/21_hello_shadow/simple_depth.frag");

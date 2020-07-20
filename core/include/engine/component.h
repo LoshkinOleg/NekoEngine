@@ -56,7 +56,8 @@ enum class ComponentType : EntityMask
 	CHUNK_STATUS = 1u << 15u,
 	CHUNK_POS = 1u << 16u,
 	CHUNK_RENDER = 1u << 17u,
-	OTHER_TYPE = 1u << 18u
+	PLAYER = 1u << 18u,
+	OTHER_TYPE = 1u << 19u
 };
 
 struct Component

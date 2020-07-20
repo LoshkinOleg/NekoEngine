@@ -27,6 +27,7 @@ struct Gizmos
 	Vec3f pos = Vec3f::zero;
 	Color4 color = Color::red;
 	GizmoShape shape = GizmoShape::CUBE;
+	float lineThickness = 1.0f;
 
 	union
 	{
@@ -48,7 +49,8 @@ public:
 	virtual void DrawCube(
 		const Vec3f& pos,
 		const Vec3f& size = Vec3f::one,
-		const Color4& color = Color::red) = 0;
+		const Color4& color = Color::red,
+		float lineThickness = 1.0f) = 0;
 
 	/**
 	 * \brief Generate a line.
@@ -56,9 +58,11 @@ public:
 	virtual void DrawLine(
 		const Vec3f& startPos,
 		const Vec3f& endPos,
-		const Color4& color = Color::red) = 0;
+		const Color4& color = Color::red,
+		float lineThickness = 1.0f) = 0;
 	
-	virtual Vec3f GetCameraPos() const = 0;
+	virtual void SetCamera(Camera* camera) = 0;
+	virtual Camera* GetCamera() const = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -70,18 +74,21 @@ class NullGizmosRenderer final : public IGizmosRenderer
 	void DrawCube(
 		[[maybe_unused]] const Vec3f& pos,
 		[[maybe_unused]] const Vec3f& size = Vec3f::one,
-		[[maybe_unused]] const Color4& color = Color::red) override
+		[[maybe_unused]] const Color4& color = Color::red,
+		[[maybe_unused]] float lineThickness = 1.0f) override
 	{
 	}
 
 	void DrawLine(
 		[[maybe_unused]] const Vec3f& startPos,
 		[[maybe_unused]] const Vec3f& endPos,
-		[[maybe_unused]] const Color4& color = Color::red) override
+		[[maybe_unused]] const Color4& color = Color::red,
+		[[maybe_unused]] float lineThickness = 1.0f) override
 	{
 	}
-
-	Vec3f GetCameraPos() const override { return {}; }
+	
+	void SetCamera([[maybe_unused]] Camera* camera) override {}
+	Camera* GetCamera() const override { return nullptr; }
 };
 
 //-----------------------------------------------------------------------------
@@ -93,7 +100,7 @@ class GizmosRenderer final : public RenderCommandInterface,
                              public IGizmosRenderer
 {
 public:
-	explicit GizmosRenderer(Camera& camera);
+	explicit GizmosRenderer(Camera* camera);
 
 	void Init() override;
 
@@ -107,19 +114,20 @@ public:
 	void DrawCube(
 		const Vec3f& pos,
 		const Vec3f& size = Vec3f::one,
-		const Color4& color = Color::red) override;
+		const Color4& color = Color::red,
+		float lineThickness = 1.0f) override;
 
 	void DrawLine(
 		const Vec3f& startPos,
 		const Vec3f& endPos,
-		const Color4& color = Color::red) override;
+		const Color4& color = Color::red,
+		float lineThickness = 1.0f) override;
 
-	Vec3f GetCameraPos() const override { return camera_.position; }
+	void SetCamera(Camera* camera) override;
+	Camera* GetCamera() const override { return camera_; }
 	
 private:
-	std::mutex updateMutex_;
-
-	Camera& camera_;
+	Camera* camera_;
 
 	gl::RenderWireFrameCuboid cube_{Vec3f::zero, Vec3f::one};
 	gl::RenderLine3d line_{Vec3f::zero, Vec3f::one};

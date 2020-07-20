@@ -31,7 +31,7 @@ void HelloBloomProgram::Init()
     screenPlane_.Init();
 
     camera_.position = Vec3f::forward*5.0f;
-    camera_.LookAt(Vec3f::zero);
+    camera_.WorldLookAt(Vec3f::zero);
     // configure (floating point) framebuffers
     // ---------------------------------------
 

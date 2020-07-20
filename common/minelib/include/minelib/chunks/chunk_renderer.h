@@ -24,7 +24,7 @@ class ChunkManager;
 class ChunkRenderer final : public RenderCommandInterface, public SystemInterface
 {
 public:
-	ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera);
+	ChunkRenderer(MinecraftLikeEngine& engine, Camera* camera);
 
 	void Init() override;
 	void Update(seconds dt) override;
@@ -38,9 +38,12 @@ public:
 	void SetCameraParameters(const Camera& camera) const;
 
 	void SetLightParameters() const;
+	
+	void SetCamera(Camera* camera);
+	Camera* GetCameraPos() const { return camera_; }
 
 private:
-	Camera& camera_;
+	Camera* camera_;
 
 	MinecraftLikeEngine& engine_;
 	ChunkManager& chunkManager_;

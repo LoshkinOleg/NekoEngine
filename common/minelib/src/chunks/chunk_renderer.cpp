@@ -12,7 +12,7 @@
 
 namespace neko
 {
-ChunkRenderer::ChunkRenderer(MinecraftLikeEngine& engine, Camera& camera)
+ChunkRenderer::ChunkRenderer(MinecraftLikeEngine& engine, Camera* camera)
 	: camera_(camera),
 	  engine_(engine),
 	  chunkManager_(engine.componentsManagerSystem.chunkManager)
@@ -29,7 +29,7 @@ void ChunkRenderer::Init()
 	shader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/base/cube_vertex.vert",
 		config.dataRootPath + "shaders/minecraft_like/base/cube.frag");
-	atlasTex_ = stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
+	atlasTex_ = gl::stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
 	
 	RendererLocator::get().Render(this);
 }
@@ -64,7 +64,7 @@ void ChunkRenderer::Render()
 	EASY_BLOCK("ChunkRenderer::Render");
 #endif
 	shader_.Bind();
-	SetCameraParameters(camera_);
+	SetCameraParameters(*camera_);
 	glBindTexture(GL_TEXTURE_2D, atlasTex_);
 	const auto visibleChunks = chunkManager_.chunkStatusManager.GetVisibleChunks();
 	for (auto& chunk : visibleChunks)
@@ -74,7 +74,8 @@ void ChunkRenderer::Render()
 		else
 			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::EMPTY);
 		if (!chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::LOADED) ||
-			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY))
+			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::EMPTY) ||
+			chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::OCCLUDED))
 			continue;
 		
 		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
@@ -100,6 +101,11 @@ void ChunkRenderer::SetLightParameters() const
 	shader_.SetFloat("ambientStrength", directionalLight_.ambientStrength_);
 	shader_.SetFloat("diffuseStrength", directionalLight_.diffuseStrength_);
 	shader_.SetFloat("specularStrength", directionalLight_.specularStrength_);
+}
+
+void ChunkRenderer::SetCamera(Camera* camera)
+{
+	camera_ = camera;
 }
 
 void ChunkRenderer::Destroy()

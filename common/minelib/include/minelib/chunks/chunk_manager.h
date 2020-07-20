@@ -25,18 +25,18 @@ class ChunkContentManager final : public ComponentManager<ChunkContentVector, Co
 public:
 	Index AddComponent(Entity chunkIndex) override;
 	
-	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, const Vec3i& pos);
-	void SetBlock(Entity chunkIndex, std::shared_ptr<Block> block, BlockId blockId);
+	void SetBlock(Entity chunkIndex, const Block& block, const Vec3i& pos);
+	void SetBlock(Entity chunkIndex, const Block& block, BlockId blockId);
 
-	void FillOfBlock(Entity chunkIndex, std::shared_ptr<Block> block);
+	void FillOfBlock(Entity chunkIndex, const Block& block);
 
 	void RemoveBlock(Entity chunkIndex, const Vec3i& pos);
 	void RemoveBlock(Entity chunkIndex, BlockId blockId);
 
 	size_t GetChunkSize(Entity chunkIndex) const;
 	ChunkContentVector GetBlocks(Entity chunkIndex) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, const Vec3i& pos) const;
-	std::shared_ptr<ChunkContent> GetBlock(Entity chunkIndex, BlockId blockId) const;
+	ChunkContent& GetBlock(Entity chunkIndex, const Vec3i& pos);
+	ChunkContent& GetBlock(Entity chunkIndex, BlockId blockId);
 
 	void DestroyComponent(Entity chunkIndex) override;
 };
@@ -54,6 +54,8 @@ enum class ChunkFlag : std::uint16_t
 	OCCLUDE_LEFT = 1u << 7u,
 	OCCLUDE_FRONT = 1u << 8u,
 	OCCLUDE_BACK = 1u << 9u,
+	OCCLUDED = 1u << 10u,
+	DIRTY = 1u << 11u
 };
 
 class ChunkStatusManager final : public ComponentManager<ChunkMask, ComponentType::CHUNK_STATUS>
@@ -90,7 +92,9 @@ public:
 	ChunkRenderManager(EntityManager& entityManager, ChunkContentManager& chunkContentManager);
 
 	Index AddComponent(Entity chunkIndex) override;
-	
+
+	void Init(Entity chunkIndex);
+
 	void Draw(Entity chunkIndex) const;
 	void SetChunkValues(Entity chunkIndex);
 

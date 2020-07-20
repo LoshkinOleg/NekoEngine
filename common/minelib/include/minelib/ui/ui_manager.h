@@ -36,11 +36,11 @@ class UiManager final : public RenderCommandInterface,
                         public IUiManager
 {
 public:
-	UiManager() = default;
+	explicit UiManager();
 
 	void Init() override;
 
-	void Update(seconds dt) override {}
+	void Update(seconds dt) override;
 	void FixedUpdate() override {}
 
 	void AddUiElement(UiElement* uiElement) override;
@@ -52,8 +52,6 @@ public:
 	void Destroy() override;
 
 private:
-	std::mutex updateMutex_;
-
 	gl::Shader uiShader_;
 	std::vector<UiElement*> uiElements_{};
 };

@@ -16,6 +16,8 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 	RegisterOnDrawUi(drawSystem_);
 	RegisterSystem(componentsManagerSystem);
 	RegisterSystem(blockManager);
+	RegisterSystem(uiManager);
+	RegisterOnEvent(uiManager);
 #ifdef EASY_PROFILE_USE
 	EASY_PROFILER_ENABLE;
 #endif
@@ -25,9 +27,6 @@ MinecraftLikeEngine::MinecraftLikeEngine(Configuration* config)
 void MinecraftLikeEngine::Init()
 {
 	SdlEngine::Init();
-	//Temporary scene init
-    const auto entity = entityManager.CreateEntity();
-	componentsManagerSystem.transform3dManager.AddComponent(entity);
 }
 
 void MinecraftLikeEngine::Destroy()

@@ -1,10 +1,10 @@
 #pragma once
 #include <sdl_engine/sdl_engine.h>
 
-
 #include "blocks/block_manager.h"
 #include "components_manager_system.h"
 #include "draw_system.h"
+#include "ui/ui_manager.h"
 
 namespace neko
 {
@@ -26,6 +26,7 @@ public:
 	EntityHierarchy entityHierarchy;
 	ComponentsManagerSystem componentsManagerSystem;
 	BlockManager blockManager;
+	UiManager uiManager;
 private :
 	DrawSystem drawSystem_;
 

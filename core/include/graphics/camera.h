@@ -17,7 +17,7 @@ struct Camera
 	float nearPlane = 0.1f;
 	float farPlane = 10'000.0f;
 
-	void LookAt(const Vec3f& target)
+	void WorldLookAt(const Vec3f& target)
 	{
 		const Vec3f direction = position - target;
 		reverseDirection = direction.Normalized();
@@ -153,6 +153,14 @@ struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 		inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
 	{
 	}
+	
+	MovableCamera& operator=(const MovableCamera& other)
+	{
+		mouseSpeed = other.mouseSpeed;
+		moveSpeed = other.moveSpeed;
+	
+		return *this;
+	}
 protected:
 	Vec2f mouseMotion_;
 	sdl::InputManager& inputManager_;
@@ -287,6 +295,24 @@ struct FpsCamera final : public MoveableCamera3D
 {
 	bool freezeCam = false;
 
+	FpsCamera& operator=(const FpsCamera& other)
+	{
+		position = other.position;
+		reverseDirection = other.reverseDirection;
+		
+		farPlane = other.farPlane;
+		nearPlane = other.nearPlane;
+		fovY = other.fovY;
+		
+		mouseSpeed = other.mouseSpeed;
+		moveSpeed = other.moveSpeed;
+		mouseMotion_ = other.mouseMotion_;
+		
+		freezeCam = other.freezeCam;
+	
+		return *this;
+	}
+
 	void Init() override
 	{
 		SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -294,6 +320,16 @@ struct FpsCamera final : public MoveableCamera3D
 
 	void Update(const seconds dt) override
 	{
+		//Check if left click is pressed
+		if (!freezeCam)
+		{
+			Rotate(EulerAngles(
+					degree_t(mouseMotion_.y),
+					degree_t(mouseMotion_.x),
+					degree_t(0.0f)
+			));
+			mouseMotion_ = Vec2f::zero;
+		}
 	}
 
 	void FixedUpdate() override
@@ -342,13 +378,7 @@ struct FpsCamera final : public MoveableCamera3D
 		if (!freezeCam)
 		{
 			if (event.type == SDL_MOUSEMOTION)
-			{
-				Rotate(EulerAngles(
-						degree_t(-event.motion.yrel) * mouseSpeed,
-						degree_t(-event.motion.xrel) * mouseSpeed,
-						degree_t(0.0f)
-				));
-			}
+				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
 			
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}
