@@ -26,7 +26,7 @@ bool AabbManager::RaycastChunk(Ray& ray,
 	for (auto accessibleChunk : accessibleChunks)
 	{
 		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(accessibleChunk);
-		if (aabb.IntersectRay(origin, dir, rayDist))
+		if (aabb.IntersectRay(dir, origin, rayDist))
 		{
 			ray.hitChunk = accessibleChunk;
 			ray.hitDist = rayDist;
@@ -45,7 +45,7 @@ std::vector<Index> AabbManager::RaycastChunks(const Vec3f& origin, const Vec3f& 
 	for (auto accessibleChunk : accessibleChunks)
 	{
 		const Aabb3d aabb = chunkManager_.chunkPosManager.GetAabb(accessibleChunk);
-		if (aabb.IntersectRay(origin, dir, rayDist))
+		if (aabb.IntersectRay(dir, origin, rayDist))
 		{
 			indices.push_back(accessibleChunk);
 		}

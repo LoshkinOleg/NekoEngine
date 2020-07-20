@@ -45,11 +45,15 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&gizmosRenderer_);
 	if (raycastOn_)
 	{
+		rayOut_ = Ray();
 		AabbLocator::get().RaycastBlock(rayOut_, camera_.position, -camera_.reverseDirection);
 		savedCameraDir_ = -camera_.reverseDirection;
 		savedCameraPos_ = camera_.position;
-		GizmosLocator::get().DrawCube(rayOut_.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
 	}
+	GizmosLocator::get().DrawCube(savedCameraPos_, Vec3f::one, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawCube(rayOut_.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_+savedCameraDir_*10, Color4(1, 1, 1, 1));
+	GizmosLocator::get().DrawLine(savedCameraPos_, rayOut_.hitAabb.CalculateCenter(), Color4(1, 1, 1, 1));
 }
 
 void DrawSystem::Destroy()
