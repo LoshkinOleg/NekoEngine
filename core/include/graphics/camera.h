@@ -324,6 +324,7 @@ struct FpsCamera final : public MoveableCamera3D
 		mouseSpeed = other.mouseSpeed;
 		moveSpeed = other.moveSpeed;
 		mouseMotion_ = other.mouseMotion_;
+		aspect_ = other.aspect_;
 
 		freezeCam = other.freezeCam;
 
