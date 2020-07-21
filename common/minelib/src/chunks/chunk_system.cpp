@@ -67,7 +67,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 				}
 			}
 			break;
-		case ChunkFlag::OCCLUDE_RIGHT:
+		case ChunkFlag::OCCLUDE_FRONT:
 			for (int x = 0; x < kChunkSize; x++)
 			{
 				for (int y = 0; y < kChunkSize; y++)
@@ -79,7 +79,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 				}
 			}
 			break;
-		case ChunkFlag::OCCLUDE_LEFT:
+		case ChunkFlag::OCCLUDE_BACK:
 			for (int x = 0; x < kChunkSize; x++)
 			{
 				for (int y = 0; y < kChunkSize; y++)
@@ -91,7 +91,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 				}
 			}
 			break;
-		case ChunkFlag::OCCLUDE_FRONT:
+		case ChunkFlag::OCCLUDE_LEFT:
 			for (int z = 0; z < kChunkSize; z++)
 			{
 				for (int y = 0; y < kChunkSize; y++)
@@ -103,7 +103,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 				}
 			}
 			break;
-		case ChunkFlag::OCCLUDE_BACK:
+		case ChunkFlag::OCCLUDE_RIGHT:
 			for (int z = 0; z < kChunkSize; z++)
 			{
 				for (int y = 0; y < kChunkSize; y++)
