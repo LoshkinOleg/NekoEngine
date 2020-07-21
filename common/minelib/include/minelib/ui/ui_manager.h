@@ -14,7 +14,7 @@ const static size_t kMaxUiElements = 16;
 class IUiManager
 {
 public:
-	virtual void AddUiElement(UiElement uiElement) = 0;
+	virtual void AddUiElement(UiElement* uiElement) = 0;
 protected:
 	~IUiManager() = default;
 };
@@ -25,7 +25,7 @@ protected:
 /// \brief Used for the service locator
 class NullUiManager final : public IUiManager
 {
-	void AddUiElement([[maybe_unused]] UiElement uiElement) override {}
+	void AddUiElement([[maybe_unused]] UiElement* uiElement) override {}
 };
 
 //-----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ public:
 	void Update(seconds dt) override;
 	void FixedUpdate() override {}
 
-	void AddUiElement(UiElement uiElement) override;
+	void AddUiElement(UiElement* uiElement) override;
 
 	void Render() override;
 
@@ -55,7 +55,7 @@ public:
 
 private:
 	gl::Shader uiShader_;
-	std::vector<UiElement> uiElements_{};
+	std::vector<UiElement*> uiElements_{};
 };
 
 using UiManagerLocator = Locator<IUiManager, NullUiManager>;

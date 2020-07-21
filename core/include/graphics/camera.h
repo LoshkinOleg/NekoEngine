@@ -11,13 +11,17 @@ namespace neko
 {
 struct Camera
 {
-	virtual ~Camera() = default;
-
 	Vec3f position = Vec3f::back;
-	Vec3f reverseDirection = Vec3f::back, rightDirection = Vec3f::right, upDirection = Vec3f::up;
+	Vec3f reverseDirection = Vec3f::back;
+
 	float nearPlane = 0.1f;
 	float farPlane = 10'000.0f;
 
+	void WorldLookAt(const Vec3f& target)
+	{
+		const Vec3f direction = position - target;
+		reverseDirection = direction.Normalized();
+	}
 
 	[[nodiscard]] Vec3f GetRight() const
 	{
@@ -55,15 +59,6 @@ struct Camera
 		});
 	}
 
-	void WorldLookAt(Vec3f target, Vec3f lookUp = Vec3f::down)
-	{
-		reverseDirection = (position - target).Normalized();
-		if (reverseDirection.x == 0.0f && reverseDirection.z == 0.0f)
-			rightDirection = Vec3f::Cross(Vec3f::forward, reverseDirection).Normalized();
-		rightDirection = Vec3f::Cross(Vec3f::up, reverseDirection).Normalized();
-		upDirection = Vec3f::Cross(reverseDirection, rightDirection).Normalized();
-	}
-
 	[[nodiscard]] Mat4f GenerateViewMatrix() const
 	{
 		const Mat4f rotation = GetRotationMat();
@@ -87,13 +82,15 @@ struct Camera
 			Abs(camRot.x.value()) < 91.0f && Sign(reverseDirection.z) != 1)
 			pitch = Quaternion::Identity;
 		else
-			pitch = Quaternion::AngleAxis(angles.x, rightDirection);
-		const auto yaw = Quaternion::AngleAxis(angles.y, upDirection);
+			pitch = Quaternion::AngleAxis(angles.x, GetRight());
+
+		const auto yaw = Quaternion::AngleAxis(angles.y, GetUp());
+
 		const auto roll = Quaternion::AngleAxis(angles.z, reverseDirection);
+
+		const Quaternion rotation = pitch * yaw * roll;
 		reverseDirection = Vec3f(
-				Transform3d::RotationMatrixFrom(pitch * yaw * roll) * Vec4f(reverseDirection)).
-			Normalized();
-		WorldLookAt(-reverseDirection + position);
+			Transform3d::RotationMatrixFrom(rotation) * Vec4f(reverseDirection));
 	}
 
 	float GetAspect() const { return aspect_; }
@@ -103,7 +100,7 @@ struct Camera
 		aspect_ = static_cast<float>(width) / static_cast<float>(height);
 	}
 
-	[[nodiscard]] virtual Mat4f GenerateProjectionMatrix() const = 0;
+	virtual Mat4f GenerateProjectionMatrix() const = 0;
 
 protected:
 	float aspect_ = 1.0f;
@@ -126,6 +123,7 @@ struct Camera2D : Camera
 		});
 	}
 
+
 	void SetSize(const Vec2f& size)
 	{
 		left = -size.x;
@@ -136,7 +134,7 @@ struct Camera2D : Camera
 
 	Vec2f GetSize() const
 	{
-		return {right, top};
+		return { right, top };
 	}
 };
 
@@ -161,12 +159,20 @@ struct Camera3D : Camera
 
 struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 {
-	float moveSpeed = 2.5f;
+	float moveSpeed = 5.0f;
 	float mouseSpeed = 1.0f;
 
 	MovableCamera()
 		: inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))
 	{
+	}
+
+	MovableCamera& operator=(const MovableCamera& other)
+	{
+		mouseSpeed = other.mouseSpeed;
+		moveSpeed = other.moveSpeed;
+
+		return *this;
 	}
 
 protected:
@@ -213,7 +219,7 @@ struct MoveableCamera2D final : Camera2D, MovableCamera
 			cameraMove *= 3.0f;
 
 		//Apply camera movement
-		position += (rightDirection * cameraMove.x +
+		position += (GetRight() * cameraMove.x +
 			Vec3f::up * cameraMove.y -
 			reverseDirection * cameraMove.z) * moveSpeed;
 	}
@@ -272,10 +278,10 @@ struct MoveableCamera3D : Camera3D, public MovableCamera
 
 		//Boost key test
 		if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
-			cameraMove *= 25.0f;
+			cameraMove *= 3.0f;
 
 		//Apply camera movement
-		position += (rightDirection * cameraMove.x +
+		position += (GetRight() * cameraMove.x +
 			Vec3f::up * cameraMove.y -
 			reverseDirection * cameraMove.z) * moveSpeed;
 	}
@@ -335,10 +341,10 @@ struct FpsCamera final : public MoveableCamera3D
 		if (!freezeCam)
 		{
 			Rotate(EulerAngles(
-					degree_t(mouseMotion_.y),
-					degree_t(mouseMotion_.x),
-					degree_t(0.0f)
-			));
+				degree_t(mouseMotion_.y),
+				degree_t(mouseMotion_.x),
+				degree_t(0.0f)
+				));
 			mouseMotion_ = Vec2f::zero;
 		}
 	}
@@ -346,8 +352,8 @@ struct FpsCamera final : public MoveableCamera3D
 	void FixedUpdate() override
 	{
 		if (!freezeCam)
-		{	
-			//Movement keys tests
+		{
+			//Checking if keys are down
 			Vec3f cameraMove = Vec3f();
 			if (inputManager_.IsActionHeld(sdl::InputAction::RIGHT))
 				cameraMove.x += Time::fixedDeltaTime;
@@ -364,12 +370,12 @@ struct FpsCamera final : public MoveableCamera3D
 
 			//Boost key test
 			if (inputManager_.IsActionHeld(sdl::InputAction::SPRINT))
-				cameraMove *= 25.0f;
+				cameraMove *= 3.0f;
 
 			//Apply camera movement
-			position += (rightDirection * cameraMove.x +
+			position += (GetRight() * cameraMove.x +
 				Vec3f::up * cameraMove.y -
-				reverseDirection * cameraMove.z) * moveSpeed;
+				Vec3f::Cross(GetRight(), Vec3f::up) * cameraMove.z) * moveSpeed;
 		}
 	}
 
@@ -380,17 +386,17 @@ struct FpsCamera final : public MoveableCamera3D
 			freezeCam = !freezeCam;
 			SDL_SetRelativeMouseMode(static_cast<SDL_bool>(!freezeCam));
 		}
-		
-		if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+
+		if (event.window.event == SDL_WINDOWEVENT_RESIZED)
 		{
 			SetAspect(event.window.data1, event.window.data2);
 		}
-		
+
 		if (!freezeCam)
 		{
 			if (event.type == SDL_MOUSEMOTION)
-				mouseMotion_ = Vec2f(-event.motion.xrel, event.motion.yrel) * mouseSpeed;
-			
+				mouseMotion_ = Vec2f(-event.motion.xrel, -event.motion.yrel) * mouseSpeed;
+
 			SDL_WarpMouseGlobal(event.window.data1 / 2, event.window.data2 / 2);
 		}
 	}
@@ -448,11 +454,6 @@ struct PlayerCamera final : public MoveableCamera3D
 
 	void Destroy() override
 	{
-	}
-
-	radian_t GetFovX() const
-	{
-		return 2.0f * Atan(Tan(fovY * 0.5f) * aspect_);
 	}
 };
 }

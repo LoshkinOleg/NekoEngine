@@ -4,6 +4,7 @@
 #include "minelib/chunks/chunk.h"
 #include "minelib/gizmos_renderer.h"
 #include "minelib/aabb_manager.h"
+#include "minelib/minecraft_like_engine.h"
 
 namespace neko
 {
@@ -34,8 +35,8 @@ void PlayerController::Init()
 	ui_.crossHair.texturePath = config.dataRootPath + "sprites/ui/crosshair.png";
 	ui_.hotBar.texturePath = config.dataRootPath + "sprites/ui/toolbar.png";
 	ui_.blockSelect.texturePath = config.dataRootPath + "sprites/ui/selection_sprite.png";
-	uiManager_.AddUiElement(ui_.crossHair);
-	uiManager_.AddUiElement(ui_.hotBar);
+	uiManager_.AddUiElement(&ui_.crossHair);
+	uiManager_.AddUiElement(&ui_.hotBar);
 	for (int i = 0; i < ui_.hotBarPreviews.size(); ++i)
 	{
 		ui_.hotBarPreviews[i].position.x = ui_.hotBar.position.x + (i - 4) * tileSize.x;
@@ -47,13 +48,13 @@ void PlayerController::Init()
 		else
 			ui_.hotBarPreviews[i].texturePath = config.dataRootPath + "sprites/empty.png";
 
-		uiManager_.AddUiElement(ui_.hotBarPreviews[i]);
+		uiManager_.AddUiElement(&ui_.hotBarPreviews[i]);
 	}
-	uiManager_.AddUiElement(ui_.blockSelect);
+	uiManager_.AddUiElement(&ui_.blockSelect);
 }
 
 void PlayerController::Update(const seconds dt)
-{
+{ 
 	const auto players = entityManager_.FilterEntities(static_cast<EntityMask>(ComponentType::PLAYER));
 	for (auto& player : players)
 	{

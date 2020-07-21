@@ -31,6 +31,16 @@ void ChunkRenderer::Init()
 	simpleDepthShader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.vert",
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.frag");
+	skyboxCube_.Init();
+	skyboxTexture_ = gl::LoadCubemap({
+		config.dataRootPath + "sprites/skybox_bluesky/right.png",
+		config.dataRootPath + "sprites/skybox_bluesky/left.png",
+		config.dataRootPath + "sprites/skybox_bluesky/top.png",
+		config.dataRootPath + "sprites/skybox_bluesky/bottom.png",
+		config.dataRootPath + "sprites/skybox_bluesky/front.png",
+		config.dataRootPath + "sprites/skybox_bluesky/back.png"
+		});
+	skyboxCube_.SetTexture(skyboxTexture_);
 	
 	//Load Textures
 	atlasTex_ = gl::stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
@@ -114,7 +124,7 @@ void ChunkRenderer::Update(seconds dt)
 void ChunkRenderer::Render()
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkRenderer::Render");
+	EASY_BLOCK("ChunkRenderer::Render", profiler::colors::DeepOrange);
 #endif
 	const auto& config = BasicEngine::GetInstance()->config;
 
@@ -134,13 +144,16 @@ void ChunkRenderer::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(shader_);
-	
-	//GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
+
+	skyboxCube_.Draw(camera_->GenerateViewMatrix(), camera_->GenerateProjectionMatrix());
 }
 
 	
 void ChunkRenderer::RenderScene(gl::Shader& shader) const
-{	
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::RenderScene", profiler::colors::DeepOrange100);
+#endif
 	SetCameraParameters(*camera_, shader);
 	
 	SetShadowParameters(shader);
@@ -185,6 +198,9 @@ void ChunkRenderer::InitShadow() {
 	
 void ChunkRenderer::SetCameraParameters(const Camera& camera, gl::Shader& shader) const
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::SetCameraParameters", profiler::colors::DeepOrange200);
+#endif
 	shader.Bind();
 	shader.SetMat4("view", camera.GenerateViewMatrix());
 	shader.SetMat4("projection", camera.GenerateProjectionMatrix());
@@ -192,6 +208,9 @@ void ChunkRenderer::SetCameraParameters(const Camera& camera, gl::Shader& shader
 }
 
 void ChunkRenderer::SetShadowParameters(gl::Shader& shader) const {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::SetShadowParameters", profiler::colors::DeepOrange200);
+#endif
 	const auto lightView = depthCamera_.GenerateViewMatrix();
 	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
 	const auto lightSpaceMatrix = lightProjection * lightView;

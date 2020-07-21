@@ -70,5 +70,10 @@ private:
 	unsigned int depthMap_ = 0;
 	const float bias_ = 0.00002f;
 	bool enableShadow = true;
+
+	//Skybox
+	TextureId skyboxTexture_ = 0;
+	gl::Shader skyboxShader_;
+	gl::RenderCubeMap skyboxCube_{ Vec3f::zero };
 };
 }
