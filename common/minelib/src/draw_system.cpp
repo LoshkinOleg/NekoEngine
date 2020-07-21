@@ -42,6 +42,7 @@ void DrawSystem::Init()
 	playerManager_.SetComponent(newPlayer, curPlayer);
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
+	RendererLocator::get().Render(&engine_.uiManager);
 }
 
 void DrawSystem::Update(seconds dt)
@@ -51,6 +52,7 @@ void DrawSystem::Update(seconds dt)
 #endif
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
+	RendererLocator::get().Render(&engine_.uiManager);
 	if (raycastOn_)
 	{
 		rayOut_ = Ray();
