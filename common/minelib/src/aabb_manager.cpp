@@ -61,7 +61,7 @@ bool AabbManager::RaycastBlock(Ray& ray,
 	const auto raycatsedChunks = RaycastChunks(origin, dir);
 	for (auto raycastedChunk : raycatsedChunks)
 	{
-		const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(raycastedChunk));
+		const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetPositon(raycastedChunk));
 
 		const auto chunkContent = chunkManager_.chunkContentManager.GetBlocks(raycastedChunk);
 		for (auto& block : chunkContent)
@@ -88,7 +88,7 @@ bool AabbManager::RaycastBlockInChunk(Ray& ray,
                                       const Index chunkIndex) const
 {
 	if (!entityManager_.HasComponent(chunkIndex, static_cast<EntityMask>(ComponentType::CHUNK_POS))) { return false; }
-	const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunkIndex));
+	const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetPositon(chunkIndex));
 
 	float rayDist;
 	const auto chunkContent = chunkManager_.chunkContentManager.GetBlocks(chunkIndex);

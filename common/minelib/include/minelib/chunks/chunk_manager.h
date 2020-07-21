@@ -132,7 +132,16 @@ class ChunkPosManager final : public ComponentManager<Vec3i, ComponentType::CHUN
 {
 	using ComponentManager::ComponentManager;
 public:
+	Vec3i GetPositon(Entity chunkIndex);
+
+	void SetPositon(Entity chunkIndex, const Vec3i& chunkPos);
+
 	Aabb3d GetAabb(Entity chunkIndex) const;
+
+	Entity GetChunkAtPos(const Vec3i& chunkPos);
+
+private:
+	std::mutex mutex_;
 };
 
 class ChunkRenderManager final : public ComponentManager<ChunkRender, ComponentType::CHUNK_RENDER>

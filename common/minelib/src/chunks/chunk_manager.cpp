@@ -441,13 +441,44 @@ std::vector<Index> ChunkStatusManager::GetLoadedChunks()
 	return loadedChunks;
 }
 
+
 //-----------------------------------------------------------------------------
 // ChunkPosManager
 //-----------------------------------------------------------------------------
+
+Vec3i ChunkPosManager::GetPositon(Entity chunkIndex)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	return components_[chunkIndex];
+}
+
+void ChunkPosManager::SetPositon(Entity chunkIndex, const Vec3i& chunkPos)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	components_[chunkIndex] = chunkPos;
+}
+
 Aabb3d ChunkPosManager::GetAabb(const Entity chunkIndex) const
 {
 	const Vec3f chunkPos = Vec3f(components_[chunkIndex]) * kChunkSize + Vec3f(kChunkSize / 2.0f);
 	return {chunkPos, Vec3f(kChunkSize / 2.0f)};
+}
+
+Entity ChunkPosManager::GetChunkAtPos(const Vec3i& chunkPos)
+{
+	std::lock_guard<std::mutex> lock(mutex_);
+	const auto it = std::find_if(components_.begin(),
+		components_.end(),
+		[chunkPos](const Vec3i& pos)
+		{
+			return pos == chunkPos;
+		});
+	if (it != components_.end())
+	{
+		return std::distance(components_.begin(), it);;
+	}
+
+	return INVALID_ENTITY;
 }
 
 //-----------------------------------------------------------------------------
@@ -607,7 +638,7 @@ void ChunkViewer::DrawImGui(const Entity selectedEntity) const
 		if (entityManager_.HasComponent(selectedEntity,
 		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
 		{
-			auto chunkPos = Vec3i(chunkManager_.chunkPosManager.GetComponent(selectedEntity));
+			auto chunkPos = Vec3i(chunkManager_.chunkPosManager.GetPositon(selectedEntity));
 			DragInt3("Chunk Index", &chunkPos[0]);
 		}
 		if (entityManager_.HasComponent(selectedEntity,
