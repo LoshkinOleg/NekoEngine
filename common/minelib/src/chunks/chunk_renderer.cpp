@@ -127,16 +127,17 @@ void ChunkRenderer::Render()
 	EASY_BLOCK("ChunkRenderer::Render", profiler::colors::DeepOrange);
 #endif
 	const auto& config = BasicEngine::GetInstance()->config;
-
-	//Render With shadows
-	glEnable(GL_CULL_FACE);
-	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_FRONT);
-	SetLightParameters();
-	RenderScene(simpleDepthShader_);
-	
+	if (enableShadow)
+	{
+		//Render With shadows
+		glEnable(GL_CULL_FACE);
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glCullFace(GL_FRONT);
+		SetLightParameters();
+		RenderScene(simpleDepthShader_);
+	}
 	//Render normal
 	glCullFace(GL_BACK);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

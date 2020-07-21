@@ -95,31 +95,26 @@ std::vector<ChunkContent> ChunkContentVector::GetBlocks() const
 	return blocks;
 }
 
-std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
-	const Vec3i& pos)
+ChunkContent& ChunkContentVector::GetBlock(const Vec3i& pos)
 {
 	return GetBlock(PosToBlockId(pos));
 }
 
-std::shared_ptr<ChunkContent> ChunkContentVector::GetBlock(
-	BlockId blockId)
+ChunkContent& ChunkContentVector::GetBlock(BlockId blockId)
 {
-	if (blockId < 0 || blockId > kChunkBlockCount - 1)
-	{
-		LogError("BlockID out of bounds! ID: " + std::to_string(blockId));
-		return nullptr;
-	}
 	const auto it = std::find_if(blocks.begin(),
-	                             blocks.end(),
-	                             [blockId](const ChunkContent& content)
-	                             {
-		                             return content.blockId == blockId;
-	                             });
+		blocks.end(),
+		[blockId](const ChunkContent& content)
+		{
+			return content.blockId == blockId;
+		});
 	if (it != blocks.end())
 	{
-		return std::make_shared<ChunkContent>(
-			blocks[it - blocks.begin()]);
+		return blocks[it - blocks.begin()];
 	}
+
+	LogError("Block ID out of bounds! ID: " + std::to_string(blockId));
+	return ChunkContent();
 }
 
 bool ChunkContentVector::HasBlockAt(const Vec3i& pos) const

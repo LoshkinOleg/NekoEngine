@@ -53,6 +53,8 @@ private:
 	 */
 	void CalculateVisibleStatus(Entity chunkIndex) const;
 
+	void UpdateDirtyChunk(Entity chunkIndex, Vec3i chunkPos);
+
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
 	 */
