@@ -162,7 +162,7 @@ void ChunkRenderer::RenderScene(gl::Shader& shader) const
 	const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
 	for (auto& chunk : renderedChunks)
 	{		
-		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetComponent(chunk)));
+		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetPositon(chunk)));
 		chunkManager_.chunkRenderManager.Draw(chunk);
 	}
 }

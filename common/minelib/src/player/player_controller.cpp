@@ -68,10 +68,10 @@ void PlayerController::Update(const seconds dt)
 			std::floor(curPlayer.position.z / kChunkSize)
 		);
 		if (curPlayer.currentChunk == INVALID_ENTITY || 
-			currentChunkPos != chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk))
+			currentChunkPos != chunkManager_.chunkPosManager.GetPositon(curPlayer.currentChunk))
 		{
 			const auto chunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
-			for (auto& chunk : chunks)
+			for (auto chunk : chunks)
 			{
 				if (chunkManager_.chunkPosManager.GetAabb(chunk).IntersectAabb(Aabb3d(curPlayer.position, Vec3f(0.2f))))
 				{
@@ -92,10 +92,10 @@ void PlayerController::Update(const seconds dt)
 			//Gets the chunks in front
 			std::vector<Entity> chunksInFront{curPlayer.currentChunk};
 			const auto chunks = chunkManager_.chunkStatusManager.GetAccessibleChunks();
-			for (auto& chunk : chunks)
+			for (auto chunk : chunks)
 			{
-				auto& chunkPos = chunkManager_.chunkPosManager.GetComponent(chunk);
-				auto& curChunkPos = chunkManager_.chunkPosManager.GetComponent(curPlayer.currentChunk);
+				auto chunkPos = chunkManager_.chunkPosManager.GetPositon(chunk);
+				auto curChunkPos = chunkManager_.chunkPosManager.GetPositon(curPlayer.currentChunk);
 				if (curPlayer.camera.reverseDirection.x < 0)
 				{
 					if (chunkPos == curChunkPos + Vec3i::right)
@@ -265,12 +265,12 @@ void PlayerController::Update(const seconds dt)
 			//Sorts the chunks in front by proximity
 			for (size_t i = 1; i < chunksInFront.size(); ++i)
 			{
-				const auto& chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[i]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
+				const auto chunkPos = Vec3f(chunkManager_.chunkPosManager.GetPositon(chunksInFront[i]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
 				for (size_t j = 1; j < chunksInFront.size(); ++j)
 				{
 					if (chunksInFront[j] == chunksInFront[i]) continue;
 					
-					const auto& otherChunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunksInFront[j]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
+					const auto otherChunkPos = Vec3f(chunkManager_.chunkPosManager.GetPositon(chunksInFront[j]) * kChunkSize) + Vec3f(kChunkSize / 2.0f);
 					if ((chunkPos - curPlayer.position).SquareMagnitude() < (otherChunkPos - curPlayer.position).SquareMagnitude())
 						std::swap(chunksInFront[i], chunksInFront[j]);
 				}
@@ -300,7 +300,7 @@ void PlayerController::Update(const seconds dt)
 							
 							curPlayer.placeTimeStamp = Time::time + curPlayer.placeCoolDown;
 							
-							const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetComponent(chunkInFront));
+							const Vec3f chunkPos = Vec3f(chunkManager_.chunkPosManager.GetPositon(chunkInFront));
 							const Vec3f hitPos = Vec3f(BlockIdToPos(rayOut.hitId)) + chunkPos * kChunkSize;
 							
 							const Vec3f toPoint = curPlayer.camera.reverseDirection * -1 * rayOut.hitDist;
