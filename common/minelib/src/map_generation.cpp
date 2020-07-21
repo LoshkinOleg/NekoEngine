@@ -10,7 +10,7 @@ namespace neko
 	{
 		
 	}
-	Zone::Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end)
+	Zone::Zone(int zoneID, Zone* parentID, int terrain, int biome, Vec2i start, Vec2i end)
 	{
 		this->zoneID = zoneID;
 		this->parentID = parentID;
@@ -21,7 +21,7 @@ namespace neko
 		this->canSpawnMountain = false;
 	}
 
-	Zone::Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end, bool canSpawnMountain)
+	Zone::Zone(int zoneID, Zone* parentID, int terrain, int biome, Vec2i start, Vec2i end, bool canSpawnMountain)
 	{
 		this->zoneID = zoneID;
 		this->parentID = parentID;
@@ -127,12 +127,13 @@ namespace neko
 		return map;
 	}
 
-	void MapGeneration::GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage)
+	void MapGeneration::GenerateZones(int bspCutIterations)
 	{
 		srand(seed);
 		//Cut Map
-		Zone mapZone = Zone(index++, -1, 0, 0, Vec2i(0, 0), Vec2i(mapSize, mapSize));
-		CutZone(mapZone, cutIteration, maxCutPercentage, mapSize);
+		Zone mapZone = Zone(index++, nullptr, 0, 0, Vec2i(0, 0), Vec2i(mapSize, mapSize));
+		allZones.push_back(mapZone);
+		CutZone(&mapZone, cutIteration, maxCutPercentage, mapSize);
 		
 		//Generate Mountain
 		int randomMountain;
@@ -189,37 +190,115 @@ namespace neko
 	}
 
 	
-	void MapGeneration::CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize)
+	void MapGeneration::CutZone(Zone* parentZone, int cutIteration, float maxCutPercentage, int mapSize)
 	{
 		srand(seed);
 		if (maxCutPercentage > 1)
 		{
 			maxCutPercentage = 1;
 		}
+		else if(maxCutPercentage < 0)
+		{
+			maxCutPercentage = 0;
+		}
 
 		Zone childZone1;
 		Zone childZone2;
-		if (parentZone.end.x - parentZone.start.x > parentZone.end.y - parentZone.start.y)
+		if (parentZone->end.x - parentZone->start.x > parentZone->end.y - parentZone->start.y)
 		{
 			//Cut in x
-			int distance = parentZone.end.x - parentZone.start.x;
+			int distance = parentZone->end.x - parentZone->start.x;
 			int random = (rand() % (int)(distance * maxCutPercentage)) + (distance * maxCutPercentage)/2;
 			
-			childZone1 = Zone(index++, parentZone.parentID, 0, 0, parentZone.start, Vec2i(parentZone.end.x - random, parentZone.end.y));
-			childZone2 = Zone(index++, parentZone.parentID, 0, 0, Vec2i(parentZone.start.x + random, parentZone.start.y), parentZone.end);
+			childZone1 = Zone(index++, parentZone, 0, 0, parentZone->start, Vec2i(parentZone->end.x - random, parentZone->end.y));
+			childZone2 = Zone(index++, parentZone, 0, 0, Vec2i(parentZone->start.x + random, parentZone->start.y), parentZone->end);
 		}
 		else
 		{
 			//Cut in y
-			int distance = parentZone.end.y - parentZone.start.y;
+			int distance = parentZone->end.y - parentZone->start.y;
 			int random = (rand() % (int)(distance * maxCutPercentage)) + (distance * maxCutPercentage) / 2;
 
-			childZone1 = Zone(index++, parentZone.parentID, 0, 0, parentZone.start, Vec2i(parentZone.end.x, parentZone.end.y - random));
-			childZone2 = Zone(index++, parentZone.parentID, 0, 0, Vec2i(parentZone.start.x, parentZone.start.y + random), parentZone.end);
+			childZone1 = Zone(index++, parentZone, 0, 0, parentZone->start, Vec2i(parentZone->end.x, parentZone->end.y - random));
+			childZone2 = Zone(index++, parentZone, 0, 0, Vec2i(parentZone->start.x, parentZone->start.y + random), parentZone->end);
 		}
-		//TODO Generate Neighbours ?
 		allZones.push_back(childZone1);
 		allZones.push_back(childZone2);
+
+		//Check Neighbourhood
+		for (Zone* element : allZones[allZones.size() -1].parentID->XposNeighboursIndexes)
+		{
+			for (Zone* element : element->children)
+			{
+				if(CheckNeighbourhood(allZones[allZones.size() - 1], *element))
+				{
+					if (allZones[allZones.size() - 1].start.x > element->start.x)
+					{
+
+						allZones[allZones.size() - 1].XnegNeighboursIndexes;
+					}
+					else
+					{
+						allZones[allZones.size() - 1].XposNeighboursIndexes;
+					}
+				}
+			}
+		}
+		for (Zone* element : allZones[allZones.size() - 1].parentID->XnegNeighboursIndexes)
+		{
+			for (Zone* element : element->children)
+			{
+				if (CheckNeighbourhood(allZones[allZones.size() - 1], *element))
+				{
+					if (allZones[allZones.size() - 1].start.x > element->start.x)
+					{
+
+						allZones[allZones.size() - 1].XnegNeighboursIndexes;
+					}
+					else
+					{
+						allZones[allZones.size() - 1].XposNeighboursIndexes;
+					}
+				}
+			}
+		}
+		for (Zone* element : allZones[allZones.size() - 2].parentID->XposNeighboursIndexes)
+		{
+			for (Zone* element : element->children)
+			{
+				if (CheckNeighbourhood(allZones[allZones.size() - 2], *element))
+				{
+					if (allZones[allZones.size() - 2].start.x > element->start.x)
+					{
+
+						allZones[allZones.size() - 2].XnegNeighboursIndexes;
+					}
+					else
+					{
+						allZones[allZones.size() - 2].XposNeighboursIndexes;
+					}
+				}
+			}
+		}
+		for (Zone* element : allZones[allZones.size() - 2].parentID->XnegNeighboursIndexes)
+		{
+			for (Zone* element : element->children)
+			{
+				if (CheckNeighbourhood(allZones[allZones.size() - 2], *element))
+				{
+					if (allZones[allZones.size() - 2].start.x > element->start.x)
+					{
+
+						allZones[allZones.size() - 2].XnegNeighboursIndexes;
+					}
+					else
+					{
+						allZones[allZones.size() - 2].XposNeighboursIndexes;
+					}
+				}
+			}
+		}
+		
 		if (cutIteration <= 0)
 		{
 			if (childZone1.start.x != 0 && childZone1.start.y >= mapSize - 1 && !(childZone1.end.x >= mapSize - 1) &&
@@ -238,8 +317,8 @@ namespace neko
 		}
 		else
 		{
-			CutZone(childZone1, cutIteration - 1, maxCutPercentage, mapSize);
-			CutZone(childZone2, cutIteration - 1, maxCutPercentage, mapSize);
+			CutZone(&childZone1, cutIteration - 1, maxCutPercentage, mapSize);
+			CutZone(&childZone2, cutIteration - 1, maxCutPercentage, mapSize);
 		}
 	}
 
@@ -326,10 +405,6 @@ namespace neko
 				{
 					return true;
 				}
-				else
-				{
-
-				}
 			}
 		}
 		else if (zone1.end.y == zone2.start.y)
@@ -351,19 +426,49 @@ namespace neko
 				{
 					return true;
 				}
-				else
-				{
-
-				}
 			}
 		}
 		else if (zone2.end.x == zone1.start.x)
 		{
+			if (zone1.start.y > zone2.start.y)
+			{
+				if (zone1.end.y > zone2.start.y)
+				{
 
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (zone1.start.y > zone2.end.y)
+				{
+					return true;
+				}
+			}
 		}
 		else if (zone2.end.y == zone1.start.y)
 		{
+			if (zone1.start.x > zone2.start.x)
+			{
+				if (zone1.start.x > zone2.end.x)
+				{
 
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (zone1.end.x > zone2.start.x)
+				{
+					return true;
+				}
+			}
 		}
 
 		return false;

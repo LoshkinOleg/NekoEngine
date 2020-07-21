@@ -36,17 +36,18 @@ namespace neko
 	{
 	public:
 		int zoneID;
-		int parentID;
+		Zone* parentID;
 		int terrain;
 		int biome;
 		Vec2i start;
 		Vec2i end;
 		std::vector<Zone*> XnegNeighboursIndexes;
 		std::vector<Zone*> XposNeighboursIndexes;
+		std::vector<Zone*> children;
 		bool canSpawnMountain;
 		Zone();
-		Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end);
-		Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end, bool canSpawnMountain);
+		Zone(int zoneID, Zone* parentID, int terrain, int biome, Vec2i start, Vec2i end);
+		Zone(int zoneID, Zone* parentID, int terrain, int biome, Vec2i start, Vec2i end, bool canSpawnMountain);
 	};
 	
 	class MapGeneration
@@ -56,9 +57,9 @@ namespace neko
 		void GenerateZoneSurface(Vec2i offset, int octaves, float frequency, Zone zone);
 		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> MapGeneration::GenerateMap3D(int posX, int posY);
 
-		void GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage);
+		void GenerateZones(int bspCutIterations);
 		void LerpZone(Zone zone, int lerpHeight);
-		void CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize);
+		void CutZone(Zone* parentZone, int cutIteration, float maxCutPercentage, int mapSize);
 		void LerpBlock(Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
 		bool CheckNeighbourhood(Zone zone1, Zone zone2);
 
@@ -72,8 +73,8 @@ namespace neko
 	siv::PerlinNoise perlinNoise;
 	
 	int index = 0;
-	int cutIteration;
-	float maxCutPercentage;
+	int cutIteration = 4;
+	float maxCutPercentage = 0.8;
 	int lerpHeight = 4;
 	//std::array<std::array<char, mapSize>, mapSize> map;
 	};
