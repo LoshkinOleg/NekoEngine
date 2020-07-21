@@ -2,7 +2,6 @@
 #include <engine/system.h>
 #include <engine/entity.h>
 #include <mathematics/vector.h>
-#include <thread>
 #include <mutex>
 #include <minelib/chunks/chunk.h>
 #include <minelib/chunks/chunk_manager.h>
@@ -14,14 +13,19 @@ class EntityManager;
 class Transform3dManager;
 class MinecraftLikeEngine;
 
-class ChunkSystem final : public RenderCommandInterface, public SystemInterface, public DrawImGuiInterface
+class ChunkSystem final : public RenderCommandInterface,
+                          public SystemInterface,
+                          public DrawImGuiInterface
 {
 public:
 	explicit ChunkSystem(MinecraftLikeEngine& engine);
+
 	void Init() override;
 
 	void Update(seconds dt) override;
+
 	void Render() override;
+
 	/**
 	 *  \brief Generates a 2d noise map
 	 */
@@ -35,14 +39,16 @@ public:
 	void Destroy() override;
 
 	void DrawImGui() override;
-	
+
 private:
-	const float kMaxViewDist_ = 100;
 
 	/**
 	 * \brief Calculate if a chunk occlude other chunks
 	 */
-	bool CalculateOcclusionStatus(const ChunkContentVector& chunkContent, ChunkFlag occludeDir) const;
+	bool CalculateOcclusionStatus(
+		const ChunkContentVector& chunkContent,
+		ChunkFlag occludeDir) const;
+
 	/**
 	 * \brief Generate a chunk depend on it position
 	 */
@@ -53,16 +59,19 @@ private:
 	 */
 	void CalculateVisibleStatus(Entity chunkIndex) const;
 
-	void UpdateDirtyChunk(Entity chunkIndex, Vec3i chunkPos);
+	/**
+	 * \brief Update chunks if they are modified by the player
+	 */
+	void UpdateDirtyChunk(Entity chunkIndex,const Vec3i& chunkPos);
 
 	/**
 	 * \brief Update chunks if they are visible or not and load new chunks
 	 */
 	void UpdateVisibleChunks();
-	
+
 	std::mutex mutexRenderer_;
 	std::mutex mutexGeneration_;
-	
+
 	BlockManager& blockManager_;
 	ChunkManager& chunkManager_;
 	EntityManager& entityManager_;
