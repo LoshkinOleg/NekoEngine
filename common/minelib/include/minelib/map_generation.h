@@ -12,6 +12,25 @@ namespace neko
 	const uint32_t seed = 0;
 	const int undergroundHeight = 0;
 	const int blocksNrBeforeStone = 4;
+
+	const int plainsTerrainID = 0;
+	const int hillsTerrainID = 1;
+	const int mountainTerrainID = 2;
+
+	const int greenBiomeID = 0;
+	const int desertBiomeID = 1;
+	const int snowBiomeID = 2;
+
+	const float plainsfrequency = 0.1;
+	const float frequency = 1;
+
+	const int mountainOctaves = 3;
+	const int octaves = 2;
+
+	const int mountainHeightMultiplier = 64;
+	const int heightMultiplier = 16;
+
+	const Vec2i offset = Vec2i(0, 0);
 	
 	struct Zone
 	{
@@ -22,7 +41,8 @@ namespace neko
 		int biome;
 		Vec2i start;
 		Vec2i end;
-		std::vector<int> neighboursIndexes;
+		std::vector<Zone*> XnegNeighboursIndexes;
+		std::vector<Zone*> XposNeighboursIndexes;
 		bool canSpawnMountain;
 		Zone();
 		Zone(int zoneID, int parentID, int terrain, int biome, Vec2i start, Vec2i end);
@@ -37,8 +57,9 @@ namespace neko
 		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> MapGeneration::GenerateMap3D(int posX, int posY);
 
 		void GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage);
+		void LerpZone(Zone zone, int lerpHeight);
 		void CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize);
-		void LerpBlock(std::array<std::array<int, mapSize>, mapSize> map, Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
+		void LerpBlock(Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg);
 		bool CheckNeighbourhood(Zone zone1, Zone zone2);
 
 		std::array<std::array<int, mapSize>, mapSize> heightMap;
@@ -46,10 +67,14 @@ namespace neko
 	private:
 
 	std::vector<Zone> allZones;
-	std::vector<Zone> finalZones;
+	std::vector<Zone*> finalZones;
+	std::vector<int> possibleMountainZonesID;
 	siv::PerlinNoise perlinNoise;
 	
 	int index = 0;
+	int cutIteration;
+	float maxCutPercentage;
+	int lerpHeight = 4;
 	//std::array<std::array<char, mapSize>, mapSize> map;
 	};
 }

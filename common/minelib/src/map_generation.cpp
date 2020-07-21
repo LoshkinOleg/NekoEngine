@@ -1,6 +1,7 @@
 #pragma once
 #include "minelib/map_generation.h"
 #include "PerlinNoise.hpp"
+#include <time.h>
 
 namespace neko
 {
@@ -128,28 +129,69 @@ namespace neko
 
 	void MapGeneration::GenerateZones(int mapSize, int bspCutIterations, int bspCutPercentage)
 	{
+		srand(seed);
 		//Cut Map
-
+		Zone mapZone = Zone(index++, -1, 0, 0, Vec2i(0, 0), Vec2i(mapSize, mapSize));
+		CutZone(mapZone, cutIteration, maxCutPercentage, mapSize);
+		
 		//Generate Mountain
+		int randomMountain;
+		randomMountain = rand() % possibleMountainZonesID.size();
+		
+		allZones[randomMountain].zoneID = mountainTerrainID;
+		allZones[randomMountain].biome = snowBiomeID;
+		int mountainID = -1;
 
+		for (Zone* element : allZones[randomMountain].XposNeighboursIndexes)
+		{
+			element->terrain = hillsTerrainID;
+			element->biome = desertBiomeID;
+		}
+		for (Zone* element : allZones[randomMountain].XnegNeighboursIndexes)
+		{
+			element->terrain = hillsTerrainID;
+		}
+
+		
+		
+		
 		//Generate Noise
 
-		//Generate Mountain Terrain
-
-		//Find Mountain Neighbors to generate Hills
-
-		//Generate Hills
-
-		//Lerp between mountains and hills 
-
-		//Find hills neightbours (that aren't hills or mountain)
-
-		//Lerp between flatbiome and hills
+		for (Zone* element : finalZones)
+		{
+			switch (element->terrain)
+			{
+			//plains
+			case 0:
+				GenerateZoneSurface(offset, octaves, plainsfrequency, *element);
+				break;
+			//hills
+			case 1:
+				GenerateZoneSurface(offset, octaves, frequency, *element);
+				break;
+			//mountains
+			case 2:
+				GenerateZoneSurface(offset, mountainOctaves, frequency, *element);
+				break;
+			}
+		}
+		//Lerp between mountains and hills
+		LerpZone(*finalZones[mountainID], lerpHeight);
+		
+		for (Zone* element : finalZones[mountainID]->XposNeighboursIndexes)
+		{
+			LerpZone(*element, lerpHeight);
+		}
+		for (Zone* element : finalZones[mountainID]->XnegNeighboursIndexes)
+		{
+			LerpZone(*element, lerpHeight);
+		}
 	}
 
 	
 	void MapGeneration::CutZone(Zone parentZone, int cutIteration, float maxCutPercentage, int mapSize)
 	{
+		srand(seed);
 		if (maxCutPercentage > 1)
 		{
 			maxCutPercentage = 1;
@@ -161,19 +203,19 @@ namespace neko
 		{
 			//Cut in x
 			int distance = parentZone.end.x - parentZone.start.x;
-			//int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
-
-			//childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x - random, parentZone.end.y));
-			//childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x + random, parentZone.start.y), parentZone.end);
+			int random = (rand() % (int)(distance * maxCutPercentage)) + (distance * maxCutPercentage)/2;
+			
+			childZone1 = Zone(index++, parentZone.parentID, 0, 0, parentZone.start, Vec2i(parentZone.end.x - random, parentZone.end.y));
+			childZone2 = Zone(index++, parentZone.parentID, 0, 0, Vec2i(parentZone.start.x + random, parentZone.start.y), parentZone.end);
 		}
 		else
 		{
 			//Cut in y
 			int distance = parentZone.end.y - parentZone.start.y;
-			//int random = Random.Range((int)((distance / 2) - ((distance / 2) * maxCutPercentage)), (int)(((distance / 2) + ((distance / 2) * maxCutPercentage))));
+			int random = (rand() % (int)(distance * maxCutPercentage)) + (distance * maxCutPercentage) / 2;
 
-			//childZone1 = new Zone(index++, parentZone.parentID, 0, 0, parentZone.start, new Vec2i(parentZone.end.x, parentZone.end.y - random));
-			//childZone2 = new Zone(index++, parentZone.parentID, 0, 0, new Vec2i(parentZone.start.x, parentZone.start.y + random), parentZone.end);
+			childZone1 = Zone(index++, parentZone.parentID, 0, 0, parentZone.start, Vec2i(parentZone.end.x, parentZone.end.y - random));
+			childZone2 = Zone(index++, parentZone.parentID, 0, 0, Vec2i(parentZone.start.x, parentZone.start.y + random), parentZone.end);
 		}
 		//TODO Generate Neighbours ?
 		allZones.push_back(childZone1);
@@ -191,8 +233,8 @@ namespace neko
 				childZone1.canSpawnMountain = true;
 				//mountainZonesIndexes.Add(childZone1.zoneID);
 			}
-			finalZones.push_back(childZone1);
-			finalZones.push_back(childZone2);
+			finalZones.push_back(&childZone1);
+			finalZones.push_back(&childZone2);
 		}
 		else
 		{
@@ -201,42 +243,63 @@ namespace neko
 		}
 	}
 
-	void MapGeneration::LerpBlock(std::array<std::array<int, mapSize>, mapSize> map, Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg)
+	void MapGeneration::LerpZone(Zone zone, int lerpHeight)
+	{
+		LerpBlock(zone.start, lerpHeight, false, true, false, true);
+		LerpBlock(zone.end, lerpHeight, true, false, true, false);
+		LerpBlock(Vec2i(zone.start.x, zone.end.y), lerpHeight, true, false, false, true);
+		LerpBlock(Vec2i(zone.start.y, zone.end.x), lerpHeight, false, true, true, false);
+
+		for(int i = zone.start.x + 1; i < zone.end.x; i++)
+		{
+			LerpBlock(Vec2i(i, zone.start.y), lerpHeight, false, true, false, false);
+			LerpBlock(Vec2i(i, zone.end.y), lerpHeight, true, false, false, false);
+		}
+		for (int i = zone.start.y + 1; i < zone.end.y; i++)
+		{
+			LerpBlock(Vec2i(zone.start.x, i), lerpHeight, false, false, false, true);
+			LerpBlock(Vec2i(zone.end.y, i), lerpHeight, false, false, true, false);
+		}
+		
+	}
+
+
+	void MapGeneration::LerpBlock(Vec2i startPos, int lerpHeight, bool yPos, bool yNeg, bool xPos, bool xNeg)
 	{
 		//TODO check if value is higher
 
 		if (yPos)
 		{
-			if (map[startPos.x][startPos.y] - lerpHeight > map[startPos.x][startPos.y + 1])
+			if (heightMap[startPos.x][startPos.y] - lerpHeight > heightMap[startPos.x][startPos.y + 1])
 			{
-				map[startPos.x][startPos.y + 1] = map[startPos.x][startPos.x] - lerpHeight;
-				LerpBlock(map, Vec2i(startPos.x, startPos.y + 1), lerpHeight, yPos, yNeg, xPos, xNeg);
+				heightMap[startPos.x][startPos.y + 1] = heightMap[startPos.x][startPos.x] - lerpHeight;
+				LerpBlock(Vec2i(startPos.x, startPos.y + 1), lerpHeight, yPos, yNeg, xPos, xNeg);
 			}
 		}
 
 		if (yNeg)
 		{
-			if (map[startPos.x][startPos.y] - lerpHeight > map[startPos.x][startPos.y - 1])
+			if (heightMap[startPos.x][startPos.y] - lerpHeight > heightMap[startPos.x][startPos.y - 1])
 			{
-				map[startPos.x][startPos.y - 1] = map[startPos.x][startPos.x] - lerpHeight;
-				LerpBlock(map, Vec2i(startPos.x, startPos.y - 1), lerpHeight, yPos, yNeg, xPos, xNeg);
+				heightMap[startPos.x][startPos.y - 1] = heightMap[startPos.x][startPos.x] - lerpHeight;
+				LerpBlock(Vec2i(startPos.x, startPos.y - 1), lerpHeight, yPos, yNeg, xPos, xNeg);
 			}
 
 			if (xPos)
 			{
-				if (map[startPos.x][startPos.y] - lerpHeight > map[startPos.x + 1][startPos.y])
+				if (heightMap[startPos.x][startPos.y] - lerpHeight > heightMap[startPos.x + 1][startPos.y])
 				{
-					map[startPos.x + 1][startPos.y] = map[startPos.x][startPos.x] - lerpHeight;
-					LerpBlock(map, Vec2i(startPos.x + 1, startPos.y), lerpHeight, yPos, yNeg, xPos, xNeg);
+					heightMap[startPos.x + 1][startPos.y] = heightMap[startPos.x][startPos.x] - lerpHeight;
+					LerpBlock(Vec2i(startPos.x + 1, startPos.y), lerpHeight, yPos, yNeg, xPos, xNeg);
 				}
 			}
 
 			if (xNeg)
 			{
-				if (map[startPos.x][startPos.y] - lerpHeight > map[startPos.x - 1][startPos.y])
+				if (heightMap[startPos.x][startPos.y] - lerpHeight > heightMap[startPos.x - 1][startPos.y])
 				{
-					map[startPos.x - 1][startPos.y] = map[startPos.x][startPos.x] - lerpHeight;
-					LerpBlock(map, Vec2i(startPos.x - 1, startPos.y), lerpHeight, yPos, yNeg, xPos, xNeg);
+					heightMap[startPos.x - 1][startPos.y] = heightMap[startPos.x][startPos.x] - lerpHeight;
+					LerpBlock(Vec2i(startPos.x - 1, startPos.y), lerpHeight, yPos, yNeg, xPos, xNeg);
 				}
 			}
 		}

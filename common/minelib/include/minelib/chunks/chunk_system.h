@@ -59,6 +59,7 @@ private:
 
 	std::vector<std::function<void()>> scheduledChunks_;
 	std::vector<std::unique_ptr<Job>> generationJobs_;
+	std::vector<int> possibleMountainZonesID;
 
 	//std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> map;
 	MapGeneration mapGeneration;
