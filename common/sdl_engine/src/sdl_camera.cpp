@@ -84,7 +84,7 @@ namespace neko::sdl
 			cameraMove.y -= 1.0f * dt.count();
 		}
 		position +=
-			(rightDirection * cameraMove.x -
+			(GetRight() * cameraMove.x -
 				reverseDirection * cameraMove.y) *
 			(cameraMovement_ & ACCELERATE ? cameraFast_ : cameraSpeed_);
 	}

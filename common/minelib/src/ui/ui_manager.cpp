@@ -8,7 +8,7 @@ UiManager::UiManager()
 
 void UiManager::Init()
 {
-	//RendererLocator::get().Render(this);
+	RendererLocator::get().Render(this);
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -23,7 +23,7 @@ void UiManager::Init()
 
 void UiManager::Update(seconds dt)
 {
-	//RendererLocator::get().Render(this);
+	RendererLocator::get().Render(this);
 }
 
 void UiManager::AddUiElement(UiElement* uiElement)

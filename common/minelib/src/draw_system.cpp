@@ -37,12 +37,12 @@ void DrawSystem::Init()
 	Player curPlayer = playerManager_.GetComponent(newPlayer);
 	gizmosRenderer_.SetCamera(playerManager_.GetCamera(newPlayer));
 	chunkRenderer_.SetCamera(playerManager_.GetCamera(newPlayer));
-	curPlayer.position = Vec3f(mapSize / 2, 100, mapSize / 2);
+	curPlayer.position = Vec3f(mapSize / 2, 48, mapSize / 2);
 	curPlayer.camera.position = curPlayer.position;
 	playerManager_.SetComponent(newPlayer, curPlayer);
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
-	RendererLocator::get().Render(&engine_.uiManager);
+	//RendererLocator::get().Render(&engine_.uiManager);
 }
 
 void DrawSystem::Update(seconds dt)
@@ -52,7 +52,7 @@ void DrawSystem::Update(seconds dt)
 #endif
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
-	RendererLocator::get().Render(&engine_.uiManager);
+	//RendererLocator::get().Render(&engine_.uiManager);
 	if (raycastOn_)
 	{
 		rayOut_ = Ray();

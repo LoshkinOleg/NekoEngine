@@ -71,5 +71,7 @@ private:
 	std::vector<Entity> dirtyChunks_;
 	//std::array<std::array<std::array<int, mapHeight>, mapSize>, mapSize> map;
 	MapGeneration mapGeneration;
+
+	FpsCamera savedCamera_;
 };
 }

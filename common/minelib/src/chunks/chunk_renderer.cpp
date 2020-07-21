@@ -124,7 +124,7 @@ void ChunkRenderer::Update(seconds dt)
 void ChunkRenderer::Render()
 {
 #ifdef EASY_PROFILE_USE
-	EASY_BLOCK("ChunkRenderer::Render");
+	EASY_BLOCK("ChunkRenderer::Render", profiler::colors::DeepOrange);
 #endif
 	const auto& config = BasicEngine::GetInstance()->config;
 
@@ -150,7 +150,10 @@ void ChunkRenderer::Render()
 
 	
 void ChunkRenderer::RenderScene(gl::Shader& shader) const
-{	
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::RenderScene", profiler::colors::DeepOrange100);
+#endif
 	SetCameraParameters(*camera_, shader);
 	
 	SetShadowParameters(shader);
@@ -195,6 +198,9 @@ void ChunkRenderer::InitShadow() {
 	
 void ChunkRenderer::SetCameraParameters(const Camera& camera, gl::Shader& shader) const
 {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::SetCameraParameters", profiler::colors::DeepOrange200);
+#endif
 	shader.Bind();
 	shader.SetMat4("view", camera.GenerateViewMatrix());
 	shader.SetMat4("projection", camera.GenerateProjectionMatrix());
@@ -202,6 +208,9 @@ void ChunkRenderer::SetCameraParameters(const Camera& camera, gl::Shader& shader
 }
 
 void ChunkRenderer::SetShadowParameters(gl::Shader& shader) const {
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("ChunkRenderer::SetShadowParameters", profiler::colors::DeepOrange200);
+#endif
 	const auto lightView = depthCamera_.GenerateViewMatrix();
 	const auto lightProjection = depthCamera_.GenerateProjectionMatrix();
 	const auto lightSpaceMatrix = lightProjection * lightView;

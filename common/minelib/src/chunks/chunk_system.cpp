@@ -48,7 +48,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-					if (chunkContent.HasBlockAt(Vec3i(x, 0, z)))
+					if (chunkContent.HasBlockAt(Vec3i(x, kChunkSize - 1, z)))
 					{
 						return false;
 					}
@@ -60,7 +60,7 @@ bool ChunkSystem::CalculateOcclusionStatus(
 			{
 				for (int z = 0; z < kChunkSize; z++)
 				{
-					if (chunkContent.HasBlockAt(Vec3i(x, kChunkSize - 1, z)))
+					if (chunkContent.HasBlockAt(Vec3i(x, 0, z)))
 					{
 						return false;
 					}
@@ -145,53 +145,74 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 	}
 	else
 	{
-		std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> map =
-			mapGeneration.GenerateMap3D(pos.x * kChunkSize, pos.z * kChunkSize);
-		for (uint16_t x = 0; x < kChunkSize; x++)
+		//If chunk is outside the map
+		if (pos.x * kChunkSize < 0 || pos.z * kChunkSize < 0 || pos.x * kChunkSize >= mapSize || pos
+			.z * kChunkSize >= mapSize)
 		{
-			for (uint16_t y = 0; y < kChunkSize; y++)
+			for (uint16_t x = 0; x < kChunkSize; x++)
 			{
 				for (uint16_t z = 0; z < kChunkSize; z++)
 				{
-					switch (map[x][y][z])
+					chunkContent.SetBlock(randBlock,
+					                      PosToBlockId(Vec3i(x, 0, z)));
+				}
+			}
+		}
+		else
+		{
+			std::array<std::array<std::array<int, kChunkSize>, kChunkSize>, kChunkSize> map =
+				mapGeneration.GenerateMap3D(pos.x * kChunkSize, pos.z * kChunkSize);
+			for (uint16_t x = 0; x < kChunkSize; x++)
+			{
+				for (uint16_t y = 0; y < kChunkSize; y++)
+				{
+					for (uint16_t z = 0; z < kChunkSize; z++)
 					{
-						case 0:
-							break;
-						case 1:
-							chunkContent.SetBlock(randBlock,
-							                      PosToBlockId(Vec3i(x, kChunkSize - y, z)));
-							break;
-						case 2:
-							chunkContent.SetBlock(randBlock,
-							                      PosToBlockId(Vec3i(x, kChunkSize - y, z)));
-							break;
-						case 3:
-							chunkContent.SetBlock(randBlock,
-							                      PosToBlockId(Vec3i(x, kChunkSize - y, z)));
-							break;
-						case 4:
-							chunkContent.SetBlock(randBlock,
-							                      PosToBlockId(Vec3i(x, kChunkSize - y, z)));
-							break;
-						case 5:
-							chunkContent.SetBlock(randBlock,
-							                      PosToBlockId(Vec3i(x, kChunkSize - y, z)));
-							break;
+						switch (map[x][y][z])
+						{
+							case 0:
+								break;
+							case 1:
+								chunkContent.SetBlock(randBlock,
+								                      PosToBlockId(
+									                      Vec3i(x, kChunkSize - y - 1, z)));
+								break;
+							case 2:
+								chunkContent.SetBlock(randBlock,
+								                      PosToBlockId(
+									                      Vec3i(x, kChunkSize - y - 1, z)));
+								break;
+							case 3:
+								chunkContent.SetBlock(randBlock,
+								                      PosToBlockId(
+									                      Vec3i(x, kChunkSize - y - 1, z)));
+								break;
+							case 4:
+								chunkContent.SetBlock(randBlock,
+								                      PosToBlockId(
+									                      Vec3i(x, kChunkSize - y - 1, z)));
+								break;
+							case 5:
+								chunkContent.SetBlock(randBlock,
+								                      PosToBlockId(
+									                      Vec3i(x, kChunkSize - y - 1, z)));
+								break;
+						}
 					}
 				}
 			}
 		}
-		chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
+
+		//chunkMask |= ChunkMask(ChunkFlag::OCCLUDE_DOWN);
 	}
-	//TODO(@Luca) : Implement CalculateOcclusionStatus
-	//for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
-	//	static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
-	//{
-	//	if (CalculateOcclusionStatus(chunkContent, static_cast<ChunkFlag>(occlude)))
-	//	{
-	//		chunkMask |= ChunkMask(occlude);
-	//	}
-	//}
+	for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
+	     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+	{
+		if (CalculateOcclusionStatus(chunkContent, static_cast<ChunkFlag>(occlude)))
+		{
+			chunkMask |= ChunkMask(occlude);
+		}
+	}
 
 	//Set if the chunk is empty or not 
 	if (chunkContent.blocks.size() == 0)
@@ -204,7 +225,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 	//Set chunkContent into component
 	chunkManager_.chunkContentManager.FillOfBlocks(newChunkIndex, chunkContent);
 
-	//chunkContent.CalculateBlockOcclusion();
+	chunkContent.CalculateBlockOcclusion();
 	//Scheduled setting of render values
 	std::lock_guard<std::mutex> lock(mutexRenderer_);
 	scheduledRenderValues_.emplace_back([this, newChunkIndex, chunkContent]
@@ -303,12 +324,29 @@ void ChunkSystem::UpdateVisibleChunks()
 #endif
 
 	auto chunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
-	//TODO (@Luca) : Find another way to get Camera
-	const Vec3f viewerPos = GizmosLocator::get().GetCameraPos();
+	Vec3f viewerPos = GizmosLocator::get().GetCameraPos();
+	if (sdl::InputLocator::get().IsKeyDown(sdl::KeyCode::TAB))
+	{
+	}
+	if (sdl::InputLocator::get().IsKeyHeld(sdl::KeyCode::TAB))
+	{
+		viewerPos = savedCamera_.position;
+	}
+	else
+	{
+		savedCamera_ = *GizmosLocator::get().GetCamera();
+	}
 	const Vec3i currentChunkPos = Vec3i(std::floor(viewerPos.x / kChunkSize),
 	                                    0,
 	                                    std::floor(viewerPos.z / kChunkSize));
 	Frustum frustum(*GizmosLocator::get().GetCamera());
+	if (sdl::InputLocator::get().IsKeyHeld(sdl::KeyCode::TAB))
+	{
+		frustum = Frustum(savedCamera_);
+	}
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::Remove last visible", profiler::colors::Green);
+#endif
 	//Remove last visible chunks and accessible chunks
 	for (auto chunk : chunks)
 	{
@@ -329,25 +367,19 @@ void ChunkSystem::UpdateVisibleChunks()
 		}
 		if (chunkManager_.chunkStatusManager.HasStatus(chunk, ChunkFlag::DIRTY))
 		{
-			const ChunkContentVector chunkContentVector = chunkManager_.chunkContentManager.GetComponent(chunk);
-			//ChunkMask chunkMask;
-			//for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN);
-			//	occlude <=
-			//	static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
-			//{
-			//	if (CalculateOcclusionStatus(chunkContentVector, static_cast<ChunkFlag>(occlude)))
-			//	{
-			//		chunkMask |= ChunkMask(occlude);
-			//	}
-			//}
-			//chunkManager_.chunkStatusManager.AddStatus(chunk, chunkMask);
+#ifdef EASY_PROFILE_USE
+			EASY_BLOCK("Chunks_System::Dirty", profiler::colors::Green);
+#endif
+			ChunkContentVector chunkContentVector = chunkManager_
+			                                        .chunkContentManager.GetComponent(chunk);
+			chunkContentVector.CalculateBlockOcclusion();
 			std::lock_guard<std::mutex> lock(mutexRenderer_);
 			scheduledRenderValues_.emplace_back([this, chunk, chunkContentVector]
 			{
 				chunkManager_.chunkRenderManager.Init(chunk);
 				chunkManager_.chunkRenderManager.SetChunkValues(chunk, chunkContentVector);
 			});
-			
+			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::DIRTY);
 		}
 	}
 #ifdef EASY_PROFILE_USE
@@ -419,6 +451,12 @@ void ChunkSystem::UpdateVisibleChunks()
 								chunks[index],
 								ChunkFlag::ACCESSIBLE);
 						}
+					}
+					else
+					{
+						chunkManager_.chunkStatusManager.RemoveStatus(
+							chunks[index],
+							ChunkFlag::VISIBLE);
 					}
 					chunks.erase(chunks.begin() + index);
 				}
