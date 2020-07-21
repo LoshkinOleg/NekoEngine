@@ -160,7 +160,7 @@ struct Camera3D : Camera
 struct MovableCamera : sdl::SdlEventSystemInterface, SystemInterface
 {
 	float moveSpeed = 5.0f;
-	float mouseSpeed = 1.0f;
+	float mouseSpeed = 0.3f;
 
 	MovableCamera()
 		: inputManager_(static_cast<sdl::InputManager&>(sdl::InputLocator::get()))

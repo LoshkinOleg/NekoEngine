@@ -52,7 +52,7 @@ void ChunkRenderer::Init()
 	directionalLight_.direction = -Vec3f::one;
 
 	//Set depthCamera values
-	depthCamera_.SetSize(Vec2f::one * 50.0f);
+	depthCamera_.SetSize(Vec2f::one * 20.0f);
 	depthCamera_.nearPlane = 0.1f;
 	depthCamera_.position = directionalLight_.position;
 	depthCamera_.reverseDirection = -directionalLight_.direction.Normalized();
@@ -159,11 +159,14 @@ void ChunkRenderer::RenderScene(gl::Shader& shader) const
 	SetShadowParameters(shader);
 
 //	glBindTexture(GL_TEXTURE_2D, atlasTex_);
-	const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
-	for (auto& chunk : renderedChunks)
-	{		
-		shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetPositon(chunk)));
-		chunkManager_.chunkRenderManager.Draw(chunk);
+	if (atlasTex_ != 0)
+	{
+		const auto renderedChunks = chunkManager_.chunkStatusManager.GetRenderedChunks();
+		for (auto& chunk : renderedChunks)
+		{
+			shader_.SetVec3("chunkPos", Vec3f(chunkManager_.chunkPosManager.GetPositon(chunk)));
+			chunkManager_.chunkRenderManager.Draw(chunk);
+		}
 	}
 }
 
