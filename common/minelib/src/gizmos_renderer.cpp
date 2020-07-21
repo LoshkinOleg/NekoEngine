@@ -8,6 +8,7 @@ GizmosRenderer::GizmosRenderer(FpsCamera* camera)
 	: camera_(camera)
 {
 	GizmosLocator::provide(this);
+	isRunning_ = true;
 }
 
 void GizmosRenderer::Init()

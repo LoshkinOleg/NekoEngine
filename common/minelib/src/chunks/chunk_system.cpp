@@ -469,45 +469,6 @@ void ChunkSystem::Update(seconds dt)
 
 	//Update Visible Chunks
 	UpdateVisibleChunks();
-	//Display Chunks Gizmos
-	const auto loadedChunks = chunkManager_.chunkStatusManager.GetLoadedChunks();
-	for (auto loadedChunk : loadedChunks)
-	{
-		if (entityManager_.HasComponent(loadedChunk,
-		                                static_cast<EntityMask>(ComponentType::CHUNK_POS)))
-		{
-			if (chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::VISIBLE))
-			{
-				if (chunkManager_.chunkStatusManager.HasStatus(loadedChunk, ChunkFlag::ACCESSIBLE))
-				{
-					GizmosLocator::get().DrawCube(
-						Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize)
-						+ Vec3f(
-							(kChunkSize - 1) / 2.0f),
-						Vec3f::one * kChunkSize,
-						Color::green);
-				}
-				else
-				{
-					GizmosLocator::get().DrawCube(
-						Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize)
-						+ Vec3f(
-							(kChunkSize - 1) / 2.0f),
-						Vec3f::one * kChunkSize,
-						Color::red);
-				}
-			}
-			else
-			{
-				GizmosLocator::get().DrawCube(
-					Vec3f(chunkManager_.chunkPosManager.GetComponent(loadedChunk) * kChunkSize) +
-					Vec3f(
-						(kChunkSize - 1) / 2.0f),
-					Vec3f::one * kChunkSize,
-					Color::blue);
-			}
-		}
-	}
 }
 
 void ChunkSystem::Render()

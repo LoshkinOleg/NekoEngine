@@ -37,7 +37,7 @@ void DrawSystem::Init()
 	Player curPlayer = playerManager_.GetComponent(newPlayer);
 	gizmosRenderer_.SetCamera(playerManager_.GetCamera(newPlayer));
 	chunkRenderer_.SetCamera(playerManager_.GetCamera(newPlayer));
-	curPlayer.position = Vec3f(mapSize / 2, 100, mapSize / 2);
+	curPlayer.position = Vec3f(mapSize / 2, 48, mapSize / 2);
 	curPlayer.camera.position = curPlayer.position;
 	playerManager_.SetComponent(newPlayer, curPlayer);
 	RendererLocator::get().Render(&chunkRenderer_);
@@ -53,17 +53,6 @@ void DrawSystem::Update(seconds dt)
 	RendererLocator::get().Render(&chunkRenderer_);
 	RendererLocator::get().Render(&gizmosRenderer_);
 	RendererLocator::get().Render(&engine_.uiManager);
-	if (raycastOn_)
-	{
-		rayOut_ = Ray();
-		AabbLocator::get().RaycastBlock(rayOut_, GizmosLocator::get().GetCamera()->position, -GizmosLocator::get().GetCamera()->reverseDirection);
-		savedCameraDir_ = -GizmosLocator::get().GetCamera()->reverseDirection;
-		savedCameraPos_ = GizmosLocator::get().GetCamera()->position;
-	}
-	GizmosLocator::get().DrawCube(savedCameraPos_, Vec3f::one, Color4(1, 1, 1, 1));
-	GizmosLocator::get().DrawCube(rayOut_.hitAabb.CalculateCenter(), Vec3f::one, Color4(1, 1, 1, 1));
-	GizmosLocator::get().DrawLine(savedCameraPos_, savedCameraPos_+savedCameraDir_*10, Color4(1, 1, 1, 1));
-	GizmosLocator::get().DrawLine(savedCameraPos_, rayOut_.hitAabb.CalculateCenter(), Color4(1, 1, 1, 1));
 }
 
 void DrawSystem::Destroy()
@@ -74,6 +63,7 @@ void DrawSystem::Destroy()
 
 void DrawSystem::DrawImGui()
 {
+	/*
 #ifdef EASY_PROFILE_USE
 	EASY_BLOCK("DrawSystem::DrawImGui", profiler::colors::Blue);
 #endif
@@ -90,42 +80,7 @@ void DrawSystem::DrawImGui()
 	chunkViewer_.DrawImGui(entityViewer_.GetSelectedEntity());
 	ImGui::End();
 
-#ifdef EASY_PROFILE_USE
-	EASY_END_BLOCK
-		EASY_BLOCK("DrawSystem::DrawImGui::Testing", profiler::colors::Blue);
-#endif
-	ImGui::Begin("Testing");
-	ImGui::Checkbox("Raycast", &raycastOn_);
-	if (ImGui::Checkbox("Gizmos", &gizmosOn_))
-	{
-		if (gizmosOn_)
-		{
-			gizmosRenderer_.Start();
-		} else
-		{
-			gizmosRenderer_.Stop();
-		}
-	}
-	
-	ImGui::End();
-	if (raycastOn_)
-	{
-		ImGui::Begin("Testing");
-		Vec3f aabbPos = rayOut_.hitAabb.CalculateCenter();
-		float hitChunk = rayOut_.hitChunk;
-		float hitDist = rayOut_.hitDist;
-		float hitId = rayOut_.hitId;
-		ImGui::InputFloat3("AabbPos", &aabbPos[0]);
-		ImGui::InputFloat("hitChunk", &hitChunk);
-		ImGui::InputFloat("hitDist", &hitDist);
-		ImGui::InputFloat("hitId", &hitId);
-		ImGui::End();
-	}
-#ifdef EASY_PROFILE_USE
-	EASY_END_BLOCK
-		EASY_BLOCK("DrawSystem::DrawImGui::chunkRenderer_", profiler::colors::Blue);
-#endif
-	chunkRenderer_.DrawImGui();
+	chunkRenderer_.DrawImGui();*/
 }
 
 void DrawSystem::OnEvent(const SDL_Event& event)

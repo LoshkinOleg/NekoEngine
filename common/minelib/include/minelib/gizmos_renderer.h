@@ -146,7 +146,7 @@ private:
 	gl::Shader shaderLine_;
 
 	std::vector<Gizmos> gizmosQueue_;
-	bool isRunning_ = false;
+	bool isRunning_ = true;
 };
 
 using GizmosLocator = Locator<IGizmosRenderer, NullGizmosRenderer>;
