@@ -31,6 +31,16 @@ void ChunkRenderer::Init()
 	simpleDepthShader_.LoadFromFile(
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.vert",
 		config.dataRootPath + "shaders/minecraft_like/shadowMappingDepth.frag");
+	skyboxCube_.Init();
+	skyboxTexture_ = gl::LoadCubemap({
+		config.dataRootPath + "sprites/skybox_bluesky/right.png",
+		config.dataRootPath + "sprites/skybox_bluesky/left.png",
+		config.dataRootPath + "sprites/skybox_bluesky/top.png",
+		config.dataRootPath + "sprites/skybox_bluesky/bottom.png",
+		config.dataRootPath + "sprites/skybox_bluesky/front.png",
+		config.dataRootPath + "sprites/skybox_bluesky/back.png"
+		});
+	skyboxCube_.SetTexture(skyboxTexture_);
 	
 	//Load Textures
 	atlasTex_ = gl::stbCreateTexture(config.dataRootPath + "sprites/atlas.png", gl::Texture::CLAMP_WRAP);
@@ -134,8 +144,8 @@ void ChunkRenderer::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(shader_);
-	
-	//GizmosLocator::get().DrawCube(directionalLight_.position, Vec3f(.5f), Color4(1, 1, 1, 1));
+
+	skyboxCube_.Draw(camera_->GenerateViewMatrix(), camera_->GenerateProjectionMatrix());
 }
 
 	
