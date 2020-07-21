@@ -397,7 +397,7 @@ void PlayerController::OnEvent(const SDL_Event& event)
 			const Vec2f tileSize = Vec2f(kTileSize) / newWindowSize;
 			for (auto i = 0; i < kHotBarSize; ++i)
 			{
-				if (ui_.hotBarBlocks[i] <= 0) continue;
+				//if (ui_.hotBarBlocks[i] <= 0) continue;
 				ui_.hotBarPreviews[i].position.x = ui_.hotBar.position.x + (i - 4) * tileSize.x;
 				ui_.hotBarPreviews[i].position.y = ui_.hotBar.position.y;
 			}
