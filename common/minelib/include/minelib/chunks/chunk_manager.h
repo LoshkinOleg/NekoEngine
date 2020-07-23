@@ -40,9 +40,9 @@ struct ChunkContentVector
 
 	std::vector<ChunkContent> GetBlocks() const;
 
-	std::shared_ptr<ChunkContent> GetBlock(const Vec3i& pos);
+	ChunkContent& GetBlock(const Vec3i& pos);
 
-	std::shared_ptr<ChunkContent> GetBlock(BlockId blockId);
+	ChunkContent& GetBlock(BlockId blockId);
 
 	bool HasBlockAt(const Vec3i& pos) const;
 

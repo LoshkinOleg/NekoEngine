@@ -203,7 +203,7 @@ Entity ChunkSystem::GenerateChunkContent(Entity newChunkIndex, const Vec3i& pos)
 			}
 		}
 		for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
-			static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+		     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
 		{
 			if (CalculateOcclusionStatus(chunkContent, static_cast<ChunkFlag>(occlude)))
 			{
@@ -261,30 +261,30 @@ void ChunkSystem::CalculateVisibleStatus(const Entity chunkIndex) const
 	bool visible = false;
 	//Check if all sides are occlude
 	for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN); occlude <=
-		static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+	     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
 	{
 		Vec3i offset;
 		switch (static_cast<ChunkFlag>(occlude))
 		{
-		case ChunkFlag::OCCLUDE_DOWN:
-			offset = Vec3i::up;
-			break;
-		case ChunkFlag::OCCLUDE_UP:
-			offset = Vec3i::down;
-			break;
-		case ChunkFlag::OCCLUDE_RIGHT:
-			offset = Vec3i::left;
-			break;
-		case ChunkFlag::OCCLUDE_LEFT:
-			offset = Vec3i::right;
-			break;
-		case ChunkFlag::OCCLUDE_FRONT:
-			offset = Vec3i::back;
-			break;
-		case ChunkFlag::OCCLUDE_BACK:
-			offset = Vec3i::forward;
-			break;
-		default:;
+			case ChunkFlag::OCCLUDE_DOWN:
+				offset = Vec3i::up;
+				break;
+			case ChunkFlag::OCCLUDE_UP:
+				offset = Vec3i::down;
+				break;
+			case ChunkFlag::OCCLUDE_RIGHT:
+				offset = Vec3i::left;
+				break;
+			case ChunkFlag::OCCLUDE_LEFT:
+				offset = Vec3i::right;
+				break;
+			case ChunkFlag::OCCLUDE_FRONT:
+				offset = Vec3i::back;
+				break;
+			case ChunkFlag::OCCLUDE_BACK:
+				offset = Vec3i::forward;
+				break;
+			default: ;
 		}
 		const Entity chunk = chunkManager_.chunkPosManager.GetChunkAtPos(currentChunkPos + offset);
 		if (chunk != INVALID_ENTITY)
@@ -308,6 +308,109 @@ void ChunkSystem::CalculateVisibleStatus(const Entity chunkIndex) const
 	{
 		chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::OCCLUDED);
 	}
+}
+
+void ChunkSystem::UpdateDirtyChunk(const Entity chunkIndex, const Vec3i& chunkPos)
+{
+#ifdef EASY_PROFILE_USE
+	EASY_BLOCK("Chunks_System::Remove last visible", profiler::colors::Green);
+#endif
+	ChunkContentVector chunkContentVector = chunkManager_
+	                                        .chunkContentManager.GetComponent(chunkIndex);
+	chunkContentVector.CalculateBlockOcclusion();
+	std::lock_guard<std::mutex> lock(mutexRenderer_);
+	scheduledRenderValues_.emplace_back([this, chunkIndex, chunkContentVector]
+	{
+		chunkManager_.chunkRenderManager.Init(chunkIndex);
+		chunkManager_.chunkRenderManager.SetChunkValues(chunkIndex, chunkContentVector);
+	});
+	ChunkMask chunkMask;
+	for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN);
+	     occlude <=
+	     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
+	{
+		if (CalculateOcclusionStatus(chunkContentVector, static_cast<ChunkFlag>(occlude)))
+		{
+			if (!chunkManager_.chunkStatusManager.HasStatus(
+				chunkIndex,
+				static_cast<ChunkFlag>(occlude)))
+			{
+				chunkManager_.chunkStatusManager.AddStatus(
+					chunkIndex,
+					static_cast<ChunkFlag>(occlude));
+				Vec3i offset;
+				switch (static_cast<ChunkFlag>(occlude))
+				{
+					case ChunkFlag::OCCLUDE_DOWN:
+						offset = Vec3i::down;
+						break;
+					case ChunkFlag::OCCLUDE_UP:
+						offset = Vec3i::up;
+						break;
+					case ChunkFlag::OCCLUDE_RIGHT:
+						offset = Vec3i::right;
+						break;
+					case ChunkFlag::OCCLUDE_LEFT:
+						offset = Vec3i::left;
+						break;
+					case ChunkFlag::OCCLUDE_FRONT:
+						offset = Vec3i::forward;
+						break;
+					case ChunkFlag::OCCLUDE_BACK:
+						offset = Vec3i::back;
+						break;
+					default: ;
+				}
+				Entity chunkIndex = chunkManager_.chunkPosManager.GetChunkAtPos(
+					chunkPos + offset);
+				if (chunkIndex != INVALID_ENTITY)
+				{
+					CalculateVisibleStatus(chunkIndex);
+				}
+			}
+		}
+		else
+		{
+			if (chunkManager_.chunkStatusManager.HasStatus(
+				chunkIndex,
+				static_cast<ChunkFlag>(occlude)))
+			{
+				chunkManager_.chunkStatusManager.RemoveStatus(
+					chunkIndex,
+					static_cast<ChunkFlag>(occlude));
+				Vec3i offset;
+				switch (static_cast<ChunkFlag>(occlude))
+				{
+					case ChunkFlag::OCCLUDE_DOWN:
+						offset = Vec3i::down;
+						break;
+					case ChunkFlag::OCCLUDE_UP:
+						offset = Vec3i::up;
+						break;
+					case ChunkFlag::OCCLUDE_RIGHT:
+						offset = Vec3i::right;
+						break;
+					case ChunkFlag::OCCLUDE_LEFT:
+						offset = Vec3i::left;
+						break;
+					case ChunkFlag::OCCLUDE_FRONT:
+						offset = Vec3i::forward;
+						break;
+					case ChunkFlag::OCCLUDE_BACK:
+						offset = Vec3i::back;
+						break;
+					default: ;
+				}
+				Entity chunkIndex = chunkManager_.chunkPosManager.GetChunkAtPos(
+					chunkPos + offset);
+				if (chunkIndex != INVALID_ENTITY)
+				{
+					CalculateVisibleStatus(chunkIndex);
+				}
+			}
+		}
+	}
+	chunkManager_.chunkStatusManager.RemoveStatus(chunkIndex, ChunkFlag::DIRTY);
 }
 
 void ChunkSystem::UpdateVisibleChunks()
@@ -337,9 +440,6 @@ void ChunkSystem::UpdateVisibleChunks()
 	{
 		frustum = Frustum(savedCamera_);
 	}
-#ifdef EASY_PROFILE_USE
-	EASY_BLOCK("Chunks_System::Remove last visible", profiler::colors::Green);
-#endif
 	//Remove last visible chunks and accessible chunks
 	for (auto chunk : chunks)
 	{
@@ -363,102 +463,7 @@ void ChunkSystem::UpdateVisibleChunks()
 #ifdef EASY_PROFILE_USE
 			EASY_BLOCK("Chunks_System::Dirty", profiler::colors::Green);
 #endif
-			ChunkContentVector chunkContentVector = chunkManager_
-			                                        .chunkContentManager.GetComponent(chunk);
-			chunkContentVector.CalculateBlockOcclusion();
-			std::lock_guard<std::mutex> lock(mutexRenderer_);
-			scheduledRenderValues_.emplace_back([this, chunk, chunkContentVector]
-			{
-				chunkManager_.chunkRenderManager.Init(chunk);
-				chunkManager_.chunkRenderManager.SetChunkValues(chunk, chunkContentVector);
-			});
-			ChunkMask chunkMask;
-			for (std::uint16_t occlude = static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_DOWN);
-			     occlude <=
-			     static_cast<std::uint16_t>(ChunkFlag::OCCLUDE_BACK); occlude = occlude << 1u)
-			{
-				if (CalculateOcclusionStatus(chunkContentVector, static_cast<ChunkFlag>(occlude)))
-				{
-					if (!chunkManager_.chunkStatusManager.HasStatus(
-						chunk,
-						static_cast<ChunkFlag>(occlude)))
-					{
-						chunkManager_.chunkStatusManager.AddStatus(
-							chunk,
-							static_cast<ChunkFlag>(occlude));
-						Vec3i offset;
-						switch (static_cast<ChunkFlag>(occlude))
-						{
-							case ChunkFlag::OCCLUDE_DOWN:
-								offset = Vec3i::up;
-								break;
-							case ChunkFlag::OCCLUDE_UP:
-								offset = Vec3i::down;
-								break;
-							case ChunkFlag::OCCLUDE_RIGHT:
-								offset = Vec3i::left;
-								break;
-							case ChunkFlag::OCCLUDE_LEFT:
-								offset = Vec3i::right;
-								break;
-							case ChunkFlag::OCCLUDE_FRONT:
-								offset = Vec3i::back;
-								break;
-							case ChunkFlag::OCCLUDE_BACK:
-								offset = Vec3i::forward;
-								break;
-							default: ;
-						}
-						Entity chunkIndex = chunkManager_.chunkPosManager.GetChunkAtPos(
-							chunkPos + offset);
-						if (chunkIndex != INVALID_ENTITY)
-						{
-							CalculateVisibleStatus(chunkIndex);
-						}
-					}
-				}
-				else
-				{
-					if (chunkManager_.chunkStatusManager.HasStatus(
-						chunk,
-						static_cast<ChunkFlag>(occlude)))
-					{
-						chunkManager_.chunkStatusManager.RemoveStatus(
-							chunk,
-							static_cast<ChunkFlag>(occlude));
-						Vec3i offset;
-						switch (static_cast<ChunkFlag>(occlude))
-						{
-							case ChunkFlag::OCCLUDE_DOWN:
-								offset = Vec3i::down;
-								break;
-							case ChunkFlag::OCCLUDE_UP:
-								offset = Vec3i::up;
-								break;
-							case ChunkFlag::OCCLUDE_RIGHT:
-								offset = Vec3i::right;
-								break;
-							case ChunkFlag::OCCLUDE_LEFT:
-								offset = Vec3i::left;
-								break;
-							case ChunkFlag::OCCLUDE_FRONT:
-								offset = Vec3i::forward;
-								break;
-							case ChunkFlag::OCCLUDE_BACK:
-								offset = Vec3i::back;
-								break;
-							default: ;
-						}
-						Entity chunkIndex = chunkManager_.chunkPosManager.GetChunkAtPos(
-							chunkPos + offset);
-						if (chunkIndex != INVALID_ENTITY)
-						{
-							CalculateVisibleStatus(chunkIndex);
-						}
-					}
-				}
-			}
-			chunkManager_.chunkStatusManager.RemoveStatus(chunk, ChunkFlag::DIRTY);
+			UpdateDirtyChunk(chunk, chunkPos);
 		}
 	}
 #ifdef EASY_PROFILE_USE
