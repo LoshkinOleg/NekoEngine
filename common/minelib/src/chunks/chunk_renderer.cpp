@@ -193,6 +193,7 @@ void ChunkRenderer::InitShadow() {
 		LogDebug("[Error] Shadow depth map framebuffer is incomplete");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glCheckError();
 }
 
 	
@@ -219,7 +220,6 @@ void ChunkRenderer::SetShadowParameters(gl::Shader& shader) const {
 	shader.SetTexture("material.diffuse", atlasTex_, 0);
 	shader.SetTexture("shadowMap", depthMap_, 1);
 	shader.SetVec3("light.direction", directionalLight_.direction.Normalized());
-	shader.SetFloat("bias", bias_);
 	shader.SetBool("enableShadow", enableShadow);
 
 	shader.SetVec3("light.color", directionalLight_.color);
