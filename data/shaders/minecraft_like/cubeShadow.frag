@@ -19,9 +19,9 @@ struct Material{
 };
 uniform Light light;
 uniform Material material;
+
 uniform sampler2D shadowMap;
 uniform vec3 viewPos;
-uniform float bias;
 uniform bool enableShadow;
 
 float ShadowCalculation(vec4 fragPosLightSpace)
@@ -46,7 +46,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         for(int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
+            shadow += currentDepth > pcfDepth  ? 1.0 : 0.0;        
         }    
     }
     shadow /= 9.0;
